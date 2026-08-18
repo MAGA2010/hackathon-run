@@ -1,0 +1,71 @@
+{
+  "name": "hackathon-surgeon",
+  "version": "0.1.0",
+  "description": "A decision-making and execution system for hackathon teams operating under time pressure.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "hackathon": "dist/cli/index.js"
+  },
+  "files": [
+    "dist/",
+    "skills/",
+    "src/state/schemas/",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "eslint src/ --ext .ts",
+    "format": "prettier --write \"**/*.{ts,md,json}\"",
+    "format:check": "prettier --check \"**/*.{ts,md,json}\"",
+    "test": "bash tests/run-all.sh",
+    "test:acceptance": "bash tests/run-acceptance.sh",
+    "test:integration": "bash tests/run-integration.sh",
+    "validate": "node dist/cli/commands/validate.js",
+    "dogfood": "bash scripts/dogfood.sh",
+    "release": "bash scripts/release.sh"
+  },
+  "keywords": [
+    "hackathon",
+    "ai-agents",
+    "codex-skills",
+    "claude-code-skills",
+    "developer-tools",
+    "mvp",
+    "demo",
+    "pitch",
+    "judging",
+    "time-management",
+    "scope-management",
+    "productivity"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hackathon-surgeon/hackathon-surgeon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hackathon-surgeon/hackathon-surgeon/issues"
+  },
+  "homepage": "https://hackathon-surgeon.dev",
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "ora": "^8.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "eslint": "^9.9.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  }
+}

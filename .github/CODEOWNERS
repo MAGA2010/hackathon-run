@@ -1,0 +1,13 @@
+# Default code owners
+*              @hackathon-surgeon/core-maintainers
+
+# Core SKILL.md files require senior review
+/skills/       @hackathon-surgeon/core-maintainers
+
+# Schemas and shared infrastructure
+/src/state/    @hackathon-surgeon/core-maintainers
+/src/core/     @hackathon-surgeon/core-maintainers
+
+# Docs and examples can be reviewed by any maintainer
+/docs/         @hackathon-surgeon/maintainers
+/examples/     @hackathon-surgeon/maintainers

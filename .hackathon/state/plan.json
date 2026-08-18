@@ -1,0 +1,138 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-08-18T17:04:28.087945+00:00",
+  "demo_goal": "user runs scope-knife end to end",
+  "time_remaining_minutes": 360,
+  "features": [
+    {
+      "name": "30-second quickstart",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "CUT",
+      "rationale": "Off demo path; removed for time."
+    },
+    {
+      "name": "Community",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "CUT",
+      "rationale": "Off demo path; removed for time."
+    },
+    {
+      "name": "Examples",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "CUT",
+      "rationale": "Off demo path; removed for time."
+    },
+    {
+      "name": "How it works",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "CUT",
+      "rationale": "Off demo path; removed for time."
+    },
+    {
+      "name": "Inside any hackathon project",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "CUT",
+      "rationale": "Off demo path; removed for time."
+    },
+    {
+      "name": "One-time install",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "CUT",
+      "rationale": "Off demo path; removed for time."
+    },
+    {
+      "name": "Star history",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "KEEP",
+      "rationale": "Supports the demo path."
+    },
+    {
+      "name": "The problem",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "DEFER",
+      "rationale": "Valuable post-demo; ship later."
+    },
+    {
+      "name": "bin",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "DEFER",
+      "rationale": "Valuable post-demo; ship later."
+    },
+    {
+      "name": "bugs",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "DEFER",
+      "rationale": "Valuable post-demo; ship later."
+    },
+    {
+      "name": "engines",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "DEFER",
+      "rationale": "Valuable post-demo; ship later."
+    },
+    {
+      "name": "repository",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "KEEP",
+      "rationale": "Supports the demo path."
+    },
+    {
+      "name": "🔪 Hackathon Surgeon",
+      "status": "unimplemented",
+      "time_estimate_minutes": 60,
+      "classification": "DEFER",
+      "rationale": "Valuable post-demo; ship later."
+    }
+  ],
+  "demo_path": [
+    {
+      "step": 1,
+      "action": "Open the demo URL.",
+      "expected_outcome": "App loads without errors."
+    },
+    {
+      "step": 2,
+      "action": "Star history",
+      "expected_outcome": "User sees the feature working."
+    },
+    {
+      "step": 3,
+      "action": "repository",
+      "expected_outcome": "User sees the feature working."
+    },
+    {
+      "step": 4,
+      "action": "Connect back to demo goal: user runs scope-knife end to end.",
+      "expected_outcome": "Judge understands product value."
+    }
+  ],
+  "next_tasks": [
+    {
+      "priority": "P0",
+      "task": "Verify demo path end-to-end.",
+      "estimate_minutes": 30
+    },
+    {
+      "priority": "P1",
+      "task": "Polish Star history.",
+      "estimate_minutes": 20
+    },
+    {
+      "priority": "P1",
+      "task": "Polish repository.",
+      "estimate_minutes": 20
+    }
+  ]
+}

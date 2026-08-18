@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+.eslintcache
+.cache/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+coverage/
+.nyc_output/
+*.lcov
+
+# Python
+__pycache__/
+*.py[cod]
+*.class
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Local hackathon state (template files are tracked, runtime state is not)
+# Per-skill user state should be in their own .hackathon/, not ours.
+.hackathon/state/*.json.tmp
+.hackathon/artifacts/*.tmp
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Secrets (NEVER commit these — see ship-pack)
+*.pem
+*.key
+*secret*
+
+# OS
+.DS_Store
+desktop.ini

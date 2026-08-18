@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Discord
+    url: https://discord.gg/hackathon-surgeon
+    about: Real-time chat with the community
+  - name: 🗣️ Discussions
+    url: https://github.com/hackathon-surgeon/hackathon-surgeon/discussions
+    about: Longer-form discussion, idea sharing

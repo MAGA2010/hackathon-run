@@ -1,0 +1,117 @@
+site_name: Hackathon Surgeon
+site_description: A decision-making and execution system for hackathon teams.
+site_url: https://hackathon-surgeon.dev
+repo_url: https://github.com/hackathon-surgeon/hackathon-surgeon
+repo_name: hackathon-surgeon/hackathon-surgeon
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: red
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: red
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.tracking
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.action.edit
+  font:
+    text: Inter
+    code: JetBrains Mono
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search
+
+nav:
+  - Home: index.md
+  - Getting Started:
+      - getting-started/installation.md
+      - getting-started/quickstart.md
+      - getting-started/concepts.md
+  - Skills:
+      - skills/scope-knife.md
+      - skills/fast-verify.md
+      - skills/demo-coach.md
+      - skills/judge-sim.md
+      - skills/ship-pack.md
+      - skills/recovery-runbook.md
+  - Guides:
+      - guides/36-hour-walkthrough.md
+      - guides/team-coordination.md
+      - guides/emergency-handling.md
+  - Architecture:
+      - architecture/overview.md
+      - architecture/state-schemas.md
+      - architecture/skill-protocol.md
+      - ADRs: architecture/adr/index.md
+  - Contributing:
+      - contributing/contributing.md
+      - contributing/skill-template.md
+      - contributing/local-development.md
+  - About:
+      - about/motivation.md
+      - about/faq.md
+      - about/changelog.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/hackathon-surgeon/hackathon-surgeon
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/hackathon-surgeon
+    - icon: fontawesome/brands/twitter
+      link: https://twitter.com/HackathonSurgeon
+
+copyright: Copyright &copy; 2025 Hackathon Surgeon Contributors

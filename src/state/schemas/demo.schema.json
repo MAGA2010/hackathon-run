@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hackathon-surgeon.dev/schemas/demo.schema.json",
+  "title": "Demo Coach Script",
+  "description": "Output of demo-coach. A timed pitch script broken into six canonical steps with SAY/CLICK/SHOW/NOT plus risk flags.",
+  "type": "object",
+  "required": ["version", "duration_seconds", "one_liner", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": "1.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "duration_seconds": { "enum": [30, 60, 90] },
+    "audience": { "type": "string" },
+    "audience_interest": { "enum": ["technical", "business", "both"] },
+    "one_liner": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "The product positioning sentence (max 20 words)."
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": ["name", "max_seconds", "say", "click", "show", "not", "risks"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "enum": ["opening", "pain", "product", "core_action", "result", "close"] },
+          "max_seconds": { "type": "integer", "minimum": 1 },
+          "say": { "type": "string", "minLength": 1, "description": "What to say out loud (max 2 sentences)." },
+          "click": { "type": "string", "description": "UI interaction." },
+          "show": { "type": "string", "description": "What the screen shows." },
+          "not": { "type": "string", "description": "What NOT to do or say." },
+          "risks": {
+            "type": "array",
+            "items": { "enum": ["LAG", "FAIL", "EXPLAIN", "OVERTIME"] }
+          }
+        }
+      }
+    }
+  }
+}

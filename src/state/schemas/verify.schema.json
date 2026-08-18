@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hackathon-surgeon.dev/schemas/verify.schema.json",
+  "title": "Fast Verify Run",
+  "description": "Output of fast-verify. A step-by-step verification log with status, timing, and diagnostics for the first failure.",
+  "type": "object",
+  "required": ["version", "started_at", "status", "steps"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": "1.0" },
+    "started_at": { "type": "string", "format": "date-time" },
+    "finished_at": { "type": "string", "format": "date-time" },
+    "status": {
+      "enum": ["pass", "fail", "partial", "skipped"],
+      "description": "Overall outcome."
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step", "action", "status"],
+        "additionalProperties": false,
+        "properties": {
+          "step": { "type": "integer", "minimum": 1 },
+          "action": { "type": "string", "minLength": 1 },
+          "command": { "type": "string" },
+          "expected_outcome": { "type": "string" },
+          "actual_outcome": { "type": "string" },
+          "status": { "enum": ["pass", "fail", "skip"] },
+          "duration_seconds": { "type": "number", "minimum": 0 },
+          "error_signature": { "type": "string" },
+          "diagnosis": {
+            "type": "object",
+            "properties": {
+              "likely_cause": { "type": "string" },
+              "minimal_fix": { "type": "string" },
+              "re_verify_command": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+

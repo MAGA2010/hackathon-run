@@ -1,0 +1,71 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hackathon-surgeon.dev/schemas/ship.schema.json",
+  "title": "Ship Pack Audit",
+  "description": "Output of ship-pack. A submission-readiness audit with secret scan results, checklist status, and a safe packaging command.",
+  "type": "object",
+  "required": ["version", "generated_at", "readme", "secret_scan", "checklist", "reproducible", "packaging_command"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": "1.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "readme": {
+      "type": "object",
+      "required": ["present", "missing"],
+      "additionalProperties": false,
+      "properties": {
+        "present": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "missing": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "secret_scan": {
+      "type": "object",
+      "required": ["clean", "findings"],
+      "additionalProperties": false,
+      "properties": {
+        "clean": { "type": "boolean" },
+        "findings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["file", "pattern", "line"],
+            "additionalProperties": false,
+            "properties": {
+              "file": { "type": "string" },
+              "pattern": { "type": "string" },
+              "line": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "checklist": {
+      "type": "object",
+      "required": ["passed", "failed"],
+      "additionalProperties": false,
+      "properties": {
+        "passed": { "type": "array", "items": { "type": "string" } },
+        "failed": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "reproducible": {
+      "type": "object",
+      "required": ["ok", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "ok": { "type": "boolean" },
+        "reason": { "type": "string" }
+      }
+    },
+    "packaging_command": {
+      "type": "string",
+      "description": "Shell command that produces the submission tarball/zip excluding secrets and build artifacts."
+    }
+  }
+}

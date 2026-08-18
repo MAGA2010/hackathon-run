@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hackathon-surgeon.dev/schemas/review.schema.json",
+  "title": "Judge Simulation Result",
+  "description": "Output of judge-sim. Seven-dimension scoring with per-dimension reasoning and a prioritized fix list.",
+  "type": "object",
+  "required": ["version", "generated_at", "dimensions", "overall", "fix_priorities"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": "1.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "verify_was_failing": { "type": "boolean" },
+    "dimensions": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "required": ["name", "score", "deduction_reason", "judge_questions", "improvements"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "enum": ["problem_clarity", "originality", "completeness",
+                     "technical_depth", "demo_quality", "business_value",
+                     "submission_readiness"]
+          },
+          "score": { "type": "integer", "minimum": 0, "maximum": 5 },
+          "deduction_reason": { "type": "string", "minLength": 1 },
+          "judge_questions": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 3,
+            "items": { "type": "string" }
+          },
+          "improvements": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        }
+      }
+    },
+    "overall": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 5,
+      "description": "Mean of dimension scores, rounded to 2 decimals."
+    },
+    "fix_priorities": {
+      "type": "object",
+      "required": ["fix_now", "fix_last_10min", "do_not_touch"],
+      "additionalProperties": false,
+      "properties": {
+        "fix_now": { "type": "array", "items": { "type": "string" } },
+        "fix_last_10min": { "type": "array", "items": { "type": "string" } },
+        "do_not_touch": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

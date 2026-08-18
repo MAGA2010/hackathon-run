@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://hackathon-surgeon.dev/schemas/recovery.schema.json",
+  "title": "Recovery Runbook",
+  "description": "Output of recovery-runbook. A severity-based fallback plan and 30-second recovery script.",
+  "type": "object",
+  "required": ["version", "generated_at", "failure", "severity", "fallback", "script"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": "1.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "failure": { "type": "string", "minLength": 1 },
+    "severity": { "enum": ["P0", "P1", "P2", "P3"] },
+    "fallback": {
+      "type": "object",
+      "required": ["default", "do", "say", "not"],
+      "additionalProperties": false,
+      "properties": {
+        "default": { "type": "string" },
+        "do": { "type": "string" },
+        "say": { "type": "string" },
+        "not": { "type": "string" }
+      }
+    },
+    "recovery_steps": { "type": "array", "items": { "type": "string" } },
+    "script": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step", "phase", "max_seconds", "line"],
+        "additionalProperties": false,
+        "properties": {
+          "step": { "type": "integer", "minimum": 1 },
+          "phase": { "type": "string" },
+          "max_seconds": { "type": "integer", "minimum": 1 },
+          "line": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

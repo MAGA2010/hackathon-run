@@ -29,7 +29,8 @@
     "test:unit": "npm run build --silent && node --test tests/unit/*.test.mjs",
     "validate": "npm run build --silent && node dist/cli/commands/validate.js",
     "dogfood": "node scripts/run-sh.mjs scripts/dogfood.sh",
-    "release": "node scripts/run-sh.mjs scripts/release.sh"
+    "release": "node scripts/run-sh.mjs scripts/release.sh",
+    "mcp": "node dist/mcp/server.js"
   },
   "keywords": [
     "hackathon",
@@ -71,3 +72,4 @@
     "typescript": "^5.5.4"
   }
 }
+

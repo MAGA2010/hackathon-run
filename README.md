@@ -2,10 +2,10 @@
 
 > **Ship the demo, not the dream.**
 
-A decision-making and execution system for hackathon teams operating under time pressure. Eight skills, one workflow: **clarify, scope, verify, demo, judge, ship, recover, pivot.**
+A decision-making and execution system for hackathon teams operating under time pressure. Eleven skills, one workflow: **clarify, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
-[![Version](https://img.shields.io/badge/version-0.3.0-blue)](https://github.com/MAGA2010/hackathon-run/releases)
+[![Version](https://img.shields.io/badge/version-0.4.0-blue)](https://github.com/MAGA2010/hackathon-run/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2)](https://discord.gg/hackathon-surgeon)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
@@ -34,12 +34,14 @@ A hackathon is not a coding problem. It is a **time-pressure, decision-making, e
 
 Eight skills, mapped to the hackathon lifecycle:
 
-`   idea-clarify (pre)         pivot (mid-build redirect)
+`   idea-clarify (pre)             pivot (mid-build redirect)
               │                              │
               ▼                              ▼
-   scope-knife ─► fast-verify ─► demo-coach ─► judge-sim ─► ship-pack
-        │              │              │             │            │
-        └──────────────┴──────────────┴─────────────┴────────────┘
+   scope-knife ─► time-box ─► fast-verify ─► demo-coach ─► judge-sim ─► ship-pack
+        │              │            │              │             │            │
+        └──────────────┴────────────┴──────────────┴─────────────┴────────────┘
+              │                                              │
+        stack-picker (cold-start)                    retro (post-event)
                                        │
                               recovery-runbook (anytime)`
 

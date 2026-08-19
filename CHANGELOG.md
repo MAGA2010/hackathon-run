@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-08-19
+
+### Added
+
+- **Three new skills** (the pack now ships 11):
+  - `time-box` — allocates the remaining clock to each pipeline stage (build/verify/demo/ship) and emits per-stage checkpoints with alarms. Pairs with scope-knife: one says _what_, the other says _when_.
+  - `stack-picker` — recommends a tech stack from `team_skills`, `time_remaining_minutes`, `demo_format`, and `prize_category`. Outputs a 30-minute bootstrap walkthrough. Pairs with idea-clarify.
+  - `retro` — post-event retrospective. Computes four ratios (scope_accuracy, time_accuracy, verify_pass_rate, judge_score_avg) and emits a three-bucket action list (keep_doing / stop_doing / try_next_time). Closes the lifecycle loop.
+- **MCP server now exposes 8 tools** (was 4):
+  - `validate_skill` — lint a skill directory against the protocol (captures stdout, returns findings as structured JSON)
+  - `apply_skill_advice` — write a skill's structured output to a state file (supports deep-merge or replace)
+  - `list_examples` — enumerate bundled example projects with stack + stage detection
+  - `get_recovery_plan` — return the 30-second fallback script + decision tree for a failing demo path
+- **Three new example projects** under `examples/` (now 6 total):
+  - `data-eng` — Python stdlib ETL (CSV -> TSV)
+  - `chrome-extension` — Manifest V3 TODO highlighter
+  - `devtool-cli` — Node ESM CLI tool
+- **Three new JSON schemas** under `src/state/schemas/`:
+  - `time-box.schema.json`, `stack.schema.json`, `retro.schema.json`
+- **ADR-0005: v0.4 skill roster expansion** — documents the time-box/stack-picker/retro additions and the MCP surface growth. Updated `docs/architecture/adr/index.md`.
+- **Skill detail pages for `time-box`, `stack-picker`, and `retro`** in `docs/skills/`, with mkdocs nav entries.
+- **3 new docs pages + index updates** (skills/index.md, mkdocs.yml, state-schemas.md).
+- **29 new unit tests** (6 new MCP tests, 12 new skill/schema tests, 11 new example tests). Total: 98/98 passing.
+
+### Changed
+
+- **MCP server `serverInfo.version`** now reads from `package.json` at startup instead of being hardcoded to `0.2.0`. The reported version matches the package version at all times.
+- **`validate-skill` action-verb regex** gained `allocate|retro|retrospect|bootstrap` so the new skills' descriptions pass the validator.
+- **`.prettierignore`** is now recursive (`**/.hackathon/state/*.json`, `**/.hackathon/artifacts/**`) so example state files don't trigger format warnings.
+- **`eslint.config.js`** now covers `examples/**/src/**/*.mjs` and `examples/chrome-extension/src/**/*.js` with appropriate Node + browser globals. CI lint:eslint script now runs `eslint .` (was: a narrow `scripts/` subset).
+
+### Fixed
+
+- **MCP server version hardcoded to `0.2.0`** despite package.json being `0.3.0`. Now reads package.json at startup.
+
 ## [0.3.0] - 2026-08-19
 
 ### Added

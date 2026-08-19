@@ -23,7 +23,7 @@ export default [
   },
   js.configs.recommended,
   {
-    files: ['scripts/**/*.mjs', 'examples/**/scripts/**/*.mjs', 'eslint.config.js'],
+    files: ['scripts/**/*.mjs', 'examples/**/scripts/**/*.mjs', 'examples/**/src/**/*.mjs', 'eslint.config.js'],
     languageOptions: {
       ecmaVersion: 2024,
       sourceType: 'module',
@@ -49,6 +49,21 @@ export default [
       'no-console': 'off',
       'prefer-const': 'warn',
       'no-var': 'error',
+    },
+  },
+  // Chrome extension files use the chrome.* browser API and DOM globals.
+  {
+    files: ['examples/chrome-extension/src/**/*.js'],
+    languageOptions: {
+      ecmaVersion: 2024,
+      sourceType: 'module',
+      globals: {
+        console: 'readonly',
+        chrome: 'readonly',
+        document: 'readonly',
+        window: 'readonly',
+        NodeFilter: 'readonly',
+      },
     },
   },
 ];

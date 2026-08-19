@@ -4,11 +4,13 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = 'D:/personal skill';
+const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = dirname(dirname(HERE));
 const CLI = join(ROOT, 'dist/cli/index.js');
 
 function run(args, opts = {}) {
@@ -26,12 +28,35 @@ describe('hackathon replay', () => {
   });
 
   it('emits a timeline (json) from .hackathon/state/', () => {
-    const r = run(['replay', '--json']);
-    assert.equal(r.status, 0, r.stderr);
-    const payload = JSON.parse(r.stdout);
-    assert.ok(payload.state_dir);
-    assert.ok(Array.isArray(payload.entries));
-    assert.ok(payload.entries.length >= 1);
+    const tmp = mkdtempSync(join(tmpdir(), 'hs-replay-'));
+    try {
+      const stateDir = join(tmp, '.hackathon', 'state');
+      mkdirSync(stateDir, { recursive: true });
+      writeFileSync(
+        join(stateDir, 'verify.json'),
+        JSON.stringify({ version: '1.0', started_at: '2026-08-19T08:00:00.000Z', status: 'passed', steps: [] }),
+      );
+      writeFileSync(
+        join(stateDir, 'plan.json'),
+        JSON.stringify({
+          version: '1.0',
+          generated_at: '2026-08-19T07:00:00.000Z',
+          demo_goal: 'sign in and save a note',
+          features: [],
+          demo_path: [],
+          next_tasks: [],
+        }),
+      );
+      const r = run(['replay', '-C', tmp, '--json']);
+      assert.equal(r.status, 0, r.stderr);
+      const payload = JSON.parse(r.stdout);
+      assert.ok(payload.state_dir);
+      assert.equal(payload.entries.length, 2);
+      assert.equal(payload.entries[0].file, 'plan.json');
+      assert.equal(payload.entries[1].file, 'verify.json');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });
 

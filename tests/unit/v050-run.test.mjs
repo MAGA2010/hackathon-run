@@ -1,14 +1,15 @@
 // tests/unit/v050-run.test.mjs
 // Unit tests for v0.5.0: `hackathon run --apply` flag parsing + skeleton builders.
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync, readdirSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = 'D:/personal skill';
+const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = dirname(dirname(HERE));
 const CLI = join(ROOT, 'dist/cli/index.js');
 
 function run(args, opts = {}) {

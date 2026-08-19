@@ -3,7 +3,6 @@ set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/.." && pwd)"
 BASH_TMP="$(mktemp -d)"
-WIN_TMP="$(cygpath -w "$BASH_TMP")"
 trap "rm -rf $BASH_TMP" EXIT
 
 PY="${PYTHON:-python3}"
@@ -36,7 +35,7 @@ test -f "$OUT/artifacts/scope-knife-output.md" || fail "scope-knife-output.md mi
 pass "plan.json + scope-knife-output.md written"
 
 section "demo-coach (60s)"
-WIN_PLAN="$WIN_TMP\\proj\\inv.json"
+# (removed dead WIN_PLAN/WIN_TMP variables)
 "$PY" "$ROOT/skills/demo-coach/scripts/coach.py" \
     --demo-goal "user signs in and saves a note" \
     --duration 60 --out-dir "$OUT" >/dev/null

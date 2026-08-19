@@ -94,6 +94,8 @@ nav:
       - time-box: skills/time-box.md
       - stack-picker: skills/stack-picker.md
       - retro: skills/retro.md
+      - demo-rehearsal: skills/demo-rehearsal.md
+      - team-roster: skills/team-roster.md
   - Architecture:
       - Overview: architecture/overview.md
       - State Schemas: architecture/state-schemas.md

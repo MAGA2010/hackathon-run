@@ -41,7 +41,15 @@ describe('hackathon run --apply', () => {
   });
 
   it('writes plan.json when --apply is given', () => {
-    const r = run(['run', 'scope-knife', '--demo-goal', 'sign up + save note', '--time-remaining', '120', '--apply']);
+    const r = run([
+      'run',
+      'scope-knife',
+      '--demo-goal',
+      'sign up + save note',
+      '--time-remaining',
+      '120',
+      '--apply',
+    ]);
     assert.equal(r.status, 0, r.stderr);
     const planPath = join(ROOT, '.hackathon/state/plan.json');
     assert.ok(existsSync(planPath));
@@ -61,7 +69,18 @@ describe('hackathon run --apply', () => {
   });
 
   it('writes a valid skeleton for every skill with --apply', () => {
-    const skills = ['scope-knife', 'time-box', 'demo-coach', 'ship-pack', 'recovery-runbook', 'judge-sim', 'fast-verify', 'stack-picker', 'demo-rehearsal', 'team-roster'];
+    const skills = [
+      'scope-knife',
+      'time-box',
+      'demo-coach',
+      'ship-pack',
+      'recovery-runbook',
+      'judge-sim',
+      'fast-verify',
+      'stack-picker',
+      'demo-rehearsal',
+      'team-roster',
+    ];
     for (const s of skills) {
       const r = run(['run', s, '--apply']);
       assert.equal(r.status, 0, s + ': ' + r.stderr);

@@ -34,7 +34,12 @@ describe('hackathon replay', () => {
       mkdirSync(stateDir, { recursive: true });
       writeFileSync(
         join(stateDir, 'verify.json'),
-        JSON.stringify({ version: '1.0', started_at: '2026-08-19T08:00:00.000Z', status: 'passed', steps: [] }),
+        JSON.stringify({
+          version: '1.0',
+          started_at: '2026-08-19T08:00:00.000Z',
+          status: 'passed',
+          steps: [],
+        }),
       );
       writeFileSync(
         join(stateDir, 'plan.json'),

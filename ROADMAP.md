@@ -28,16 +28,20 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [x] **2 new JSON schemas** in v0.5.0: `rehearsal.schema.json`, `roster.schema.json`
 - [x] **ADR-0006** documenting the v0.5 CLI/structural changes (v0.5.0)
 - [x] **111/111 unit tests passing** after v0.5.0 (was 98 after v0.4.0)
+- [x] **`hackathon report`** — post-hackathon markdown report with verdict + timeline + stage sections (v0.6.0)
+- [x] **`decision-log` skill** — append-only decision record, 14th skill (v0.6.0)
+- [x] **12 MCP tools** — adds replay, report, skills_pin, skills_diff (v0.6.0)
+- [x] **validate-skill hardening** — docstring-safe VERSION pin check + any-flag CLI check (v0.6.0)
+- [x] **118/118 unit tests passing** after v0.6.0 (was 111 after v0.5.0)
 
-## Now (0.5.x)
+## Now (0.6.x)
 
 - [ ] **Embedding-based fallback matcher** — when token-based score = 0, fall back to a small embedding model (configurable; opt-in). Required because the current matcher fails on paraphrased trigger phrases.
 - [ ] **Codecov + coverage report** in CI once the unit-test suite stabilizes.
-- [ ] **GitHub Pages deployment** of `site/` is already wired (`docs.yml`) but currently builds against `main` without a release tag. Tag-triggered builds are tracked separately.
+- [ ] **Re-enable GitHub Pages deployment** — `docs.yml` build step is green; the deploy step needs Pages enabled in repo settings (Source: GitHub Actions).
 
-## Later (0.6+)
+## Later (0.7+)
 
-- [ ] **Skill marketplace format** — a JSON catalog at `.hackathon/skills.json` listing every skill with version + checksum, so teams can pin a known set.
 - [ ] **Typed CLI options** — replace `any` args in `run` with per-skill option specs derived from the skill's input contract section.
 - [ ] **VS Code extension** that surfaces the `hackathon status` lifecycle in the status bar.
 - [ ] **Discord / Slack webhook** that posts `ship-pack` results to a team channel.

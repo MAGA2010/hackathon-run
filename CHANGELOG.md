@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-08-19
+
+### Added
+
+- **`hackathon report`** — a new command that turns `.hackathon/state/` into a post-hackathon markdown report: demo goal, computed verdict (SHIP READY / NEEDS WORK / BLOCKED ON SECRETS / UNVERIFIED), team roster, scope summary, a chronological timeline, and stage-by-stage sections. `--out <file>` writes a file; `--json` emits the machine payload. Reuses `replay`'s timeline collector.
+- **`decision-log` skill (the pack now ships 14)** — an append-only record of every KEEP/CUT/DEFER/PIVOT decision at `.hackathon/state/decision-log.json` (schema `decision-log.schema.json`), a Python script (`skills/decision-log/scripts/log_decision.py`), and a human-readable transcript. Pairs: scope-knife decides, decision-log records, retro learns.
+- **Four new MCP tools** (8 → 12): `replay`, `report`, `skills_pin`, `skills_diff`. Agents can now run the whole loop (match → run → replay → report) over stdio.
+- **ADR-0007** documenting the v0.6 report + decision-log + MCP closure + validation hardening decisions.
+- **7 new unit tests** (3 for `report`, 2 for the decision-log skill, 2 for the hardened VERSION check). Total: 118/118 passing.
+- **`tests/acceptance/test_decision_log.sh`** covering the decision-log acceptance criteria.
+
+### Changed
+
+- **`validate-skill` hardening** — the `VERSION` pin check now strips the leading module docstring before matching, so a version typed as prose inside a docstring no longer passes. The CLI-argument check accepts any declared `--flag`.
+- **`classify.py` bug fix** — `VERSION = "1.0"` moved out of the module docstring to real module scope (it was previously inside the docstring, so the constant did not exist at runtime; the old check false-positived).
+- **CLI consistency** — `hackathon run` and `hackathon list` gained `-C/--cwd`; `list` now reports the scripts column truthfully instead of hardcoding "yes".
+- **README.md** — fixed a corrupted fenced code block (a paste artifact with a backspace byte) and refreshed the skills table / tagline to 14 skills.
+
+### Compatibility
+
+- No breaking changes. New state file `decision-log.json` is additive; existing `.hackathon/state/` files keep working.
+
 ## [0.5.0] - 2026-08-19
 
 ### Added

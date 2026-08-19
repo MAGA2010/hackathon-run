@@ -61,10 +61,14 @@ describe('v0.4.0 example projects', () => {
   });
 
   it('chrome-extension smoke script reports all required files present', () => {
-    const r = spawnSync(process.execPath, [join(ROOT, 'examples/chrome-extension/scripts/smoke.mjs')], {
-      encoding: 'utf8',
-      cwd: ROOT,
-    });
+    const r = spawnSync(
+      process.execPath,
+      [join(ROOT, 'examples/chrome-extension/scripts/smoke.mjs')],
+      {
+        encoding: 'utf8',
+        cwd: ROOT,
+      },
+    );
     assert.equal(r.status, 0, r.stdout + r.stderr);
   });
 });

@@ -48,7 +48,9 @@ describe('v0.4.0 skill roster', () => {
       const fm = txt.split(/^---\s*$/m)[1] || '';
       const descMatch = fm.match(/^description:\s*(.+)$/m);
       const wtuMatch = fm.match(/^when_to_use:\s*[|>]([\s\S]+?)(?=^[a-z_]+:\s|^---)/m);
-      const total = (descMatch ? descMatch[1].length : 0) + (wtuMatch ? wtuMatch[1].replace(/\s+/g, ' ').trim().length : 0);
+      const total =
+        (descMatch ? descMatch[1].length : 0) +
+        (wtuMatch ? wtuMatch[1].replace(/\s+/g, ' ').trim().length : 0);
       assert.ok(total < 1536, name + ' trigger budget ' + total + ' exceeds 1536');
     });
   }

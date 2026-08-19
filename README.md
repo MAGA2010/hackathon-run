@@ -2,10 +2,10 @@
 
 > **Ship the demo, not the dream.**
 
-A decision-making and execution system for hackathon teams operating under time pressure. Thirteen skills, one workflow: **clarify, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro.**
+A decision-making and execution system for hackathon teams operating under time pressure. Fourteen skills, one workflow: **clarify, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro, decide-log.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
-[![Version](https://img.shields.io/badge/version-0.5.0-blue)](https://github.com/MAGA2010/hackathon-run/releases)
+[![Version](https://img.shields.io/badge/version-0.6.0-blue)](https://github.com/MAGA2010/hackathon-run/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2)](https://discord.gg/hackathon-surgeon)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
@@ -32,7 +32,7 @@ A hackathon is not a coding problem. It is a **time-pressure, decision-making, e
 
 ## How it works
 
-Thirteen skills, mapped to the hackathon lifecycle:
+Fourteen skills, mapped to the hackathon lifecycle:
 
 `   idea-clarify (pre)             pivot (mid-build redirect)
               │                              │
@@ -62,6 +62,7 @@ Thirteen skills, mapped to the hackathon lifecycle:
 | **retro**            | After submission, want ratios + action list       | 4 ratios + keep_doing/stop_doing/try_next_time      |
 | **demo-rehearsal**   | Final 2 hours, want a timed mock run              | Per-segment score + fix list                        |
 | **team-roster**      | Build phase, >2 KEEP features, roles unclear      | Role assignments + bottleneck + rescuer             |
+| **decision-log**     | Every cut needs a recorded "why"                  | Append-only decision record with rationale          |
 
 Each skill is **independently invokable**. You can run any of them at any time without running the others.
 
@@ -69,7 +70,7 @@ Each skill is **independently invokable**. You can run any of them at any time w
 
 ## 30-second quickstart
 
-`ash
+```bash
 
 # One-time install
 
@@ -84,7 +85,7 @@ hackathon run fast-verify # verifies the demo path
 hackathon run demo-coach # drafts the pitch
 hackathon run judge-sim # self-reviews before submitting
 hackathon run ship-pack # packages and checks for leaks
-`
+```
 
 Each command is interactive. State is saved to .hackathon/state/ and is never required by the next step.
 

@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maga2010.github.io/hackathon-run/schemas/retro.schema.json",
+  "title": "Hackathon Retro",
+  "description": "Output of retro. Four ratios, a surprises list, and a three-bucket action list.",
+  "type": "object",
+  "required": [
+    "version",
+    "generated_at",
+    "ratios",
+    "surprises",
+    "keep_doing",
+    "stop_doing",
+    "try_next_time"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "1.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_name": {
+      "type": "string"
+    },
+    "ratios": {
+      "type": "object",
+      "required": ["scope_accuracy", "time_accuracy", "verify_pass_rate", "judge_score_avg"],
+      "additionalProperties": false,
+      "properties": {
+        "scope_accuracy": {
+          "type": ["number", "string"],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "time_accuracy": {
+          "type": ["number", "string"],
+          "minimum": 0
+        },
+        "verify_pass_rate": {
+          "type": ["number", "string"],
+          "minimum": 0,
+          "maximum": 1
+        },
+        "judge_score_avg": {
+          "type": ["number", "string"],
+          "minimum": 0
+        }
+      }
+    },
+    "surprises": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "keep_doing": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["behavior", "evidence"],
+        "additionalProperties": false,
+        "properties": {
+          "behavior": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "owner_hint": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "stop_doing": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["behavior", "evidence"],
+        "additionalProperties": false,
+        "properties": {
+          "behavior": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "owner_hint": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "try_next_time": {
+      "type": "array",
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "required": ["behavior", "evidence"],
+        "additionalProperties": false,
+        "properties": {
+          "behavior": {
+            "type": "string"
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "owner_hint": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

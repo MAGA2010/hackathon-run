@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maga2010.github.io/hackathon-run/schemas/time-box.schema.json",
+  "title": "Hackathon Time-Box",
+  "description": "Output of time-box. Allocates remaining minutes to each pipeline stage and emits checkpoints.",
+  "type": "object",
+  "required": [
+    "version",
+    "generated_at",
+    "time_remaining_minutes",
+    "team_size",
+    "current_stage",
+    "schedule"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "1.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "time_remaining_minutes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "buffer_minutes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "team_size": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "current_stage": {
+      "enum": ["idea", "scope", "build", "verify", "demo", "ship"]
+    },
+    "stage_progress": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "schedule": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "stage",
+          "start_in_minutes",
+          "duration_minutes",
+          "exit_criteria",
+          "alarm_at_minutes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "stage": {
+            "enum": ["idea", "scope", "build", "verify", "demo", "ship"]
+          },
+          "start_in_minutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "duration_minutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "per_person_minutes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "exit_criteria": {
+            "type": "string",
+            "minLength": 1
+          },
+          "alarm_at_minutes": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "slipping": {
+      "type": "boolean"
+    },
+    "warning": {
+      "type": "string"
+    }
+  }
+}

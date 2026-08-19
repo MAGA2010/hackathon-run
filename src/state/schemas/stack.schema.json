@@ -1,0 +1,112 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maga2010.github.io/hackathon-run/schemas/stack.schema.json",
+  "title": "Hackathon Stack Recommendation",
+  "description": "Output of stack-picker. One recommendation, two runners-up, one anti-recommendation, and a 30-minute bootstrap.",
+  "type": "object",
+  "required": [
+    "version",
+    "generated_at",
+    "demo_format",
+    "recommendation",
+    "runners_up",
+    "bootstrap"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "1.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "demo_format": {
+      "enum": ["web", "mobile", "desktop", "cli", "api", "data", "ml", "hardware"]
+    },
+    "prize_category": {
+      "type": "string"
+    },
+    "recommendation": {
+      "type": "object",
+      "required": ["stack", "score", "rationale"],
+      "additionalProperties": false,
+      "properties": {
+        "stack": {
+          "type": "string",
+          "minLength": 1
+        },
+        "score": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "runners_up": {
+      "type": "array",
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "required": ["stack", "tradeoff"],
+        "additionalProperties": false,
+        "properties": {
+          "stack": {
+            "type": "string"
+          },
+          "tradeoff": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "anti_recommendation": {
+      "type": "object",
+      "required": ["stack", "failure_mode"],
+      "additionalProperties": false,
+      "properties": {
+        "stack": {
+          "type": "string"
+        },
+        "failure_mode": {
+          "type": "string"
+        }
+      }
+    },
+    "bootstrap": {
+      "type": "object",
+      "required": ["steps"],
+      "additionalProperties": false,
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["order", "command"],
+            "additionalProperties": false,
+            "properties": {
+              "order": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "command": {
+                "type": "string",
+                "minLength": 1
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "total_minutes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

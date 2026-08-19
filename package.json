@@ -1,6 +1,6 @@
 {
   "name": "@maga2010/hackathon-surgeon",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A decision-making and execution system for hackathon teams operating under time pressure.",
   "type": "module",
   "main": "dist/index.js",

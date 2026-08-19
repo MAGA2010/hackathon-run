@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-08-19
+
+### Added
+
+- **Two new skills** (the pack now ships 8):
+  - `idea-clarify` — pre-`scope-knife` step that turns a one-paragraph brief into a one-page brief with a concrete `demo_goal` and `mvp_axis`. Refuses vague answers.
+  - `pivot` — mid-build redirect. Reads the 5 state files, computes a preserve/cut/rewrite table, refuses to run if at least 1 KEEP feature does not survive (otherwise it is a rewrite, not a pivot).
+- **CLI: `hackathon new-skill <name>`** — scaffolds a new skill folder with the right frontmatter, section headings, kebab-case validation, optional `scripts/<name>.py` + `tests/`, and `--force` to overwrite.
+- **CLI: `hackathon validate-skill <dir>`** — lints a `SKILL.md` against the 8-rule protocol (frontmatter, folder-name match, trigger budget, action-verb lead, required body sections, `Do not invoke` clause on `when_to_use`, script shebang + `--repo-root` + `VERSION` pin, state-file-vs-schema pairing). Returns 0 on pass, 1 on any error.
+- **CLI: `hackathon diff <a> <b>`** — object-aware JSON diff between two state files or two `.hackathon/state/` directories. Stable-key array matching (matches by `name` or `id` if present, else by index). Supports `--stat` and `--json`.
+- **CLI: `hackathon mcp`** — start the Model Context Protocol server on stdio (JSON-RPC 2.0). Exposes 4 tools: `list_skills`, `get_skill`, `match_skill`, `status`. Compatible with Codex, Claude Code, and Cursor.
+- **GitHub Action: `MAGA2010/hackathon-run/.github/action@main`** — composite action wrapping the CLI for CI. Subcommands: `validate-skills`, `validate-state`, `list`, `status`, `match`, `new-skill`.
+- **MCP server** (`src/mcp/server.ts`) — minimal JSON-RPC 2.0 stdio server. No third-party SDK; the harness is the value, the MCP wrapper is a thin transport. Verified via 4 new unit tests.
+- **`recovery-runbook/scripts/build_recovery.py`** — completes the recovery loop (was the missing piece: `recovery-runbook/SKILL.md` describes the runbook, this script actually writes it). CI skill-protocol lint enforces shebang + `--repo-root` + `VERSION = "1.0"` for every `scripts/*.py`.
+- **ADR-0004: Skills are extensible via CLI + JSON Schema pairing** — documents the new-skill + validate-skill + schema-pairing pattern. Updated `docs/architecture/adr/index.md` accordingly.
+- **Skill detail pages for `idea-clarify` and `pivot`** in `docs/skills/`, with mkdocs nav entries.
+- **23 new unit tests** (frontmatter, trigger, state, status, flow, validate-skill, new-skill, diff, mcp). Total: 69/69 passing.
+- **`scripts/scaffold-skills.mjs`** — convenience script that scaffolds both `idea-clarify` and `pivot` in one shot. Used during the v0.3.0 build; safe to re-run.
+
+### Changed
+
+- `CONTRIBUTING.md` expanded with the "Add a new skill" walkthrough (4 steps: scaffold → fill in → add schema → `validate-skill`).
+- Skill matcher scoring now exposes a `reasons` array per candidate, so `--debug` output explains _why_ a skill won.
+- `docs/skills/index.md` state-machine diagram now shows the 8 skills and the `idea-clarify` + `pivot` pre/post stages.
+- README "Six skills" / "v1 ships 6 skills done well" lines updated to reflect 8 skills.
+
+### Fixed
+
+- `validate-skill` regex for the `Do not invoke` clause was using `\\s+` (literal backslash + s) instead of `\s+` (whitespace class). This made the check fail for `when_to_use` values that wrapped "do not invoke" across a line break, producing a spurious warning on `pivot` and any future skill that wraps the clause. Replaced with the correct whitespace-class regex; verified 0 warnings on `pivot`, `idea-clarify`, and `scope-knife`.
+
 ## [0.2.0] - 2026-08-19
 
 ### Added

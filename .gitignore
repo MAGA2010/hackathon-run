@@ -6,6 +6,8 @@ node_modules/
 # Build output
 dist/
 build/
+site/
+# (mkdocs build output; not checked in)
 *.tsbuildinfo
 
 # Logs

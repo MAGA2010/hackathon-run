@@ -2,10 +2,10 @@
 
 > **Ship the demo, not the dream.**
 
-A decision-making and execution system for hackathon teams operating under time pressure. Six skills, one workflow: **scope, verify, demo, judge, ship, recover.**
+A decision-making and execution system for hackathon teams operating under time pressure. Eight skills, one workflow: **clarify, scope, verify, demo, judge, ship, recover, pivot.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/MAGA2010/hackathon-run/releases)
+[![Version](https://img.shields.io/badge/version-0.3.0-blue)](https://github.com/MAGA2010/hackathon-run/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2)](https://discord.gg/hackathon-surgeon)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
@@ -32,9 +32,12 @@ A hackathon is not a coding problem. It is a **time-pressure, decision-making, e
 
 ## How it works
 
-Six skills, mapped to the hackathon lifecycle:
+Eight skills, mapped to the hackathon lifecycle:
 
-`   scope-knife ─► fast-verify ─► demo-coach ─► judge-sim ─► ship-pack
+`   idea-clarify (pre)         pivot (mid-build redirect)
+              │                              │
+              ▼                              ▼
+   scope-knife ─► fast-verify ─► demo-coach ─► judge-sim ─► ship-pack
         │              │              │             │            │
         └──────────────┴──────────────┴─────────────┴────────────┘
                                        │
@@ -83,7 +86,7 @@ Each command is interactive. State is saved to .hackathon/state/ and is never re
 2. **State lives in the filesystem** (.hackathon/state/*.json), readable, never blocking.
 3. **Trigger phrases in every description** so the agent can match intent without ambiguity.
 4. **Body = execution logic only.** No backstory, no changelogs inside skill files.
-5. **v1 ships 6 skills done well**, not 100 stubs.
+5. **v1 ships a small set of skills done well**, not 100 stubs.
 6. **Acceptance criteria live in the skill file** and are wired to shell tests.
 
 ---

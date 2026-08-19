@@ -28,6 +28,9 @@ import { loadAllSkills } from '../harness/loader.js';
 import { matchSkill } from '../harness/trigger.js';
 import { status } from '../cli/commands/status.js';
 import { validateSkill } from '../cli/commands/validate-skill.js';
+import { replay } from '../cli/commands/replay.js';
+import { report } from '../cli/commands/report.js';
+import { skills as skillsCommand } from '../cli/commands/skills.js';
 
 // Resolve the package version once at startup. Falls back to '0.0.0' if package.json
 // is unreachable (e.g. when the package is installed globally and bundled differently).
@@ -197,7 +200,68 @@ const TOOLS: ToolDef[] = [
       additionalProperties: false,
     },
   },
+  {
+    name: 'replay',
+    description:
+      'Reconstruct the team timeline from .hackathon/state/ files, ordered by generated_at / started_at. Returns the same JSON as `hackathon replay --json`.',
+    inputSchema: {
+      type: 'object',
+      properties: { cwd: { type: 'string', description: 'repo root; defaults to CWD' } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'report',
+    description:
+      'Generate the post-hackathon report from state files. Returns the machine-readable payload (states, verdict, timeline).',
+    inputSchema: {
+      type: 'object',
+      properties: { cwd: { type: 'string', description: 'repo root; defaults to CWD' } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'skills_pin',
+    description:
+      'Pin every bundled skill into .hackathon/skills.json with name + version + sha256 checksum. Returns the pin path.',
+    inputSchema: {
+      type: 'object',
+      properties: { cwd: { type: 'string', description: 'repo root; defaults to CWD' } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'skills_diff',
+    description:
+      'Compare the pinned .hackathon/skills.json against the current bundled skills. Returns lines describing added / removed / changed entries.',
+    inputSchema: {
+      type: 'object',
+      properties: { cwd: { type: 'string', description: 'repo root; defaults to CWD' } },
+      additionalProperties: false,
+    },
+  },
 ];
+
+function captureJsonCommand(fn: () => number): unknown {
+  const captured: string[] = [];
+  const orig = console.log;
+  console.log = (...a) => {
+    captured.push(a.join(' '));
+  };
+  try {
+    const exitCode = fn();
+    const raw = captured.join('\n');
+    let payload: unknown = null;
+    try {
+      payload = raw ? JSON.parse(raw) : null;
+    } catch {
+      payload = raw;
+    }
+    return { exitCode, ...(payload && typeof payload === 'object' ? payload : { output: raw }) };
+  } finally {
+    console.log = orig;
+  }
+}
 
 function toolCall(name: string, args: Record<string, unknown>): unknown {
   const cwd = process.cwd();
@@ -339,6 +403,22 @@ function toolCall(name: string, args: Record<string, unknown>): unknown {
           'have a teammate on standby for hot-fixes',
         ],
       };
+    }
+    case 'replay': {
+      return captureJsonCommand(() => replay({ cwd: String(args.cwd ?? cwd), json: true }));
+    }
+    case 'report': {
+      return captureJsonCommand(() => report({ cwd: String(args.cwd ?? cwd), json: true }));
+    }
+    case 'skills_pin': {
+      return captureJsonCommand(() =>
+        skillsCommand({ subcommand: 'pin', cwd: String(args.cwd ?? cwd) }),
+      );
+    }
+    case 'skills_diff': {
+      return captureJsonCommand(() =>
+        skillsCommand({ subcommand: 'diff', cwd: String(args.cwd ?? cwd) }),
+      );
     }
     default:
       throw new Error('unknown tool: ' + name);

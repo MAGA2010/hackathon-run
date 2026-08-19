@@ -46,19 +46,23 @@ describe('MCP server', () => {
     assert.equal(res[0].result.serverInfo.name, 'hackathon-surgeon');
   });
 
-  it('responds to tools/list with 8 tools', async () => {
+  it('responds to tools/list with 12 tools', async () => {
     const res = await call({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
     assert.equal(res.length, 1);
     const tools = res[0].result.tools;
-    assert.equal(tools.length, 8);
+    assert.equal(tools.length, 12);
     const names = tools.map((t) => t.name);
     assert.ok(names.includes('list_skills'));
     assert.ok(names.includes('get_skill'));
     assert.ok(names.includes('match_skill'));
     assert.ok(names.includes('status'));
+    assert.ok(names.includes('replay'));
+    assert.ok(names.includes('report'));
+    assert.ok(names.includes('skills_pin'));
+    assert.ok(names.includes('skills_diff'));
   });
 
-  it('list_skills returns the 13 bundled skills', async () => {
+  it('list_skills returns the 14 bundled skills', async () => {
     const res = await call({
       jsonrpc: '2.0',
       id: 3,
@@ -78,7 +82,10 @@ describe('MCP server', () => {
     assert.ok(names.includes('retro'));
     assert.ok(names.includes('idea-clarify'));
     assert.ok(names.includes('pivot'));
-    assert.equal(names.length, 13);
+    assert.ok(names.includes('demo-rehearsal'));
+    assert.ok(names.includes('team-roster'));
+    assert.ok(names.includes('decision-log'));
+    assert.equal(names.length, 14);
   });
 
   it('get_skill returns the body of a known skill', async () => {
@@ -172,7 +179,10 @@ describe('MCP server', () => {
       jsonrpc: '2.0',
       id: 11,
       method: 'tools/call',
-      params: { name: 'get_recovery_plan', arguments: { failing_step: 'login', time_remaining_minutes: 5 } },
+      params: {
+        name: 'get_recovery_plan',
+        arguments: { failing_step: 'login', time_remaining_minutes: 5 },
+      },
     });
     const payload = JSON.parse(res[0].result.content[0].text);
     assert.equal(payload.failing_step, 'login');
@@ -189,7 +199,10 @@ describe('MCP server', () => {
     const { join } = await import('node:path');
     const dir = mkdtempSync(join(tmpdir(), 'hs-test-'));
     try {
-      writeFileSync(join(dir, 'SKILL.md'), '---\nname: bad\ndescription: leads with no verb\n---\n# bad\n');
+      writeFileSync(
+        join(dir, 'SKILL.md'),
+        '---\nname: bad\ndescription: leads with no verb\n---\n# bad\n',
+      );
       const res = await call({
         jsonrpc: '2.0',
         id: 12,
@@ -205,7 +218,8 @@ describe('MCP server', () => {
   });
 
   it('apply_skill_advice writes to .hackathon/state/', async () => {
-    const { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } = await import('node:fs');
+    const { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } =
+      await import('node:fs');
     const { tmpdir } = await import('node:os');
     const { join } = await import('node:path');
     const dir = mkdtempSync(join(tmpdir(), 'hs-apply-'));

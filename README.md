@@ -128,7 +128,7 @@ The [skill template](docs/contributing/skill-template.md) is the source of truth
 
 ## License
 
-[MIT](LICENSE) — © 2025 Hackathon Surgeon Contributors
+[MIT](LICENSE) — © 2025-2026 MAGA2010
 
 ---
 

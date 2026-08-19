@@ -83,12 +83,14 @@ nav:
       - 36-Hour Walkthrough: guides/36-hour-walkthrough.md
   - Skills:
       - Overview: skills/index.md
+      - idea-clarify: skills/idea-clarify.md
       - scope-knife: skills/scope-knife.md
       - fast-verify: skills/fast-verify.md
       - demo-coach: skills/demo-coach.md
       - judge-sim: skills/judge-sim.md
       - recovery-runbook: skills/recovery-runbook.md
       - ship-pack: skills/ship-pack.md
+      - pivot: skills/pivot.md
   - Architecture:
       - Overview: architecture/overview.md
       - State Schemas: architecture/state-schemas.md

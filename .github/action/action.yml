@@ -1,0 +1,78 @@
+name: 'Hackathon Surgeon'
+description: 'Run the hackathon-surgeon skill pack in CI: lint skills, validate state, run the matcher, or scaffold a new skill.'
+author: 'MAGA2010 <https://github.com/MAGA2010>'
+
+inputs:
+  command:
+    description: 'Which subcommand to run. One of: validate-skills, validate-state, list, status, match, new-skill.'
+    required: true
+  skill:
+    description: 'For commands that need one (match, new-skill).'
+    required: false
+    default: ''
+  utterance:
+    description: 'For match command.'
+    required: false
+    default: ''
+  cwd:
+    description: 'Working directory; defaults to the workspace root.'
+    required: false
+    default: '.'
+  version:
+    description: 'hackathon-surgeon version to install. Default "latest".'
+    required: false
+    default: 'latest'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install hackathon-surgeon
+      shell: bash
+      run: |
+          if [ "${{ inputs.version }}" = "latest" ]; then
+            npm install -g @maga2010/hackathon-surgeon
+          else
+            npm install -g "@maga2010/hackathon-surgeon@${{ inputs.version }}"
+          fi
+
+    - name: Run
+      shell: bash
+      working-directory: ${{ inputs.cwd }}
+      run: |
+          case "${{ inputs.command }}" in
+            validate-skills)
+              for d in skills/*/; do
+                echo "== $d =="
+                hackathon validate-skill "$d"
+              done
+              ;;
+            validate-state)
+              hackathon validate .hackathon/state
+              ;;
+            list)
+              hackathon list
+              ;;
+            status)
+              hackathon status
+              ;;
+            match)
+              hackathon match "${{ inputs.utterance }}" --debug
+              ;;
+            new-skill)
+              hackathon new-skill "${{ inputs.skill }}"
+              ;;
+            *)
+              echo "::error::unknown command: ${{ inputs.command }}"
+              echo "Valid: validate-skills, validate-state, list, status, match, new-skill"
+              exit 2
+              ;;
+          esac
+
+branding:
+  icon: 'activity'
+  color: 'red'

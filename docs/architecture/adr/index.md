@@ -3,11 +3,12 @@
 This directory contains the ADRs for Hackathon Surgeon. Each captures a
 significant architectural choice, its context, and its consequences.
 
-| ID                                    | Title                                        | Status   |
-| ------------------------------------- | -------------------------------------------- | -------- |
-| [0001](0001-skill-format.md)          | Skill format follows `SKILL.md` convention   | Accepted |
-| [0002](0002-state-filesystem.md)      | State lives in `.hackathon/state/*.json`     | Accepted |
-| [0003](0003-agent-skills-standard.md) | Skills follow the Agent Skills open standard | Accepted |
+| ID                                    | Title                                               | Status   |
+| ------------------------------------- | --------------------------------------------------- | -------- |
+| [0001](0001-skill-format.md)          | Skill format follows `SKILL.md` convention          | Accepted |
+| [0002](0002-state-filesystem.md)      | State lives in `.hackathon/state/*.json`            | Accepted |
+| [0003](0003-agent-skills-standard.md) | Skills follow the Agent Skills open standard        | Accepted |
+| [0004](0004-skill-extensibility.md)   | Skills are extensible via CLI + JSON Schema pairing | Accepted |
 
 ## Adding a new ADR
 

@@ -33,11 +33,13 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [x] **12 MCP tools** — adds replay, report, skills_pin, skills_diff (v0.6.0)
 - [x] **validate-skill hardening** — docstring-safe VERSION pin check + any-flag CLI check (v0.6.0)
 - [x] **118/118 unit tests passing** after v0.6.0 (was 111 after v0.5.0)
+- [x] **Paraphrase-aware fallback matcher** — zero-dep synonym expansion on the no-match path (v0.7.0)
+- [x] **Coverage report in CI** — `npm run test:coverage` with line/branch/function percentages (v0.7.0)
+- [x] **121/121 unit tests passing** after v0.7.0 (was 118 after v0.6.0)
 
-## Now (0.6.x)
+## Now (0.7.x)
 
-- [ ] **Embedding-based fallback matcher** — when token-based score = 0, fall back to a small embedding model (configurable; opt-in). Required because the current matcher fails on paraphrased trigger phrases.
-- [ ] **Codecov + coverage report** in CI once the unit-test suite stabilizes.
+- [ ] **Embedding-based backend** — optional pluggable semantic backend behind `HACKATHON_EMBED_BACKEND` for teams that want real vector similarity; the zero-dep synonym fallback remains the default.
 - [ ] **Re-enable GitHub Pages deployment** — `docs.yml` build step is green; the deploy step needs Pages enabled in repo settings (Source: GitHub Actions).
 
 ## Later (0.7+)

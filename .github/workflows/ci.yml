@@ -48,6 +48,9 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      - name: Unit test coverage
+        run: npm run test:coverage
+
       - name: Validate skill protocol
         run: |
           for d in skills/*/; do
@@ -86,6 +89,3 @@ jobs:
             --time-remaining 240 \
             --out-dir $TMP/repo/.hackathon
           test -f $TMP/repo/.hackathon/state/plan.json
-
-
-

@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-08-19
+
+### Added
+
+- **Paraphrase-aware fallback matcher** — when the token matcher scores 0, `matchSkill` now expands the utterance with a hackathon-domain synonym map (scope, verify, demo, team, retro, stack, decision, recovery, ship, judge, clarify, time) and re-scores. Gibberish still returns no match. This closes the "current matcher fails on paraphrased trigger phrases" gap without adding an embedding dependency.
+- **Coverage report** — `npm run test:coverage` runs the unit suite with Node's `--experimental-test-coverage` and prints line/branch/function percentages. Wired into CI as a separate step.
+- **3 new matcher tests** for synonym rescue, paraphrase mapping, and gibberish fallthrough.
+
+### Changed
+
+- `MatchResult` gains an optional `fallback: true` flag; the rescued candidate's reasons include `synonym expansion`.
+- CI now runs the coverage step after unit tests.
+
+### Compatibility
+
+- No breaking changes. The fallback only activates on the previously no-match path.
+
 ## [0.6.0] - 2026-08-19
 
 ### Added

@@ -8,6 +8,8 @@
  *   status         Show lifecycle state across all 5 state files
  *   doctor         Diagnose environment + state-file health
  *   flow           Run the full 36h pipeline end-to-end
+ *   new-skill <name>  Scaffold a brand-new skill folder
+ *   validate-skill <dir>  Lint a SKILL.md against the protocol
  *   validate [dir] Validate state JSON files against their schemas
  *   run <skill>    Invoke a skill (loads its SKILL.md as guidance for the agent)
  *   match <utterance>  Find the best skill for a user utterance
@@ -22,6 +24,8 @@ import { list } from './commands/list.js';
 import { status } from './commands/status.js';
 import { doctor } from './commands/doctor.js';
 import { flow } from './commands/flow.js';
+import { newSkill } from './commands/new-skill.js';
+import { validateSkill } from './commands/validate-skill.js';
 import { validate } from './commands/validate.js';
 import { loadAllSkills } from '../harness/loader.js';
 import { matchSkill } from '../harness/trigger.js';
@@ -37,6 +41,29 @@ program
   .name('hackathon')
   .description('A decision-making and execution system for hackathon teams.')
   .version(PKG.version);
+
+program
+  .command('new-skill <name>')
+  .description('Scaffold a new skill folder under skills/<name>/')
+  .option('-f, --force', 'overwrite an existing skill folder')
+  .option('--with-scripts', 'include a python script stub (default: yes)')
+  .option('--no-scripts', 'skip the python script stub')
+  .option('--with-tests', 'include an acceptance test stub')
+  .option('-d, --description <text>', 'frontmatter description')
+  .option('-w, --when-to-use <text>', 'frontmatter when_to_use text')
+  .action((name: string, opts) =>
+    process.exit(
+      newSkill({
+        name,
+        cwd: process.cwd(),
+        force: Boolean(opts.force),
+        withScripts: opts.scripts !== false,
+        withTests: Boolean(opts.withTests),
+        description: opts.description,
+        whenToUse: opts.whenToUse,
+      }),
+    ),
+  );
 
 program
   .command('init')
@@ -73,6 +100,14 @@ program
   .option('--json', 'machine-readable JSON output')
   .option('-C, --cwd <path>', 'use a different working directory', process.cwd())
   .action((opts) => process.exit(status({ cwd: opts.cwd, json: Boolean(opts.json) })));
+
+program
+  .command('validate-skill <dir>')
+  .description('Lint a SKILL.md against the Hackathon Surgeon skill protocol')
+  .option('--json', 'machine-readable JSON output')
+  .action((dir: string, opts) =>
+    process.exit(validateSkill({ target: dir, json: Boolean(opts.json) })),
+  );
 
 program
   .command('validate [dir]')

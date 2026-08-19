@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Hackathon TODO Highlighter",
+  "version": "0.1.0",
+  "description": "Highlights TODO items on any page.",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "src/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup.html",
+    "default_title": "Hackathon TODO"
+  }
+}

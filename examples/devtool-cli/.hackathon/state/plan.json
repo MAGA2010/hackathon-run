@@ -1,0 +1,79 @@
+{
+  "version": "1.0",
+  "generated_at": "2025-08-19T00:00:00Z",
+  "demo_goal": "A reviewer pipes sample.json into demo-cli and sees a pretty-printed, timestamped payload.",
+  "time_remaining_minutes": 240,
+  "features": [
+    {
+      "name": "stdin reader",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Core demo path.",
+      "time_estimate_minutes": 10
+    },
+    {
+      "name": "JSON parse + pretty",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Core demo path.",
+      "time_estimate_minutes": 15
+    },
+    {
+      "name": "ISO timestamp prefix",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Differentiator vs jq.",
+      "time_estimate_minutes": 5
+    },
+    {
+      "name": "--no-ts flag",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Nice for scriptable use.",
+      "time_estimate_minutes": 5
+    },
+    {
+      "name": "JSON schema validation",
+      "status": "unimplemented",
+      "classification": "DEFER",
+      "rationale": "Off demo path.",
+      "time_estimate_minutes": 60
+    },
+    {
+      "name": "Color output",
+      "status": "unimplemented",
+      "classification": "DEFER",
+      "rationale": "Off demo path.",
+      "time_estimate_minutes": 30
+    }
+  ],
+  "demo_path": [
+    {
+      "step": 1,
+      "action": "Show package.json with the bin field.",
+      "expected_outcome": "\"demo-cli\" mapped to src/cli.mjs."
+    },
+    {
+      "step": 2,
+      "action": "cat fixtures/sample.json | node src/cli.mjs.",
+      "expected_outcome": "Timestamp + pretty JSON printed; exit 0."
+    },
+    {
+      "step": 3,
+      "action": "cat fixtures/sample.json | node src/cli.mjs --no-ts.",
+      "expected_outcome": "Pretty JSON only; no timestamp."
+    }
+  ],
+  "next_tasks": [
+    {
+      "priority": "P0",
+      "task": "Run smoke script and confirm exit 0.",
+      "estimate_minutes": 2
+    },
+    {
+      "priority": "P1",
+      "task": "Add a README screenshot of the demo output.",
+      "estimate_minutes": 10
+    }
+  ]
+}

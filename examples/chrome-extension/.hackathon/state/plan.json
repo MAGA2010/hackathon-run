@@ -1,0 +1,84 @@
+{
+  "version": "1.0",
+  "generated_at": "2025-08-19T00:00:00Z",
+  "demo_goal": "A reviewer loads the unpacked extension, visits a page with TODO comments, and sees them highlighted.",
+  "time_remaining_minutes": 480,
+  "features": [
+    {
+      "name": "Manifest V3",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Required to load in Chrome.",
+      "time_estimate_minutes": 20
+    },
+    {
+      "name": "Service worker",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Required by MV3.",
+      "time_estimate_minutes": 10
+    },
+    {
+      "name": "Content highlighter",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Core demo path.",
+      "time_estimate_minutes": 45
+    },
+    {
+      "name": "Popup",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Browser-action UI.",
+      "time_estimate_minutes": 15
+    },
+    {
+      "name": "Options page",
+      "status": "unimplemented",
+      "classification": "DEFER",
+      "rationale": "Off demo path.",
+      "time_estimate_minutes": 60
+    },
+    {
+      "name": "Settings storage",
+      "status": "unimplemented",
+      "classification": "DEFER",
+      "rationale": "Settings UI is deferred.",
+      "time_estimate_minutes": 45
+    }
+  ],
+  "demo_path": [
+    {
+      "step": 1,
+      "action": "Open chrome://extensions.",
+      "expected_outcome": "Extensions page renders."
+    },
+    {
+      "step": 2,
+      "action": "Enable Developer mode; click \"Load unpacked\".",
+      "expected_outcome": "File picker opens."
+    },
+    {
+      "step": 3,
+      "action": "Select examples/chrome-extension/.",
+      "expected_outcome": "Extension appears in the list."
+    },
+    {
+      "step": 4,
+      "action": "Visit a page with TODO text.",
+      "expected_outcome": "TODO tokens highlighted in yellow."
+    }
+  ],
+  "next_tasks": [
+    {
+      "priority": "P0",
+      "task": "Verify the extension loads without console errors.",
+      "estimate_minutes": 5
+    },
+    {
+      "priority": "P1",
+      "task": "Add a README screenshot of a highlighted page.",
+      "estimate_minutes": 15
+    }
+  ]
+}

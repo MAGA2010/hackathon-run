@@ -1,0 +1,72 @@
+{
+  "version": "1.0",
+  "generated_at": "2025-08-19T00:00:00Z",
+  "demo_goal": "A reviewer runs the ETL on sample.csv and sees cleaned rows in the output.",
+  "time_remaining_minutes": 360,
+  "features": [
+    {
+      "name": "CSV reader",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Core demo path.",
+      "time_estimate_minutes": 15
+    },
+    {
+      "name": "Row cleaner",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Core demo path.",
+      "time_estimate_minutes": 30
+    },
+    {
+      "name": "TSV writer",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "No external deps for the demo.",
+      "time_estimate_minutes": 15
+    },
+    {
+      "name": "Parquet output",
+      "status": "unimplemented",
+      "classification": "DEFER",
+      "rationale": "Requires pyarrow; not on demo path.",
+      "time_estimate_minutes": 60
+    },
+    {
+      "name": "CLI argparse",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Required to invoke from the smoke script.",
+      "time_estimate_minutes": 10
+    }
+  ],
+  "demo_path": [
+    {
+      "step": 1,
+      "action": "Open data/sample.csv in a viewer.",
+      "expected_outcome": "20 rows visible."
+    },
+    {
+      "step": 2,
+      "action": "Run python3 src/etl.py --in data/sample.csv --out /tmp/out.tsv.",
+      "expected_outcome": "Pipeline exits 0; prints kept count."
+    },
+    {
+      "step": 3,
+      "action": "Open /tmp/out.tsv.",
+      "expected_outcome": "Header + cleaned rows; bad rows dropped."
+    }
+  ],
+  "next_tasks": [
+    {
+      "priority": "P0",
+      "task": "Confirm smoke script runs end-to-end on a clean box.",
+      "estimate_minutes": 5
+    },
+    {
+      "priority": "P1",
+      "task": "Add a README screenshot of the output TSV.",
+      "estimate_minutes": 15
+    }
+  ]
+}

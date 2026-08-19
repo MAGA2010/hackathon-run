@@ -1,0 +1,2 @@
+# data-eng uses Python stdlib only.
+# No external dependencies for the demo path.

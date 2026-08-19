@@ -1,0 +1,15 @@
+{
+  "name": "@example/devtool-cli",
+  "version": "0.1.0",
+  "description": "A tiny demo CLI used by Hackathon Surgeon to demo the cli flow.",
+  "type": "module",
+  "bin": {
+    "demo-cli": "src/cli.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "smoke": "node scripts/smoke.mjs"
+  }
+}

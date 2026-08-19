@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# test_ship_pack.sh
+# All paths are POSIX. Python on Windows accepts forward slashes, so we don't
+# need cygpath -w. This keeps the script portable between Git Bash on Windows
+# and bash on Linux CI.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
@@ -9,11 +13,6 @@ fail() { echo "  [ERR] $1 (line $LINENO in test_ship_pack.sh)"; echo "  last com
 section() { echo; echo "## $1"; }
 
 BASH_TMP="$(mktemp -d)"
-if command -v cygpath >/dev/null 2>&1; then
-  WIN_TMP="$(cygpath -w "$BASH_TMP")"
-else
-  WIN_TMP="$BASH_TMP"  # POSIX path on Linux CI
-fi
 trap "rm -rf $BASH_TMP" EXIT
 
 # Repo A: clean repo with README
@@ -49,10 +48,10 @@ echo "API_KEY=\"sk-deadbeef0123456789abcdef\"" > "$REPO_B/src/config.ts"
 
 section "Acceptance: clean repo yields clean=true"
 "$PY" "$ROOT/skills/ship-pack/scripts/audit.py" --repo-root "$REPO_A" --out-dir "$REPO_A/.hackathon" >/dev/null
-WIN_A="$WIN_TMP\\clean\\.hackathon\\state\\ship.json"
+JSON_A="$REPO_A/.hackathon/state/ship.json"
 python3 -c "
 import json
-d = json.load(open(r'$WIN_A'))
+d = json.load(open(r'$JSON_A'))
 assert d['secret_scan']['clean'] is True
 "
 pass "clean repo -> clean=true"
@@ -62,10 +61,10 @@ section "Acceptance: leaky repo yields clean=false"
 if "$PY" "$ROOT/skills/ship-pack/scripts/audit.py" --repo-root "$REPO_B" --out-dir "$REPO_B/.hackathon" >/dev/null 2>&1; then
   fail "leaky repo should exit non-zero"
 fi
-WIN_B="$WIN_TMP\\leaky\\.hackathon\\state\\ship.json"
+JSON_B="$REPO_B/.hackathon/state/ship.json"
 python3 -c "
 import json
-d = json.load(open(r'$WIN_B'))
+d = json.load(open(r'$JSON_B'))
 assert d['secret_scan']['clean'] is False
 assert len(d['secret_scan']['findings']) >= 1
 "
@@ -74,7 +73,7 @@ pass "leaky repo -> clean=false, exit != 0"
 section "Acceptance: README checks mark sections present"
 python3 -c "
 import json
-d = json.load(open(r'$WIN_A'))
+d = json.load(open(r'$JSON_A'))
 present = set(d['readme']['present'])
 assert 'name' in present
 assert 'install' in present
@@ -88,7 +87,7 @@ pass "all README sections detected"
 section "Acceptance: checklist has passed and failed entries"
 python3 -c "
 import json
-d = json.load(open(r'$WIN_A'))
+d = json.load(open(r'$JSON_A'))
 assert 'passed' in d['checklist'] and 'failed' in d['checklist']
 assert 'readme' in d['checklist']['passed']
 "
@@ -97,7 +96,7 @@ pass "checklist split into passed/failed"
 section "Acceptance: packaging command excludes secrets"
 python3 -c "
 import json
-d = json.load(open(r'$WIN_A'))
+d = json.load(open(r'$JSON_A'))
 cmd = d['packaging_command']
 for token in ('.env', 'node_modules', 'dist', '.git', '--exclude'):
     assert token in cmd, f'missing {token}'

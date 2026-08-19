@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# test_recovery_runbook.sh
+# All paths are POSIX. Python on Windows accepts forward slashes, so we don't
+# need cygpath -w. This keeps the script portable between Git Bash on Windows
+# and bash on Linux CI.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
@@ -9,11 +13,6 @@ fail() { echo "  [ERR] $1 (line $LINENO in test_recovery_runbook.sh)"; echo "  l
 section() { echo; echo "## $1"; }
 
 BASH_TMP="$(mktemp -d)"
-if command -v cygpath >/dev/null 2>&1; then
-  WIN_TMP="$(cygpath -w "$BASH_TMP")"
-else
-  WIN_TMP="$BASH_TMP"  # POSIX path on Linux CI
-fi
 trap "rm -rf $BASH_TMP" EXIT
 
 OUT="$BASH_TMP/out"
@@ -29,10 +28,10 @@ pass "fallback for every severity"
 
 section "Acceptance: 30-second script fits within 30s + 5s slack"
 for sev in P0 P1 P2 P3; do
-  win_md="$WIN_TMP\\out\\$sev\\artifacts\\recovery-runbook.md"
+  md="$OUT/$sev/artifacts/recovery-runbook.md"
   python3 -c "
 import re, sys
-text = open(r'$win_md').read()
+text = open(r'$md').read()
 m = re.search(r'Total: (\d+)s', text)
 total = int(m.group(1))
 sev = '$sev'
@@ -43,26 +42,26 @@ done
 pass "all severities fit"
 
 section "Acceptance: provides DO / SAY / NOT for the failure"
-WIN_P0="$WIN_TMP\\out\\P0\\artifacts\\recovery-runbook.md"
-grep -q "DO\*\*:" "$WIN_P0" || fail "missing DO"
-grep -q "SAY\*\*:" "$WIN_P0" || fail "missing SAY"
-grep -q "NOT\*\*:" "$WIN_P0" || fail "missing NOT"
+MD_P0="$OUT/P0/artifacts/recovery-runbook.md"
+grep -q "DO\*\*:" "$MD_P0" || fail "missing DO"
+grep -q "SAY\*\*:" "$MD_P0" || fail "missing SAY"
+grep -q "NOT\*\*:" "$MD_P0" || fail "missing NOT"
 pass "DO / SAY / NOT present"
 
 section "Acceptance: includes off-stage recovery steps"
-grep -q "lsof" "$WIN_P0" || fail "missing port check"
-grep -q ".env" "$WIN_P0" || fail "missing env check"
+grep -q "lsof" "$MD_P0" || fail "missing port check"
+grep -q ".env" "$MD_P0" || fail "missing env check"
 pass "recovery steps included"
 
 section "Acceptance: prioritizes demo continuity over debugging"
-grep -q "Do not debug" "$WIN_P0" || fail "missing anti-debug guidance"
+grep -q "Do not debug" "$MD_P0" || fail "missing anti-debug guidance"
 pass "no-live-debugging rule honored"
 
 section "Acceptance: recovery.json is valid JSON"
-WIN_REC="$WIN_TMP\\out\\P0\\state\\recovery.json"
+REC="$OUT/P0/state/recovery.json"
 python3 -c "
 import json
-d = json.load(open(r'$WIN_REC'))
+d = json.load(open(r'$REC'))
 assert d['severity'] == 'P0'
 assert 'fallback' in d
 assert 'script' in d

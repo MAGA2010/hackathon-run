@@ -43,7 +43,7 @@ const REQUIRED_SECTIONS = [
 ];
 
 const ACTION_VERB_LEAD =
-  /^(force|run|generate|emit|produce|detect|simulate|classify|score|audit|scan|ship|recover|list|review|cut|verify|demo|coach|build|write|recommend|suggest|draft|prioritize|prioritise|trim|narrow|expand|identify|find|spot|trace|pick|choose|select|surface|reshape|rebuild|pivot|clarif|prioritis|verif|verifi)(?:s|es|ies|ied|ing|ed)?\b/i;
+  /^(force|run|generate|emit|produce|detect|simulate|classify|score|audit|scan|ship|recover|list|review|cut|verify|demo|coach|build|write|recommend|suggest|draft|prioritize|prioritise|trim|narrow|expand|identify|find|spot|trace|pick|choose|select|surface|reshape|rebuild|pivot|clarif|prioritis|verif|verifi|allocate|retro|retrospect|bootstrap)(?:s|es|ies|ied|ing|ed)?\b/i;
 
 function checkSkill(skillDir: string, cwd: string): Finding[] {
   const out: Finding[] = [];

@@ -46,11 +46,11 @@ describe('MCP server', () => {
     assert.equal(res[0].result.serverInfo.name, 'hackathon-surgeon');
   });
 
-  it('responds to tools/list with 4 tools', async () => {
+  it('responds to tools/list with 8 tools', async () => {
     const res = await call({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
     assert.equal(res.length, 1);
     const tools = res[0].result.tools;
-    assert.equal(tools.length, 4);
+    assert.equal(tools.length, 8);
     const names = tools.map((t) => t.name);
     assert.ok(names.includes('list_skills'));
     assert.ok(names.includes('get_skill'));
@@ -58,7 +58,7 @@ describe('MCP server', () => {
     assert.ok(names.includes('status'));
   });
 
-  it('list_skills returns the 6 bundled skills', async () => {
+  it('list_skills returns the 11 bundled skills', async () => {
     const res = await call({
       jsonrpc: '2.0',
       id: 3,
@@ -73,6 +73,12 @@ describe('MCP server', () => {
     assert.ok(names.includes('judge-sim'));
     assert.ok(names.includes('ship-pack'));
     assert.ok(names.includes('recovery-runbook'));
+    assert.ok(names.includes('time-box'));
+    assert.ok(names.includes('stack-picker'));
+    assert.ok(names.includes('retro'));
+    assert.ok(names.includes('idea-clarify'));
+    assert.ok(names.includes('pivot'));
+    assert.equal(names.length, 11);
   });
 
   it('get_skill returns the body of a known skill', async () => {
@@ -118,5 +124,120 @@ describe('MCP server', () => {
   it('returns method-not-found for unknown methods', async () => {
     const res = await call({ jsonrpc: '2.0', id: 7, method: 'no/such/method' });
     assert.equal(res[0].error.code, -32601);
+  });
+
+  it('serverInfo.version matches package.json', async () => {
+    const { readFileSync } = await import('node:fs');
+    const res = await call({ jsonrpc: '2.0', id: 8, method: 'initialize', params: {} });
+    const pkg = JSON.parse(readFileSync(ROOT + '/package.json', 'utf8'));
+    assert.equal(res[0].result.serverInfo.version, pkg.version);
+  });
+
+  it('list_examples returns the 6 bundled example projects', async () => {
+    const res = await call({
+      jsonrpc: '2.0',
+      id: 9,
+      method: 'tools/call',
+      params: { name: 'list_examples', arguments: {} },
+    });
+    const payload = JSON.parse(res[0].result.content[0].text);
+    const names = payload.examples.map((e) => e.name);
+    assert.ok(names.includes('web-app'));
+    assert.ok(names.includes('ai-ml'));
+    assert.ok(names.includes('mobile'));
+    assert.ok(names.includes('data-eng'));
+    assert.ok(names.includes('chrome-extension'));
+    assert.ok(names.includes('devtool-cli'));
+    for (const ex of payload.examples) {
+      assert.ok(ex.has_state === true);
+    }
+  });
+
+  it('list_examples supports stack filter', async () => {
+    const res = await call({
+      jsonrpc: '2.0',
+      id: 10,
+      method: 'tools/call',
+      params: { name: 'list_examples', arguments: { stack: 'python' } },
+    });
+    const payload = JSON.parse(res[0].result.content[0].text);
+    assert.ok(payload.examples.length >= 1);
+    for (const ex of payload.examples) {
+      assert.ok(ex.stack.includes('python'), 'stack=' + ex.stack);
+    }
+  });
+
+  it('get_recovery_plan returns the fallback script + decision tree', async () => {
+    const res = await call({
+      jsonrpc: '2.0',
+      id: 11,
+      method: 'tools/call',
+      params: { name: 'get_recovery_plan', arguments: { failing_step: 'login', time_remaining_minutes: 5 } },
+    });
+    const payload = JSON.parse(res[0].result.content[0].text);
+    assert.equal(payload.failing_step, 'login');
+    assert.equal(payload.time_remaining_minutes, 5);
+    assert.ok(Array.isArray(payload.fallback_script));
+    assert.ok(payload.fallback_script.length >= 3);
+    assert.ok(payload.decision_tree);
+    assert.ok(Array.isArray(payload.checklist));
+  });
+
+  it('validate_skill lints a known-bad skill directory', async () => {
+    const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'hs-test-'));
+    try {
+      writeFileSync(join(dir, 'SKILL.md'), '---\nname: bad\ndescription: leads with no verb\n---\n# bad\n');
+      const res = await call({
+        jsonrpc: '2.0',
+        id: 12,
+        method: 'tools/call',
+        params: { name: 'validate_skill', arguments: { target: dir } },
+      });
+      const payload = JSON.parse(res[0].result.content[0].text);
+      assert.equal(payload.target, dir);
+      assert.equal(payload.exitCode, 1);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('apply_skill_advice writes to .hackathon/state/', async () => {
+    const { mkdtempSync, writeFileSync, rmSync, readFileSync, existsSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'hs-apply-'));
+    try {
+      const res = await call({
+        jsonrpc: '2.0',
+        id: 13,
+        method: 'tools/call',
+        params: {
+          name: 'apply_skill_advice',
+          arguments: {
+            state_file: 'plan',
+            payload: {
+              version: '1.0',
+              generated_at: '2025-01-01T00:00:00Z',
+              demo_goal: 'test',
+              time_remaining_minutes: 60,
+              features: [],
+              demo_path: [],
+              next_tasks: [],
+            },
+            cwd: dir,
+          },
+        },
+      });
+      const payload = JSON.parse(res[0].result.content[0].text);
+      assert.ok(payload.wrote.includes('.hackathon') && payload.wrote.includes('plan.json'));
+      assert.ok(existsSync(payload.wrote));
+      const written = JSON.parse(readFileSync(payload.wrote, 'utf8'));
+      assert.equal(written.demo_goal, 'test');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

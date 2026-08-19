@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 """
+
+VERSION = "1.0"
+
 classify.py — turn a feature inventory into KEEP/CUT/DEFER decisions under
 time pressure.
 

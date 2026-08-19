@@ -21,6 +21,7 @@
  * the value; the MCP wrapper is a thin transport.
  */
 
+import { fileURLToPath } from 'node:url';
 import { loadAllSkills } from '../harness/loader.js';
 import { matchSkill } from '../harness/trigger.js';
 import { status } from '../cli/commands/status.js';
@@ -201,7 +202,7 @@ function handleRequest(req: JsonRpcRequest): JsonRpcResponse | null {
   }
 }
 
-function main() {
+export function startMcpServer() {
   let buffer = '';
   process.stdin.setEncoding('utf-8');
   process.stdin.on('data', (chunk) => {
@@ -227,4 +228,8 @@ function main() {
   process.stdin.on('end', () => process.exit(0));
 }
 
-main();
+// Auto-start when invoked directly: `node dist/mcp/server.js` (or via the MCP test harness).
+// Using pathToFileURL is the only reliable way to compare on Windows where process.argv[1] has backslashes + spaces.
+import { pathToFileURL } from 'node:url';
+const invokedDirectly = process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url;
+if (invokedDirectly) startMcpServer();

@@ -31,6 +31,7 @@ import { validateSkill } from './commands/validate-skill.js';
 import { validate } from './commands/validate.js';
 import { loadAllSkills } from '../harness/loader.js';
 import { matchSkill } from '../harness/trigger.js';
+import { startMcpServer } from '../mcp/server.js';
 
 const PKG = JSON.parse(
   await import('node:fs').then((fs) =>
@@ -124,6 +125,11 @@ program
   .command('validate [dir]')
   .description('Validate state JSON files against their schemas')
   .action((dir) => process.exit(validate(dir ?? '.hackathon/state')));
+
+program
+  .command('mcp')
+  .description('Start the Model Context Protocol (MCP) server on stdio (JSON-RPC 2.0)')
+  .action(() => startMcpServer());
 
 program
   .command('run <skill>')

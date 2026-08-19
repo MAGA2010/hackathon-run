@@ -8,6 +8,7 @@
  *   status         Show lifecycle state across all 5 state files
  *   doctor         Diagnose environment + state-file health
  *   flow           Run the full 36h pipeline end-to-end
+ *   diff <a> <b>    Compare two state files or state dirs
  *   new-skill <name>  Scaffold a brand-new skill folder
  *   validate-skill <dir>  Lint a SKILL.md against the protocol
  *   validate [dir] Validate state JSON files against their schemas
@@ -24,6 +25,7 @@ import { list } from './commands/list.js';
 import { status } from './commands/status.js';
 import { doctor } from './commands/doctor.js';
 import { flow } from './commands/flow.js';
+import { diff } from './commands/diff.js';
 import { newSkill } from './commands/new-skill.js';
 import { validateSkill } from './commands/validate-skill.js';
 import { validate } from './commands/validate.js';
@@ -63,6 +65,15 @@ program
         whenToUse: opts.whenToUse,
       }),
     ),
+  );
+
+program
+  .command('diff <a> <b>')
+  .description('Compare two state files or .hackathon/state/ directories')
+  .option('--stat', 'only print counts, not per-field diffs')
+  .option('--json', 'machine-readable JSON output')
+  .action((a: string, b: string, opts) =>
+    process.exit(diff({ a, b, stat: Boolean(opts.stat), json: Boolean(opts.json) })),
   );
 
 program

@@ -10,6 +10,10 @@
     "version": { "const": "1.0" },
     "generated_at": { "type": "string", "format": "date-time" },
     "verify_was_failing": { "type": "boolean" },
+    "judge_source": {
+      "enum": ["heuristic", "llm", "heuristic-fallback"]
+    },
+    "judge_backend": { "type": "string" },
     "dimensions": {
       "type": "array",
       "minItems": 7,

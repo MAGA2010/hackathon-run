@@ -16,6 +16,8 @@ import argparse
 import json
 import os
 import sys
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -31,6 +33,40 @@ DIMENSIONS = [
     "business_value",
     "submission_readiness",
 ]
+
+DEFAULT_QUESTIONS = {
+    "problem_clarity": [
+        "What problem does this solve and for whom?",
+        "Who is the target user?",
+    ],
+    "originality": [
+        "What is novel compared to existing solutions?",
+        "What does this do that existing tools cannot?",
+    ],
+    "completeness": [
+        "Does the demo actually run end-to-end?",
+        "Did you run the demo from a clean clone?",
+    ],
+    "technical_depth": [
+        "What was the hardest engineering decision?",
+        "What tradeoff did you accept to ship in time?",
+    ],
+    "demo_quality": [
+        "Can you summarize what you built in 30 seconds?",
+        "What is the single best moment in the demo?",
+    ],
+    "business_value": [
+        "Who would pay for this and why?",
+        "What is the beachhead user segment?",
+    ],
+    "submission_readiness": [
+        "Can a stranger clone and run your project in 5 minutes?",
+        "What secrets or keys must not be committed?",
+    ],
+}
+
+JUDGE_BACKEND_ENV = "HACKATHON_JUDGE_BACKEND"
+JUDGE_TIMEOUT_ENV = "HACKATHON_JUDGE_TIMEOUT_SECONDS"
 
 
 def read_state(path: str) -> dict | None:
@@ -115,7 +151,18 @@ def heuristic_score(dim: str, plan: dict | None, demo: dict | None,
         improvements.append("Run ship-pack before submission.")
         questions.append("Can a stranger clone and run your project in 5 minutes?")
 
+    questions = pad_questions(dim, questions)
     return score, deduction, questions, improvements
+
+
+def pad_questions(dim: str, questions: list[str]) -> list[str]:
+    """Guarantee the review schema's 2..3 question range per dimension."""
+    for default in DEFAULT_QUESTIONS.get(dim, []):
+        if len(questions) >= 3:
+            break
+        if default not in questions:
+            questions.append(default)
+    return questions[:3]
 
 
 def cap_on_failure(scores: list[dict], failing: bool) -> list[dict]:
@@ -151,6 +198,67 @@ def build_fix_priorities(scores: list[dict]) -> dict:
     }
 
 
+def remote_judge(backend: str, plan: dict | None, demo: dict | None,
+                 verify: dict | None, failing: bool) -> dict | None:
+    """Ask an HTTP LLM judge for scores; return None on any failure.
+
+    The backend contract is intentionally small: POST the state inputs and
+    expect a JSON object with a `dimensions` list matching DIMENSIONS order,
+    each item carrying `score` (0..5) plus optional rationale fields.
+    `overall` is computed from the returned dimensions when omitted.
+    """
+    payload = {
+        "plan": plan,
+        "demo": demo,
+        "verify": verify,
+        "verify_was_failing": failing,
+        "dimensions": DIMENSIONS,
+    }
+    try:
+        timeout = float(os.environ.get(JUDGE_TIMEOUT_ENV, "3") or "3")
+    except ValueError:
+        timeout = 3.0
+    request = urllib.request.Request(
+        backend,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as resp:
+            body = resp.read().decode("utf-8")
+            if resp.status < 200 or resp.status >= 300:
+                return None
+            result = json.loads(body)
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+        return None
+
+    dims = result.get("dimensions")
+    if not isinstance(dims, list) or len(dims) != len(DIMENSIONS):
+        return None
+    normalized = []
+    for i, d in enumerate(dims):
+        if not isinstance(d, dict):
+            return None
+        score = d.get("score")
+        if not isinstance(score, (int, float)) or not 0 <= score <= 5:
+            return None
+        normalized.append({
+            "name": DIMENSIONS[i],
+            "score": int(score),
+            "deduction_reason": str(d.get("deduction_reason") or "LLM judge provided no rationale."),
+            "judge_questions": pad_questions(
+                DIMENSIONS[i],
+                [str(q) for q in d.get("judge_questions", [])],
+            ),
+            "improvements": [str(i) for i in d.get("improvements", [])],
+        })
+    overall = result.get("overall")
+    if not isinstance(overall, (int, float)):
+        overall = round(sum(x["score"] for x in normalized) / len(normalized), 2)
+    return {"dimensions": normalized, "overall": round(float(overall), 2)}
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--repo-root", required=True)
@@ -179,6 +287,24 @@ def main() -> int:
     dimensions = cap_on_failure(dimensions, failing)
     overall = round(sum(d["score"] for d in dimensions) / len(dimensions), 2)
 
+    judge_backend = os.environ.get(JUDGE_BACKEND_ENV, "").strip()
+    judge_source = "heuristic"
+    judge_url = None
+    if judge_backend:
+        remote = remote_judge(judge_backend, plan, demo, verify, failing)
+        if remote is not None:
+            dimensions = cap_on_failure(remote["dimensions"], failing)
+            overall = remote["overall"]
+            judge_source = "llm"
+            judge_url = judge_backend
+        else:
+            print(
+                f"warn: LLM judge backend unreachable; using heuristic scores "
+                f"(set {JUDGE_BACKEND_ENV} to an HTTP endpoint)",
+                file=sys.stderr,
+            )
+            judge_source = "heuristic-fallback"
+
     result = {
         "version": "1.0",
         "generated_at": datetime.now(timezone.utc).isoformat(),
@@ -186,7 +312,10 @@ def main() -> int:
         "dimensions": dimensions,
         "overall": overall,
         "fix_priorities": build_fix_priorities(dimensions),
+        "judge_source": judge_source,
     }
+    if judge_url:
+        result["judge_backend"] = judge_url
 
     os.makedirs(state_dir, exist_ok=True)
     artifact_dir = os.path.join(args.out_dir, "artifacts")

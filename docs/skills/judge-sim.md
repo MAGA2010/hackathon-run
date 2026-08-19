@@ -7,11 +7,12 @@ After demo-coach produces a script, run this skill to predict judge feedback. Ru
 
 ## Inputs
 
-| Field                        | Type         | Required | Description                        |
-| ---------------------------- | ------------ | -------- | ---------------------------------- |
-| `.hackathon/state/demo.json` | file         | required | the pitch script under evaluation  |
-| `.hackathon/state/plan.json` | file         | required | to cross-check demo_path coverage  |
-| `panel_size`                 | integer 3..7 | optional | default 5; one judge per dimension |
+| Field                        | Type         | Required | Description                                      |
+| ---------------------------- | ------------ | -------- | ------------------------------------------------ |
+| `.hackathon/state/demo.json` | file         | required | the pitch script under evaluation                |
+| `.hackathon/state/plan.json` | file         | required | to cross-check demo_path coverage                |
+| `panel_size`                 | integer 3..7 | optional | default 5; one judge per dimension               |
+| `HACKATHON_JUDGE_BACKEND`    | URL          | optional | HTTP LLM judge; fallback to heuristic on failure |
 
 ## Outputs
 

@@ -20,6 +20,8 @@ Required:
 Optional:
 
 - `time_remaining_minutes`: influences the fix priority list
+- `HACKATHON_JUDGE_BACKEND`: optional HTTP endpoint for an LLM judge; the script POSTs the state inputs and uses the returned scores. Any failure falls back to the heuristic scorer.
+- `HACKATHON_JUDGE_TIMEOUT_SECONDS`: request timeout for the backend (default 3).
 
 ## Execution
 

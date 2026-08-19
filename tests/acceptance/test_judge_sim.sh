@@ -86,8 +86,21 @@ assert abs(overall - round(mean, 2)) < 0.01, f'{overall} vs {mean}'
 "
 pass "overall is mean of dimensions"
 
+section "Acceptance: LLM judge backend falls back when unreachable"
+HACKATHON_JUDGE_BACKEND="http://127.0.0.1:1" \
+    "$PY" "$ROOT/skills/judge-sim/scripts/score.py" --repo-root "$REPO" --out-dir "$OUT" >/dev/null 2>/dev/null
+python3 -c "
+import json
+d = json.load(open(r'$REVIEW'))
+assert d['judge_source'] == 'heuristic-fallback', d['judge_source']
+assert len(d['dimensions']) == 7
+for x in d['dimensions']:
+    assert 2 <= len(x['judge_questions']) <= 3, (x['name'], len(x['judge_questions']))
+"
+pass "unreachable backend yields heuristic-fallback with valid question counts"
+
 section "Acceptance: review.json validates against schema"
-node "$ROOT/dist/cli/commands/validate.js" "$OUT/state" >/dev/null
+node "$ROOT/dist/cli/index.js" validate "$OUT/state" >/dev/null
 pass "schema validation passes"
 
 echo

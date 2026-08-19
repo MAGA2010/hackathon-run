@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "started_at": "2025-04-19T10:30:00Z",
+  "finished_at": "2025-04-19T10:31:42Z",
+  "status": "pass",
+  "steps": [
+    {"step": 1, "action": "Open the demo URL.",
+     "command": "curl -fsS http://localhost:3000",
+     "expected_outcome": "200 OK",
+     "actual_outcome": "<html>...</html>",
+     "status": "pass",
+     "duration_seconds": 0.42},
+    {"step": 2, "action": "Click Sign Up.",
+     "command": "curl -fsS -X POST http://localhost:3000/api/auth/signup",
+     "expected_outcome": "200 OK",
+     "actual_outcome": "user created",
+     "status": "pass",
+     "duration_seconds": 0.85},
+    {"step": 3, "action": "Create a note.",
+     "command": "curl -fsS -X POST http://localhost:3000/api/notes",
+     "expected_outcome": "note id returned",
+     "actual_outcome": "{\"id\":\"n_abc\"}",
+     "status": "pass",
+     "duration_seconds": 0.31},
+    {"step": 4, "action": "Switch to mobile in another tab.",
+     "command": "curl -fsS http://localhost:3000/api/notes?user=me",
+     "expected_outcome": "notes list contains new note",
+     "actual_outcome": "1 note",
+     "status": "pass",
+     "duration_seconds": 0.28}
+  ]
+}

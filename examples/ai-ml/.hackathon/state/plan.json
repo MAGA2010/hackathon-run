@@ -1,0 +1,24 @@
+{
+  "version": "1.0",
+  "generated_at": "2025-05-10T09:00:00Z",
+  "demo_goal": "A user uploads a 20-page PDF and gets a 5-bullet summary in 8 seconds.",
+  "time_remaining_minutes": 240,
+  "features": [
+    {"name": "PDF upload", "status": "implemented", "classification": "KEEP", "rationale": "Entry point.", "time_estimate_minutes": 30},
+    {"name": "LLM call", "status": "implemented", "classification": "KEEP", "rationale": "Core value.", "time_estimate_minutes": 60},
+    {"name": "Summary view", "status": "half-implemented", "classification": "KEEP", "rationale": "Demo path.", "time_estimate_minutes": 90},
+    {"name": "Model card", "status": "unimplemented", "classification": "DEFER", "rationale": "Polished post-demo.", "time_estimate_minutes": 60},
+    {"name": "Cost dashboard", "status": "unimplemented", "classification": "CUT", "rationale": "Not on demo path.", "time_estimate_minutes": 120},
+    {"name": "Multi-language", "status": "unimplemented", "classification": "CUT", "rationale": "Stretch goal.", "time_estimate_minutes": 240}
+  ],
+  "demo_path": [
+    {"step": 1, "action": "Open the app.", "expected_outcome": "Upload widget visible."},
+    {"step": 2, "action": "Upload sample.pdf.", "expected_outcome": "Upload completes."},
+    {"step": 3, "action": "Click 'Summarize'.", "expected_outcome": "5 bullets appear in 8s."}
+  ],
+  "next_tasks": [
+    {"priority": "P0", "task": "Verify demo path end-to-end.", "estimate_minutes": 30},
+    {"priority": "P0", "task": "Polish Summary view.", "estimate_minutes": 90},
+    {"priority": "P1", "task": "Add the model card post-demo.", "estimate_minutes": 60}
+  ]
+}

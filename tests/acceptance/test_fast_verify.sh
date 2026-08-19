@@ -6,7 +6,8 @@ ROOT="$(cd "$HERE/../.." && pwd)"
 PY="${PYTHON:-python3}"
 
 pass() { echo "  [OK] $1"; }
-fail() { echo "  [ERR] $1"; exit 1; }
+fail() { echo "  [ERR] $1 (line $LINENO in test_fast_verify.sh)"; echo "  last command: $BASH_COMMAND"; exit 1; }
+
 section() { echo; echo "## $1"; }
 
 section "Acceptance: verify_step.py classifies a passing command"

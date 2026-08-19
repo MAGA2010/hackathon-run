@@ -4,7 +4,8 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
 PY="${PYTHON:-python3}"
 pass() { echo "  PASS $1"; }
-fail() { echo "  FAIL $1"; exit 1; }
+fail() { echo "  [ERR] $1 (line $LINENO in test_judge_sim.sh)"; echo "  last command: $BASH_COMMAND"; exit 1; }
+
 section() { echo; echo "## $1"; }
 
 BASH_TMP="$(mktemp -d)"

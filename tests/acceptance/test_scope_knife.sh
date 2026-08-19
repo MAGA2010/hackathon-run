@@ -9,7 +9,8 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 pass() { echo "  [OK] $1"; }
-fail() { echo "  [ERR] $1"; exit 1; }
+fail() { echo "  [ERR] $1 (line $LINENO in test_scope_knife.sh)"; echo "  last command: $BASH_COMMAND"; exit 1; }
+
 section() { echo; echo "## $1"; }
 
 PY="${PYTHON:-python3}"

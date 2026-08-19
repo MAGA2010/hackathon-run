@@ -1,6 +1,6 @@
 {
   "name": "@maga2010/hackathon-surgeon",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "A decision-making and execution system for hackathon teams operating under time pressure.",
   "type": "module",
   "main": "dist/index.js",
@@ -28,7 +28,7 @@
     "test:integration": "npm run build --silent && node scripts/run-sh.mjs tests/run-integration.sh",
     "test:unit": "npm run build --silent && node --test tests/unit/*.test.mjs",
     "test:coverage": "npm run build --silent && node --test --experimental-test-coverage tests/unit/*.test.mjs",
-    "validate": "npm run build --silent && node dist/cli/commands/validate.js",
+    "validate": "npm run build --silent && node dist/cli/index.js validate",
     "dogfood": "node scripts/run-sh.mjs scripts/dogfood.sh",
     "release": "node scripts/run-sh.mjs scripts/release.sh",
     "mcp": "node dist/mcp/server.js"

@@ -55,7 +55,7 @@ test -f "$OUT/state/ship.json" || fail "ship.json missing"
 pass "ship.json written"
 
 section "all state files validate against schemas"
-node "$ROOT/dist/cli/commands/validate.js" "$OUT/state"
+node "$ROOT/dist/cli/index.js" validate "$OUT/state"
 pass "all schemas valid"
 
 echo

@@ -36,8 +36,11 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [x] **Paraphrase-aware fallback matcher** — zero-dep synonym expansion on the no-match path (v0.7.0)
 - [x] **Coverage report in CI** — `npm run test:coverage` with line/branch/function percentages (v0.7.0)
 - [x] **121/121 unit tests passing** after v0.7.0 (was 118 after v0.6.0)
+- [x] **LLM judge backend** — `HACKATHON_JUDGE_BACKEND` in judge-sim with heuristic fallback (v0.8.0)
+- [x] **Ship webhook** — `HACKATHON_SHIP_WEBHOOK` in ship-pack, non-fatal delivery (v0.8.0)
+- [x] **Validation no-op fix** — `validate` now routes through the real CLI; `judge_questions` minItems fixed (v0.8.0)
 
-## Now (0.7.x)
+## Now (0.8.x)
 
 - [ ] **Embedding-based backend** — optional pluggable semantic backend behind `HACKATHON_EMBED_BACKEND` for teams that want real vector similarity; the zero-dep synonym fallback remains the default.
 - [ ] **Re-enable GitHub Pages deployment** — `docs.yml` build step is green; the deploy step needs Pages enabled in repo settings (Source: GitHub Actions).
@@ -47,7 +50,7 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [ ] **Typed CLI options** — replace `any` args in `run` with per-skill option specs derived from the skill's input contract section.
 - [ ] **VS Code extension** that surfaces the `hackathon status` lifecycle in the status bar.
 - [ ] **Discord / Slack webhook** that posts `ship-pack` results to a team channel.
-- [ ] **LLM grader integration** for `judge-sim` — currently heuristic; teams that want a real LLM judge should be able to plug one in via a `HACKATHON_JUDGE_BACKEND=http://...` env var.
+- [ ] **Typed LLM judge protocol** — document a stricter request/response schema for `HACKATHON_JUDGE_BACKEND` providers and add an example adapter.
 
 ## Won't do (out of scope)
 

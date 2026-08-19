@@ -79,7 +79,7 @@ for s in d['steps']:
 pass "risks array on every step"
 
 section "Acceptance: demo.json validates against schema"
-node "$ROOT/dist/cli/commands/validate.js" "$out_dir/state" >/dev/null
+node "$ROOT/dist/cli/index.js" validate "$out_dir/state" >/dev/null
 [ $? -eq 0 ] || fail "schema validation"
 pass "schema validation passes"
 

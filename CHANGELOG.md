@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-08-20
+
+### Added
+
+- **LLM judge backend** — `judge-sim` now honors `HACKATHON_JUDGE_BACKEND` (an HTTP endpoint). When set, it POSTs the state inputs and uses the returned per-dimension scores; any transport or schema failure falls back to the heuristic scorer with `judge_source: "heuristic-fallback"`. `HACKATHON_JUDGE_TIMEOUT_SECONDS` defaults to 3.
+- **Ship webhook** — `ship-pack` now honors `HACKATHON_SHIP_WEBHOOK` and posts the audit as JSON after writing `ship.json`. Delivery is non-fatal: failure only prints a warning.
+- **ADR-0008** documenting the v0.7 semantic fallback, v0.8 pluggable backends, and the validation no-op fix.
+- **Acceptance coverage for fallback paths** — judge-sim and ship-pack tests now exercise unreachable backends and assert graceful degradation.
+
+### Fixed
+
+- **`judge_questions` schema violation** — `score.py` emitted 0-1 questions for several dimensions, violating `review.schema.json`'s `minItems: 2`. A `pad_questions()` helper now guarantees 2-3 questions for both heuristic and remote scoring.
+- **Validation no-op** — the `validate` npm script and shell acceptance/integration checks called `dist/cli/commands/validate.js` directly (a module with no CLI entrypoint), so schema validation always exited 0 without doing anything. They now call `node dist/cli/index.js validate`.
+
+### Changed
+
+- `review.schema.json` gains optional `judge_source` (`heuristic`, `llm`, `heuristic-fallback`) and `judge_backend` fields.
+- `judge-sim` and `ship-pack` SKILL.md + docs pages document the new environment variables.
+
+### Compatibility
+
+- No breaking changes. New fields are optional; local heuristic behavior remains the default when no backend/webhook is configured.
+
 ## [0.7.0] - 2026-08-19
 
 ### Added

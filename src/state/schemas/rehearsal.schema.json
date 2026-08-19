@@ -1,0 +1,93 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maga2010.github.io/hackathon-run/schemas/rehearsal.schema.json",
+  "title": "Demo Rehearsal Log",
+  "description": "Output of demo-rehearsal. Per-step timings + scores + fix list.",
+  "type": "object",
+  "required": ["version", "started_at", "target_total_seconds", "segments", "fixes"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "1.0"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "run_number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "target_total_seconds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step", "action", "budget_seconds", "actual_seconds", "score", "class"],
+        "additionalProperties": false,
+        "properties": {
+          "step": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "budget_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "actual_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          },
+          "class": {
+            "enum": ["on-time", "drift", "broken"]
+          }
+        }
+      }
+    },
+    "fixes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step", "cut", "keep", "new_budget_seconds"],
+        "additionalProperties": false,
+        "properties": {
+          "step": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "cut": {
+            "type": "string",
+            "minLength": 1
+          },
+          "keep": {
+            "type": "string",
+            "minLength": 1
+          },
+          "new_budget_seconds": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "verdict": {
+      "enum": ["all-green", "mixed", "rewrite-needed"]
+    }
+  }
+}

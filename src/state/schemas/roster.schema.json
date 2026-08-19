@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maga2010.github.io/hackathon-run/schemas/roster.schema.json",
+  "title": "Team Roster",
+  "description": "Output of team-roster. Role assignments + bottleneck detection.",
+  "type": "object",
+  "required": ["version", "generated_at", "team_size", "members", "bottleneck"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "1.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "team_size": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "role", "features"],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "enum": ["ok", "stuck", "free"]
+          },
+          "blocker": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "bottleneck": {
+      "type": "object",
+      "required": ["member", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "member": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "stuck_minutes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "free_members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

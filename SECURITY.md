@@ -9,7 +9,7 @@
 
 ## Reporting a vulnerability
 
-**Please do not file a public issue.** Email security@hackathon-surgeon.dev with:
+**Please do not file a public issue.** Email maga2010@users.noreply.github.com with:
 
 - A clear description of the issue
 - Reproduction steps

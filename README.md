@@ -4,11 +4,11 @@
 
 A decision-making and execution system for hackathon teams operating under time pressure. Six skills, one workflow: **scope, verify, demo, judge, ship, recover.**
 
-[![CI](https://img.shields.io/github/actions/workflow/status/hackathon-surgeon/hackathon-surgeon/ci.yml?branch=main&label=CI)](https://github.com/hackathon-surgeon/hackathon-surgeon/actions)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/hackathon-surgeon/hackathon-surgeon/releases)
+[![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](https://github.com/MAGA2010/hackathon-run/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2)](https://discord.gg/hackathon-surgeon)
-[![Stars](https://img.shields.io/github/stars/hackathon-surgeon/hackathon-surgeon?style=social)](https://github.com/hackathon-surgeon/hackathon-surgeon)
+[![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
 
 <p align="center">
   <img src="docs/assets/images/hero.svg" alt="Hackathon Surgeon hero" width="800">
@@ -59,7 +59,7 @@ Each skill is **independently invokable**. You can run any of them at any time w
 
 `ash
 # One-time install
-npm install -g @hackathon-surgeon/cli
+npm install -g @maga2010/hackathon-surgeon
 
 # Inside any hackathon project
 cd my-hackathon-project
@@ -88,7 +88,7 @@ Each command is interactive. State is saved to .hackathon/state/ and is never re
 
 ## Documentation
 
-Full docs at [hackathon-surgeon.dev](https://hackathon-surgeon.dev) or in [docs/](docs/index.md).
+Full docs at [maga2010.github.io/hackathon-run](https://maga2010.github.io/hackathon-run/) or in [docs/](docs/index.md).
 
 - [Getting Started](docs/getting-started/installation.md)
 - [36-Hour Walkthrough](docs/guides/36-hour-walkthrough.md)
@@ -121,7 +121,7 @@ The [skill template](docs/contributing/skill-template.md) is the source of truth
 ## Community
 
 - **Discord:** [discord.gg/hackathon-surgeon](https://discord.gg/hackathon-surgeon)
-- **Discussions:** [GitHub Discussions](https://github.com/hackathon-surgeon/hackathon-surgeon/discussions)
+- **Discussions:** [GitHub Discussions](https://github.com/MAGA2010/hackathon-run/discussions)
 - **Twitter:** [@HackathonSurgeon](https://twitter.com/HackathonSurgeon)
 
 ---
@@ -134,10 +134,10 @@ The [skill template](docs/contributing/skill-template.md) is the source of truth
 
 ## Star history
 
-<a href="https://star-history.com/#hackathon-surgeon/hackathon-surgeon&Date">
+<a href="https://star-history.com/#MAGA2010/hackathon-run&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=hackathon-surgeon/hackathon-surgeon&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=hackathon-surgeon/hackathon-surgeon&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=hackathon-surgeon/hackathon-surgeon&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MAGA2010/hackathon-run&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MAGA2010/hackathon-run&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MAGA2010/hackathon-run&type=Date" />
   </picture>
 </a>

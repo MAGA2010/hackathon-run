@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://hackathon-surgeon.dev/schemas/verify.schema.json",
+  "$id": "https://maga2010.github.io/hackathon-run/schemas/verify.schema.json",
   "title": "Fast Verify Run",
   "description": "Output of fast-verify. A step-by-step verification log with status, timing, and diagnostics for the first failure.",
   "type": "object",

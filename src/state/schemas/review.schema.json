@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://hackathon-surgeon.dev/schemas/review.schema.json",
+  "$id": "https://maga2010.github.io/hackathon-run/schemas/review.schema.json",
   "title": "Judge Simulation Result",
   "description": "Output of judge-sim. Seven-dimension scoring with per-dimension reasoning and a prioritized fix list.",
   "type": "object",

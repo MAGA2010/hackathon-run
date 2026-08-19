@@ -3,7 +3,7 @@
 > Living document. Decisions here are authoritative unless amended.
 
 ## Name
-**Hackathon Surgeon** (npm: @hackathon-surgeon/cli, repo: hackathon-surgeon)
+**Hackathon Surgeon** (npm: @maga2010/hackathon-surgeon, repo: hackathon-run)
 
 ## Tagline
 > Ship the demo, not the dream.

@@ -1,8 +1,8 @@
 site_name: Hackathon Surgeon
 site_description: A decision-making and execution system for hackathon teams.
-site_url: https://hackathon-surgeon.dev
-repo_url: https://github.com/hackathon-surgeon/hackathon-surgeon
-repo_name: hackathon-surgeon/hackathon-surgeon
+site_url: https://maga2010.github.io/hackathon-run/
+repo_url: https://github.com/MAGA2010/hackathon-run
+repo_name: MAGA2010/hackathon-run
 edit_uri: edit/main/docs/
 
 theme:
@@ -108,7 +108,7 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/hackathon-surgeon/hackathon-surgeon
+      link: https://github.com/MAGA2010/hackathon-run
     - icon: fontawesome/brands/discord
       link: https://discord.gg/hackathon-surgeon
     - icon: fontawesome/brands/twitter

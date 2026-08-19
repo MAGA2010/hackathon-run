@@ -29,7 +29,7 @@ Requirements:
 Setup:
 
 `ash
-git clone https://github.com/hackathon-surgeon/hackathon-surgeon
+git clone https://github.com/MAGA2010/hackathon-run
 cd hackathon-surgeon
 nvm use                        # or fnm use
 npm install
@@ -79,7 +79,7 @@ Maintainers only. Tag-driven, automated by `.github/workflows/release.yml`:
 - Push a `vX.Y.Z` tag
 - CI runs full test matrix
 - CHANGELOG entry generated from commits since last tag
-- npm package published to `@hackathon-surgeon/cli`
+- npm package published to `@maga2010/hackathon-surgeon`
 - GitHub Release created
 
 ## What we will (probably) reject

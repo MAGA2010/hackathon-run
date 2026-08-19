@@ -1,3 +1,13 @@
-github: hackathon-surgeon
-open_collective: hackathon-surgeon
-custom: ["https://hackathon-surgeon.dev/sponsor"]
+# FUNDING.yml - sponsorship links shown on the repo sidebar.
+#
+# Active:
+#   github: GitHub Sponsors handle (per-user)
+#
+# Inactive (kept for reference; uncomment when you actually use them):
+#   open_collective: Open Collective username
+#   custom: arbitrary sponsorship URL
+
+github: MAGA2010
+
+# open_collective: hackathon-surgeon
+# custom: ["https://hackathon-surgeon.dev/sponsor"]

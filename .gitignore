@@ -69,3 +69,5 @@ desktop.ini
 # Templates (.hackathon/skills/, scripts) are tracked; state and artifacts are not.
 .hackathon/state/*.json
 .hackathon/artifacts/*
+# Per-team skills catalog pin (rebuilt by `hackathon skills pin`)
+.hackathon/skills.json

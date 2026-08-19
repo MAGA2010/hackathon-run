@@ -30,6 +30,9 @@ import { newSkill } from './commands/new-skill.js';
 import { validateSkill } from './commands/validate-skill.js';
 import { validate } from './commands/validate.js';
 import { loadAllSkills } from '../harness/loader.js';
+import { runSkill } from './commands/run.js';
+import { replay } from './commands/replay.js';
+import { skills } from './commands/skills.js';
 import { matchSkill } from '../harness/trigger.js';
 import { startMcpServer } from '../mcp/server.js';
 
@@ -133,21 +136,76 @@ program
 
 program
   .command('run <skill>')
-  .description('Invoke a skill by name')
-  .allowUnknownOption(true)
-  .action((skillName: string) => {
-    const skills = loadAllSkills(process.cwd());
-    const skill = skills.find((s) => s.frontmatter.name === skillName);
-    if (!skill) {
-      console.error(`[ERR] skill not found: ${skillName}`);
-      console.error(`run hackathon list to see bundled skills`);
-      process.exit(2);
-    }
-    console.log(`# Skill: ${skill.frontmatter.name}`);
-    console.log(`# Trigger budget: ${skill.triggerBudget}/1536`);
-    console.log();
-    console.log(skill.body);
+  .description('Invoke a skill by name (with --apply, pre-fill the target state file)')
+  .option('--demo-goal <text>', 'pre-fill plan.demo_goal with this string')
+  .option('--team-size <n>', 'pre-fill time-box.team_size (parsed as integer)', parseInt)
+  .option(
+    '--time-remaining <n>',
+    'pre-fill plan.time_remaining_minutes or time-box.time_remaining_minutes (parsed as integer)',
+    parseInt,
+  )
+  .option('--apply', 'actually write the pre-filled state file to .hackathon/state/')
+  .option('--no-banner', 'skip the "# Skill:" + trigger budget header')
+  .action(
+    (
+      skillName: string,
+      opts: {
+        demoGoal?: string;
+        teamSize?: number;
+        timeRemaining?: number;
+        apply?: boolean;
+        banner?: boolean;
+      },
+    ) => {
+      const code = runSkill({
+        skillName,
+        demoGoal: opts.demoGoal,
+        teamSize: opts.teamSize,
+        timeRemaining: opts.timeRemaining,
+        apply: opts.apply,
+        noBanner: opts.banner === false,
+      });
+      process.exit(code);
+    },
+  );
+
+program
+  .command('replay')
+  .description("Reconstruct the team's timeline from .hackathon/state/ files")
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'use a different repo root', process.cwd())
+  .action((opts: { json?: boolean; cwd?: string }) => {
+    process.exit(replay({ json: opts.json, cwd: opts.cwd }));
   });
+
+const skillsCmd = program
+  .command('skills')
+  .description('Manage the .hackathon/skills.json catalog (pin / diff / show / list)');
+
+skillsCmd
+  .command('list')
+  .description('List every bundled skill')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts: { cwd?: string }) => process.exit(skills({ subcommand: 'list', cwd: opts.cwd })));
+
+skillsCmd
+  .command('pin')
+  .description('Pin every bundled skill into .hackathon/skills.json')
+  .option('--all', 'pin every skill (default; reserved for future single-name pinning)')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts: { cwd?: string }) => process.exit(skills({ subcommand: 'pin', cwd: opts.cwd })));
+
+skillsCmd
+  .command('diff')
+  .description('Show what changed since the pin was written')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts: { cwd?: string }) => process.exit(skills({ subcommand: 'diff', cwd: opts.cwd })));
+
+skillsCmd
+  .command('show')
+  .description('Print the current .hackathon/skills.json pin')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts: { cwd?: string }) => process.exit(skills({ subcommand: 'show', cwd: opts.cwd })));
 
 program
   .command('match <utterance>')

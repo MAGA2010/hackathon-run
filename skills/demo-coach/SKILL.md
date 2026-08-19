@@ -69,6 +69,13 @@ For each step, tag risks:
 Output `.hackathon/state/demo.json` (matches `demo.schema.json`) and
 `.hackathon/artifacts/demo-script.md` (printable card for the speaker).
 
+## Output contract
+
+Files written:
+
+- `.hackathon/state/demo.json` (matches `src/state/schemas/demo.schema.json`)
+- `.hackathon/artifacts/demo-script.md` (human-readable pitch script)
+
 ## Acceptance criteria
 
 - [ ] Fits within the specified duration.
@@ -76,6 +83,15 @@ Output `.hackathon/state/demo.json` (matches `demo.schema.json`) and
 - [ ] Each step has SAY / CLICK / SHOW / NOT.
 - [ ] Does not reference unimplemented features.
 - [ ] Flags risks per step.
+
+## Failure modes
+
+| Mode                            | Behavior                                         |
+| ------------------------------- | ------------------------------------------------ |
+| `demo_goal` missing             | Refuse; point to `scope-knife` output            |
+| `duration_seconds` invalid      | Refuse anything but 30, 60, or 90                |
+| `audience` is a single word     | Ask once for clarification; refuse to guess      |
+| `demo_path` longer than 5 steps | Refuse; ask to compress before writing demo.json |
 
 ## Trigger phrases
 

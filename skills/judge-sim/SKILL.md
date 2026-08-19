@@ -57,6 +57,13 @@ Three buckets:
 If `.hackathon/state/verify.json` last status is `fail`, **any**
 dimension scoring above 3 is invalid. Cap them at 3 and explain.
 
+## Output contract
+
+Files written:
+
+- `.hackathon/state/review.json` (matches `src/state/schemas/review.schema.json`)
+- `.hackathon/artifacts/judge-feedback.md` (human-readable review)
+
 ## Acceptance criteria
 
 - [ ] Provides per-dimension score (0-5).
@@ -65,6 +72,15 @@ dimension scoring above 3 is invalid. Cap them at 3 and explain.
 - [ ] Distinguishes FIX_NOW / FIX_LAST_10MIN / DO_NOT_TOUCH.
 - [ ] Caps dimensions at 3 when verify status is fail.
 - [ ] Outputs a single overall score (mean).
+
+## Failure modes
+
+| Mode                | Behavior                                                     |
+| ------------------- | ------------------------------------------------------------ |
+| No `demo.json`      | Refuse; ask to run `demo-coach` first                        |
+| `plan.json` missing | Continue, but note "demo not derived from a known plan"      |
+| All 7 scores = 5    | Refuse to rubber-stamp; ask the human to challenge one score |
+| All 7 scores = 0    | Refuse to dunk; ask the human to confirm                     |
 
 ## Trigger phrases
 

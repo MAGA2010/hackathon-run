@@ -43,7 +43,7 @@ const REQUIRED_SECTIONS = [
 ];
 
 const ACTION_VERB_LEAD =
-  /^(force|run|generate|emit|produce|detect|simulate|classify|score|audit|scan|ship|recover|list|review|cut|verify|demo|coach|build|write|recommend|suggest|draft|prioritize|prioritise|trim|narrow|expand|identify|find|spot|trace|pick|choose|select)/i;
+  /^(force|run|generate|emit|produce|detect|simulate|classify|score|audit|scan|ship|recover|list|review|cut|verify|demo|coach|build|write|recommend|suggest|draft|prioritize|prioritise|trim|narrow|expand|identify|find|spot|trace|pick|choose|select|surface|reshape|rebuild|pivot|clarif|prioritis|verif|verifi)(?:s|es|ies|ied|ing|ed)?\b/i;
 
 function checkSkill(skillDir: string, cwd: string): Finding[] {
   const out: Finding[] = [];
@@ -95,7 +95,7 @@ function checkSkill(skillDir: string, cwd: string): Finding[] {
       severity: 'warn',
       message: 'when_to_use is empty; agent will rely on description alone for triggering',
     });
-  } else if (!/do not invoke|do not use|avoid/i.test(wtu)) {
+  } else if (!/do not invoke|do not use|avoid/i.test(wtu.replace(/\s+/g, ' '))) {
     out.push({
       severity: 'warn',
       message: 'when_to_use has no "Do not invoke when ..." clause',

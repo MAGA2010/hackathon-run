@@ -63,6 +63,13 @@ For the engineer, off-stage:
 - `.hackathon/artifacts/recovery-runbook.md` (printable card)
 - `.hackathon/state/recovery.json` (machine-readable for downstream tools)
 
+## Output contract
+
+Files written:
+
+- `.hackathon/artifacts/recovery-runbook.md` (the 30-second script + fallback plan)
+- `.hackathon/state/recovery.json` (matches `src/state/schemas/recovery.schema.json`; severity + steps + fallback)
+
 ## Acceptance criteria
 
 - [ ] Provides a fallback plan for the given severity.
@@ -70,6 +77,15 @@ For the engineer, off-stage:
 - [ ] Avoids prolonged live debugging.
 - [ ] Prioritizes demo continuity over technical depth.
 - [ ] Outputs a 30-second script that fits within 30 seconds when read aloud.
+
+## Failure modes
+
+| Mode                       | Behavior                                                 |
+| -------------------------- | -------------------------------------------------------- |
+| `symptom` is empty         | Ask once; do not invent a symptom                        |
+| Demo is already over       | Refuse; recovery-runbook is for the live demo            |
+| `time_to_present` <= 0     | Refuse; emit "too late, post-mortem instead"             |
+| Multiple symptoms detected | Ask the human to pick the dominant one before proceeding |
 
 ## Trigger phrases
 

@@ -69,6 +69,13 @@ Generate a shell command that excludes:
 
 Default output: `tar czf submit.tar.gz --exclude=... .`
 
+## Output contract
+
+Files written:
+
+- `.hackathon/state/ship.json` (matches `src/state/schemas/ship.schema.json`)
+- `ship.sh` (a single-line packaging command, only emitted on PASS)
+
 ## Acceptance criteria
 
 - [ ] Checks for secret leaks (fails if any found).
@@ -77,6 +84,16 @@ Default output: `tar czf submit.tar.gz --exclude=... .`
 - [ ] Checks submission checklist items.
 - [ ] Generates a safe packaging command.
 - [ ] Never includes real secrets in the submission package.
+
+## Failure modes
+
+| Mode                            | Behavior                                            |
+| ------------------------------- | --------------------------------------------------- |
+| Secret leak detected            | FAIL loud, print the offending line, refuse to ship |
+| `README.md` missing             | FAIL loud; ask to write the README first            |
+| `package.json` has placeholder  | WARN; suggest a single sed/fix                      |
+| Git working tree dirty          | WARN; offer a `git stash` recipe, do not auto-stash |
+| No `.hackathon/state/ship.json` | Refuse; cannot audit what was never verified        |
 
 ## Trigger phrases
 

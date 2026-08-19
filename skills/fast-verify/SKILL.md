@@ -57,6 +57,13 @@ If a step fails, run `scripts/diagnose.py`:
 - `.hackathon/state/verify.json` (matches `verify.schema.json`)
 - `.hackathon/artifacts/fast-verify-output.md` (human-readable run log)
 
+## Output contract
+
+Files written:
+
+- `.hackathon/state/verify.json` (matches `src/state/schemas/verify.schema.json`)
+- `.hackathon/artifacts/fast-verify-output.md` (human-readable run log)
+
 ## Acceptance criteria
 
 - [ ] Verifies in demo-path order.
@@ -64,6 +71,16 @@ If a step fails, run `scripts/diagnose.py`:
 - [ ] Stops at first failure.
 - [ ] Cannot mark unverified items as PASS.
 - [ ] Emits a one-line fix suggestion for the failing step.
+
+## Failure modes
+
+| Mode                              | Behavior                                              |
+| --------------------------------- | ----------------------------------------------------- |
+| Demo path empty                   | Refuse; ask user to run `scope-knife` first           |
+| Step 1 already fails              | Stop, do not run step 2; report exact failing step    |
+| No `plan.json` and no `demo_path` | Refuse; cannot verify without a path                  |
+| Verification command missing      | Mark step `SKIP`; do not pretend it passed            |
+| Diagnose regex finds no match     | Emit raw stderr signature + suggest a generic rebuild |
 
 ## Trigger phrases
 

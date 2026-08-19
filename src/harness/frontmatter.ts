@@ -9,10 +9,10 @@
  *   - scalar keys: name: value
  *   - block-scalar values (description, when_to_use): either inline after
  *     the key or on subsequent indented lines until the next key
- *   - array values via YAML-ish "- item" or JSON-ish "[...]" (we only
- *     need arrays for `paths` and `allowed_tools`)
+ *   - array values via YAML-ish "- item" under a key, or JSON-ish "[...]"
+ *     inline. We need arrays for `paths` and `allowed_tools`.
  *
- * Not supported (and we don''t need to): nested mappings, anchors, tags.
+ * Not supported (and we don't need to): nested mappings, anchors, tags.
  */
 
 import type { SkillFrontmatter } from './types.js';
@@ -60,9 +60,17 @@ export function parseFrontmatter(raw: string): ParseResult {
   const fm: Record<string, unknown> = {};
   let currentKey: string | null = null;
   let blockBuffer: string[] = [];
+  // Tracks whether current key is collecting a list. Lines beginning with "- "
+  // (indented to align with the key) are appended as list items.
+  let currentList: string[] | null = null;
 
   const flushBlock = () => {
     if (!currentKey) return;
+    if (currentList) {
+      fm[currentKey] = currentList;
+      currentList = null;
+      return;
+    }
     const text = blockBuffer.join('\n').trim();
     if (text) {
       // Block scalars under `when_to_use:` keep newlines; under other keys
@@ -72,13 +80,17 @@ export function parseFrontmatter(raw: string): ParseResult {
     blockBuffer = [];
   };
 
+  const isIndented = (line: string): boolean =>
+    line.startsWith(' ') || line.startsWith('\t');
+
   for (const line of lines) {
     const km = line.match(KEY_RE);
-    if (km && !line.startsWith(' ') && !line.startsWith('\t')) {
+    if (km && !isIndented(line)) {
       flushBlock();
       const key = (km[1] ?? '').toLowerCase();
       const rest = (km[2] ?? '').trim();
       currentKey = key;
+      blockBuffer = [];
       if (rest === '|' || rest === '>' || rest === '') {
         // Block scalar follows on subsequent lines.
         continue;
@@ -86,7 +98,28 @@ export function parseFrontmatter(raw: string): ParseResult {
       fm[key] = parseInline(rest);
     } else if (currentKey) {
       // Indented continuation of current block.
-      blockBuffer.push(line.replace(/^\s{2}/, ''));
+      const stripped = line.replace(/^\s+/, '');
+      if (stripped.startsWith('- ')) {
+        // YAML list item. Flush any prior block text for this key first.
+        if (blockBuffer.length > 0) {
+          // We had buffered scalar content; treat list start as boundary.
+          const text = blockBuffer.join('\n').trim();
+          if (text && !currentList) {
+            fm[currentKey] = currentKey === 'when_to_use'
+              ? text
+              : text.replace(/\s+/g, ' ').trim();
+          }
+          blockBuffer = [];
+        }
+        if (!currentList) currentList = [];
+        currentList.push(stripped.slice(2).trim().replace(/^["'']|["'']$/g, ''));
+      } else if (stripped === '') {
+        // Blank indented line; skip but keep list state.
+        continue;
+      } else {
+        // Non-list continuation: only valid for block scalars.
+        blockBuffer.push(stripped);
+      }
     }
   }
   flushBlock();

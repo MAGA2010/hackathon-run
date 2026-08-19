@@ -8,9 +8,8 @@
  *   - schema invalid -> throw with diff
  *   - file unreadable -> throw
  */
-
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, resolve, basename, extname } from 'node:path';
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
@@ -30,6 +29,15 @@ function validatorFor(schemaPath: string) {
   return validate;
 }
 
+/**
+ * Given a state filename like "plan.json", resolve the matching schema path
+ * `src/state/schemas/plan.schema.json`. Callers may override via opts.schema.
+ */
+export function defaultSchemaPath(repoRoot: string, file: string): string {
+  const stem = basename(file, extname(file));
+  return resolve(repoRoot, 'src/state/schemas', `${stem}.schema.json`);
+}
+
 export interface StateWriteOptions {
   /** repo root containing .hackathon/state */
   repoRoot: string;
@@ -42,8 +50,7 @@ export interface StateWriteOptions {
 }
 
 export function writeState(opts: StateWriteOptions): string {
-  const schemasRoot = resolve(opts.repoRoot, 'src/state/schemas');
-  const schemaPath = opts.schema ?? join(schemasRoot, opts.file);
+  const schemaPath = opts.schema ?? defaultSchemaPath(opts.repoRoot, opts.file);
   const validate = validatorFor(schemaPath);
   if (!validate(opts.data)) {
     const errs = (validate.errors ?? [])
@@ -72,8 +79,7 @@ export function readState<T = unknown>(opts: StateReadOptions): T | null {
     return null;
   }
   const data = JSON.parse(raw);
-  const schemasRoot = resolve(opts.repoRoot, 'src/state/schemas');
-  const schemaPath = opts.schema ?? join(schemasRoot, opts.file);
+  const schemaPath = opts.schema ?? defaultSchemaPath(opts.repoRoot, opts.file);
   const validate = validatorFor(schemaPath);
   if (!validate(data)) {
     const errs = (validate.errors ?? [])

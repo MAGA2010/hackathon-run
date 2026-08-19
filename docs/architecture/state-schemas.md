@@ -35,20 +35,21 @@ malformed.
 
 ## Index of schemas
 
-Every state file in `.hackathon/state/` has a matching schema under `src/state/schemas/`. The pack ships eleven schemas as of v0.5.0:
+Every state file in `.hackathon/state/` has a matching schema under `src/state/schemas/`. The pack ships twelve schemas as of v0.6.0:
 
-| Schema file             | Skill that writes it        | Required keys                                                        |
-| ----------------------- | --------------------------- | -------------------------------------------------------------------- |
-| `plan.schema.json`      | scope-knife                 | version, generated_at, demo_goal, features, demo_path, next_tasks    |
-| `verify.schema.json`    | fast-verify                 | version, generated_at, demo_path, steps                              |
-| `demo.schema.json`      | demo-coach                  | version, generated_at, script                                        |
-| `review.schema.json`    | judge-sim                   | version, generated_at, scores                                        |
-| `ship.schema.json`      | ship-pack                   | version, generated_at, gates, status                                 |
-| `recovery.schema.json`  | recovery-runbook            | version, generated_at, fallback_script                               |
-| `time-box.schema.json`  | time-box (new in 0.4)       | version, generated_at, schedule                                      |
-| `stack.schema.json`     | stack-picker (new in 0.4)   | version, generated_at, recommendation, runners_up, bootstrap         |
-| `retro.schema.json`     | retro (new in 0.4)          | version, generated_at, ratios, keep_doing, stop_doing, try_next_time |
-| `rehearsal.schema.json` | demo-rehearsal (new in 0.5) | version, started_at, target_total_seconds, segments, fixes           |
-| `roster.schema.json`    | team-roster (new in 0.5)    | version, generated_at, team_size, members, bottleneck                |
+| Schema file                | Skill that writes it        | Required keys                                                        |
+| -------------------------- | --------------------------- | -------------------------------------------------------------------- |
+| `plan.schema.json`         | scope-knife                 | version, generated_at, demo_goal, features, demo_path, next_tasks    |
+| `verify.schema.json`       | fast-verify                 | version, generated_at, demo_path, steps                              |
+| `demo.schema.json`         | demo-coach                  | version, generated_at, script                                        |
+| `review.schema.json`       | judge-sim                   | version, generated_at, scores                                        |
+| `ship.schema.json`         | ship-pack                   | version, generated_at, gates, status                                 |
+| `recovery.schema.json`     | recovery-runbook            | version, generated_at, fallback_script                               |
+| `time-box.schema.json`     | time-box (new in 0.4)       | version, generated_at, schedule                                      |
+| `stack.schema.json`        | stack-picker (new in 0.4)   | version, generated_at, recommendation, runners_up, bootstrap         |
+| `retro.schema.json`        | retro (new in 0.4)          | version, generated_at, ratios, keep_doing, stop_doing, try_next_time |
+| `rehearsal.schema.json`    | demo-rehearsal (new in 0.5) | version, started_at, target_total_seconds, segments, fixes           |
+| `decision-log.schema.json` | decision-log (new in 0.6)   | version, generated_at, entries                                       |
+| `roster.schema.json`       | team-roster (new in 0.5)    | version, generated_at, team_size, members, bottleneck                |
 
 To add a new one: see [How to add a new state file](#how-to-add-a-new-state-file) above.

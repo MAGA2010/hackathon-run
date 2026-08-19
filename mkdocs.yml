@@ -96,6 +96,7 @@ nav:
       - retro: skills/retro.md
       - demo-rehearsal: skills/demo-rehearsal.md
       - team-roster: skills/team-roster.md
+      - decision-log: skills/decision-log.md
   - Architecture:
       - Overview: architecture/overview.md
       - State Schemas: architecture/state-schemas.md

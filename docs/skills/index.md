@@ -5,21 +5,22 @@ references. Skills are designed to be invoked by an agent that reads the
 SKILL.md, runs the scripts, and writes the state file at the path the contract
 specifies.
 
-| Skill                                   | One-line summary                                            | Output state     |
-| --------------------------------------- | ----------------------------------------------------------- | ---------------- |
-| [idea-clarify](idea-clarify.md)         | Surface a one-paragraph brief into a concrete demo goal     | (artifact only)  |
-| [scope-knife](scope-knife.md)           | Force a KEEP/CUT/DEFER decision on every feature            | `plan.json`      |
-| [fast-verify](fast-verify.md)           | Run each `demo_path` step end-to-end                        | `verify.json`    |
-| [demo-coach](demo-coach.md)             | Generate a 30/60/90-second pitch script                     | `demo.json`      |
-| [judge-sim](judge-sim.md)               | Simulate a judge panel + score                              | `review.json`    |
-| [ship-pack](ship-pack.md)               | Final ship audit (secrets, README, packaging)               | `ship.json`      |
-| [recovery-runbook](recovery-runbook.md) | Detect a 2am-class failure and emit a runbook               | `recovery.json`  |
-| [pivot](pivot.md)                       | Re-run scope-knife after a mid-build direction change       | (artifact only)  |
-| [time-box](time-box.md)                 | Allocate remaining clock to each pipeline stage             | `time-box.json`  |
-| [stack-picker](stack-picker.md)         | Recommend a tech stack when the team has no preference      | `stack.json`     |
-| [retro](retro.md)                       | Post-event retrospective with 4 ratios + 3 buckets          | `retro.json`     |
-| [demo-rehearsal](demo-rehearsal.md)     | Run a timed mock demo with stopwatch + per-segment fix list | `rehearsal.json` |
-| [team-roster](team-roster.md)           | Assign roles + detect the critical-path bottleneck          | `roster.json`    |
+| Skill                                   | One-line summary                                            | Output state        |
+| --------------------------------------- | ----------------------------------------------------------- | ------------------- |
+| [idea-clarify](idea-clarify.md)         | Surface a one-paragraph brief into a concrete demo goal     | (artifact only)     |
+| [scope-knife](scope-knife.md)           | Force a KEEP/CUT/DEFER decision on every feature            | `plan.json`         |
+| [fast-verify](fast-verify.md)           | Run each `demo_path` step end-to-end                        | `verify.json`       |
+| [demo-coach](demo-coach.md)             | Generate a 30/60/90-second pitch script                     | `demo.json`         |
+| [judge-sim](judge-sim.md)               | Simulate a judge panel + score                              | `review.json`       |
+| [ship-pack](ship-pack.md)               | Final ship audit (secrets, README, packaging)               | `ship.json`         |
+| [recovery-runbook](recovery-runbook.md) | Detect a 2am-class failure and emit a runbook               | `recovery.json`     |
+| [pivot](pivot.md)                       | Re-run scope-knife after a mid-build direction change       | (artifact only)     |
+| [time-box](time-box.md)                 | Allocate remaining clock to each pipeline stage             | `time-box.json`     |
+| [stack-picker](stack-picker.md)         | Recommend a tech stack when the team has no preference      | `stack.json`        |
+| [retro](retro.md)                       | Post-event retrospective with 4 ratios + 3 buckets          | `retro.json`        |
+| [demo-rehearsal](demo-rehearsal.md)     | Run a timed mock demo with stopwatch + per-segment fix list | `rehearsal.json`    |
+| [team-roster](team-roster.md)           | Assign roles + detect the critical-path bottleneck          | `roster.json`       |
+| [decision-log](decision-log.md)         | Log every KEEP/CUT/DEFER decision with rationale            | `decision-log.json` |
 
 ## How to read each page
 

@@ -8,7 +8,11 @@ fail() { echo "  FAIL $1"; exit 1; }
 section() { echo; echo "## $1"; }
 
 BASH_TMP="$(mktemp -d)"
-WIN_TMP="$(cygpath -w "$BASH_TMP")"
+if command -v cygpath >/dev/null 2>&1; then
+  WIN_TMP="$(cygpath -w "$BASH_TMP")"
+else
+  WIN_TMP="$BASH_TMP"  # POSIX path on Linux CI
+fi
 trap "rm -rf $BASH_TMP" EXIT
 
 # Repo A: clean repo with README

@@ -8,8 +8,8 @@ ROOT="$(cd "$HERE/../.." && pwd)"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
-pass() { echo "  ✓ $1"; }
-fail() { echo "  ✗ $1"; exit 1; }
+pass() { echo "  [OK] $1"; }
+fail() { echo "  [ERR] $1"; exit 1; }
 section() { echo; echo "## $1"; }
 
 PY="${PYTHON:-python3}"

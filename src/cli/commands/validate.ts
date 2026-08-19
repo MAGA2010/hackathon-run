@@ -1,5 +1,5 @@
 /**
- * validate.ts — validate every JSON file under a path against its schema.
+ * validate.ts - validate every JSON file under a path against its schema.
  *
  * Usage:
  *   hackathon validate                     # validate .hackathon/state/ in cwd
@@ -12,8 +12,10 @@ import { readdirSync, readFileSync, statSync, existsSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 import Ajv from "ajv";
+import addFormats from "ajv-formats";
 
 const ajv = new Ajv({ allErrors: true, strict: false });
+addFormats(ajv);
 
 export function validate(dir: string): number {
   const schemasRoot = resolve("src/state/schemas");
@@ -36,7 +38,7 @@ export function validate(dir: string): number {
     const base = name.replace(/\.json$/i, "");
     const schemaPath = join(schemasRoot, `${base}.schema.json`);
     if (!existsSync(schemaPath)) {
-      console.error(`✗ ${file}: no schema at ${schemaPath}`);
+      console.error(`X ${file}: no schema at ${schemaPath}`);
       errors++;
       continue;
     }
@@ -46,16 +48,16 @@ export function validate(dir: string): number {
       schema = JSON.parse(readFileSync(schemaPath, "utf-8"));
       data = JSON.parse(readFileSync(file, "utf-8"));
     } catch (e) {
-      console.error(`✗ ${file}: parse error ${(e as Error).message}`);
+      console.error(`X ${file}: parse error ${(e as Error).message}`);
       errors++;
       continue;
     }
 
     const validateFn = ajv.compile(schema);
     if (validateFn(data)) {
-      console.log(`✓ ${file}`);
+      console.log(`OK ${file}`);
     } else {
-      console.error(`✗ ${file}`);
+      console.error(`X ${file}`);
       for (const e of validateFn.errors ?? []) {
         console.error(`    - ${e.instancePath} ${e.message}`);
       }
@@ -65,4 +67,3 @@ export function validate(dir: string): number {
 
   return errors === 0 ? 0 : 1;
 }
-

@@ -12,9 +12,9 @@ function apply(s: string, fn: (x: string) => string): string {
 
 export const log = {
   info: (msg: string) => console.log(apply(msg, c.cyan)),
-  ok: (msg: string) => console.log(apply(`✓ ${msg}`, c.green)),
-  warn: (msg: string) => console.warn(apply(`! ${msg}`, c.yellow)),
-  err: (msg: string) => console.error(apply(`✗ ${msg}`, c.red)),
+  ok: (msg: string) => console.log(apply(`[OK] ${msg}`, c.green)),
+  warn: (msg: string) => console.warn(apply(`[!] ${msg}`, c.yellow)),
+  err: (msg: string) => console.error(apply(`[ERR] ${msg}`, c.red)),
   dim: (msg: string) => console.log(apply(msg, c.dim)),
   bold: (msg: string) => console.log(apply(msg, c.bold)),
 };

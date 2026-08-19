@@ -9,10 +9,12 @@
  *        - trigger phrases section in the body (extracted via regex)
  *        - skill name (low weight)
  *   3. Score by overlap. Highest score wins. Score == 0 => no match.
- *   4. Tie-break by triggerBudget (smaller = more focused).
+ *   4. Tie-break: smaller trigger budget (more focused skill wins).
+ *   5. Final tie-break: alphabetical name order (stable, predictable).
  *
  * This is deliberately simple. It runs on every agent turn, so it must
- * be fast and zero-dep.
+ * be fast and zero-dep. For production semantic matching, an embedding-
+ * based fallback would be added behind a flag.
  */
 
 import type { SkillManifest } from "./types.js";
@@ -52,7 +54,6 @@ function score(utterance: Set<string>, skill: SkillManifest): number {
   for (const t of utterance) {
     if (bag.has(t)) hits += 2;
     else {
-      // Substring match for multi-word phrases.
       for (const b of bag) {
         if (b.includes(t) || t.includes(b)) {
           hits += 1;
@@ -75,14 +76,24 @@ export function matchSkill(
   skills: SkillManifest[],
 ): MatchResult {
   const utt = new Set(tokens(utterance));
+  const byName = new Map(skills.map((s) => [s.frontmatter.name, s]));
   const candidates = skills
     .map((s) => ({ name: s.frontmatter.name, score: score(utt, s) }))
-    .sort((a, b) => b.score - a.score);
+    .sort((a, b) => {
+      if (b.score !== a.score) return b.score - a.score;
+      const sa = byName.get(a.name);
+      const sb = byName.get(b.name);
+      // Smaller trigger budget = more focused = wins ties.
+      if (sa && sb && sa.triggerBudget !== sb.triggerBudget) {
+        return sa.triggerBudget - sb.triggerBudget;
+      }
+      return a.name.localeCompare(b.name);
+    });
 
   const top = candidates[0];
   if (!top || top.score <= 0) {
     return { skill: null, score: 0, candidates };
   }
-  const skill = skills.find((s) => s.frontmatter.name === top.name) ?? null;
+  const skill = byName.get(top.name) ?? null;
   return { skill, score: top.score, candidates };
 }

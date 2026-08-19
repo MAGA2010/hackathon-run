@@ -5,8 +5,8 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"
 PY="${PYTHON:-python3}"
 
-pass() { echo "  ✓ $1"; }
-fail() { echo "  ✗ $1"; exit 1; }
+pass() { echo "  [OK] $1"; }
+fail() { echo "  [ERR] $1"; exit 1; }
 section() { echo; echo "## $1"; }
 
 section "Acceptance: verify_step.py classifies a passing command"

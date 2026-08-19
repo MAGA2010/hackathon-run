@@ -55,7 +55,7 @@ program
     const skills = loadAllSkills(process.cwd());
     const skill = skills.find((s) => s.frontmatter.name === skillName);
     if (!skill) {
-      console.error(`✗ skill not found: ${skillName}`);
+      console.error(`[ERR] skill not found: ${skillName}`);
       console.error(`run \`hackathon list\` to see bundled skills`);
       process.exit(2);
     }

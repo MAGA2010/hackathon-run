@@ -145,4 +145,33 @@ describe('matchSkill', () => {
     assert.equal(r.skill?.frontmatter.name, 'shipper');
     assert.ok(r.candidates[0].reasons.some((s) => s.includes('action verb')));
   });
+
+  it('rescues a zero-score utterance with domain synonyms', () => {
+    const skills = [
+      mk('team-roster', 'Assign roles and surface blockers', ''),
+      mk('unrelated', 'Collect metrics for dashboards', ''),
+    ];
+    const r = matchSkill('who does what', skills);
+    assert.equal(r.skill?.frontmatter.name, 'team-roster');
+    assert.equal(r.fallback, true);
+    assert.ok(r.candidates[0].reasons.some((s) => s.includes('synonym')));
+  });
+
+  it('maps paraphrases like "shorten" to scope-knife intent', () => {
+    const skills = [
+      mk('scope-knife', 'Force a KEEP, CUT, or DEFER decision', ''),
+      mk('unrelated', 'Run image classification', ''),
+    ];
+    const r = matchSkill('please shorten the roadmap', skills);
+    assert.equal(r.skill?.frontmatter.name, 'scope-knife');
+    assert.equal(r.fallback, true);
+  });
+
+  it('still returns null for gibberish after synonym fallback', () => {
+    const skills = [mk('alpha', 'do alpha things', 'alpha only')];
+    const r = matchSkill('zzz qqq xxx', skills);
+    assert.equal(r.skill, null);
+    assert.equal(r.score, 0);
+    assert.equal(r.fallback, undefined);
+  });
 });

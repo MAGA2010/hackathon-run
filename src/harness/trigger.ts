@@ -146,6 +146,57 @@ export interface MatchResult {
   skill: SkillManifest | null;
   score: number;
   candidates: MatchCandidate[];
+  /** True when the zero-score path was rescued by synonym expansion. */
+  fallback?: boolean;
+}
+
+const PARAPHRASE_GROUPS: Record<string, string[]> = {
+  scope: ['trim', 'cut', 'narrow', 'shorten', 'reduce', 'descope', 'focus', 'mvp', 'minimal'],
+  verify: ['test', 'check', 'run', 'smoke', 'validate', 'pass', 'works'],
+  demo: ['pitch', 'present', 'show', 'script', 'rehearse', 'dry', 'mock', 'speak'],
+  team: ['who', 'assign', 'role', 'roster', 'free', 'blocked', 'stuck', 'owner', 'accountable'],
+  retro: ['review', 'postmortem', 'post', 'after', 'reflect', 'learn', 'retrospective'],
+  stack: ['tech', 'language', 'framework', 'tool', 'choose', 'pick', 'recommend', 'lib'],
+  decision: ['log', 'record', 'why', 'keep', 'defer', 'pivot', 'reason', 'rationale', 'decide'],
+  recovery: ['fail', 'crash', 'fallback', 'emergency', 'broken', '2am', 'recover'],
+  ship: ['submit', 'package', 'secret', 'readme', 'audit', 'ready', 'release', 'leak'],
+  judge: ['score', 'rating', 'panel', 'grade', 'feedback', 'review', 'evaluate'],
+  clarify: ['idea', 'brief', 'what', 'goal', 'question', 'understand', 'surface', 'refine'],
+  time: ['schedule', 'allocate', 'clock', 'hours', 'deadline', 'remaining', 'budget', 'minutes'],
+};
+
+const TOKEN_TO_GROUPS = new Map<string, string[]>();
+for (const [group, members] of Object.entries(PARAPHRASE_GROUPS)) {
+  for (const token of [group, ...members]) {
+    const groups = TOKEN_TO_GROUPS.get(token) ?? [];
+    if (!groups.includes(group)) groups.push(group);
+    TOKEN_TO_GROUPS.set(token, groups);
+  }
+}
+
+function expandWithParaphrases(words: string[]): string[] {
+  const expanded = new Set<string>(words);
+  for (const word of words) {
+    const groups = TOKEN_TO_GROUPS.get(word);
+    if (!groups) continue;
+    for (const group of groups) {
+      expanded.add(group);
+      for (const synonym of PARAPHRASE_GROUPS[group]) expanded.add(synonym);
+    }
+  }
+  return [...expanded];
+}
+
+function rankCandidates(candidates: MatchCandidate[], byName: Map<string, SkillManifest>) {
+  return candidates.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    const sa = byName.get(a.name);
+    const sb = byName.get(b.name);
+    if (sa && sb && sa.triggerBudget !== sb.triggerBudget) {
+      return sa.triggerBudget - sb.triggerBudget;
+    }
+    return a.name.localeCompare(b.name);
+  });
 }
 
 export function matchSkill(utterance: string, skills: SkillManifest[]): MatchResult {
@@ -158,19 +209,24 @@ export function matchSkill(utterance: string, skills: SkillManifest[]): MatchRes
     return { name: s.frontmatter.name, score: r.score, reasons: r.reasons };
   });
 
-  candidates.sort((a, b) => {
-    if (b.score !== a.score) return b.score - a.score;
-    const sa = byName.get(a.name);
-    const sb = byName.get(b.name);
-    // Smaller trigger budget = more focused = wins ties.
-    if (sa && sb && sa.triggerBudget !== sb.triggerBudget) {
-      return sa.triggerBudget - sb.triggerBudget;
-    }
-    return a.name.localeCompare(b.name);
-  });
+  rankCandidates(candidates, byName);
 
   const top = candidates[0];
   if (!top || top.score <= 0) {
+    const expanded = expandWithParaphrases(utteranceWords);
+    if (expanded.length > utteranceWords.length) {
+      const fallbackCandidates: MatchCandidate[] = skills.map((s) => {
+        const r = score(expanded, buildBag(s));
+        return { name: s.frontmatter.name, score: r.score, reasons: r.reasons };
+      });
+      rankCandidates(fallbackCandidates, byName);
+      const fallbackTop = fallbackCandidates[0];
+      if (fallbackTop && fallbackTop.score > 0) {
+        fallbackTop.reasons = [...fallbackTop.reasons, 'synonym expansion'];
+        const skill = byName.get(fallbackTop.name) ?? null;
+        return { skill, score: fallbackTop.score, candidates: fallbackCandidates, fallback: true };
+      }
+    }
     return { skill: null, score: 0, candidates };
   }
   const skill = byName.get(top.name) ?? null;

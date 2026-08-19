@@ -1,6 +1,6 @@
 # Contributing
 
-See the top-level [`CONTRIBUTING.md`](../../CONTRIBUTING.md) for the full
+See the top-level [`CONTRIBUTING.md`](https://github.com/MAGA2010/hackathon-run/blob/main/CONTRIBUTING.md) for the full
 guide. Key points:
 
 - Use the [skill template](skill-template.md) when adding a skill.

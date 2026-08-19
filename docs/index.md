@@ -33,12 +33,12 @@ hackathon run scope-knife
 
 | Skill                                          | When                       | Output                               |
 | ---------------------------------------------- | -------------------------- | ------------------------------------ |
-| [scope-knife](skills/scope-knife.md)           | Too many ideas, no MVP     | KEEP/CUT/DEFER + demo path           |
-| [fast-verify](skills/fast-verify.md)           | "Will it demo?"            | Step-by-step verification log        |
-| [demo-coach](skills/demo-coach.md)             | 30/60/90s pitch            | Flow script with SAY/CLICK/SHOW/NOT  |
-| [judge-sim](skills/skill-judge-sim.md)         | Pre-submission self-review | 7-dimension scoring + fix priorities |
-| [ship-pack](skills/ship-pack.md)               | Submitting now             | README check, secret scan, packaging |
-| [recovery-runbook](skills/recovery-runbook.md) | Live demo fails            | P0–P3 fallback + 30s script          |
+| [scope-knife](https://github.com/MAGA2010/hackathon-run/blob/main/skills/scope-knife/SKILL.md)           | Too many ideas, no MVP     | KEEP/CUT/DEFER + demo path           |
+| [fast-verify](https://github.com/MAGA2010/hackathon-run/blob/main/skills/fast-verify/SKILL.md)           | "Will it demo?"            | Step-by-step verification log        |
+| [demo-coach](https://github.com/MAGA2010/hackathon-run/blob/main/skills/demo-coach/SKILL.md)             | 30/60/90s pitch            | Flow script with SAY/CLICK/SHOW/NOT  |
+| [judge-sim](https://github.com/MAGA2010/hackathon-run/blob/main/skills/judge-sim/SKILL.md)         | Pre-submission self-review | 7-dimension scoring + fix priorities |
+| [ship-pack](https://github.com/MAGA2010/hackathon-run/blob/main/skills/ship-pack/SKILL.md)               | Submitting now             | README check, secret scan, packaging |
+| [recovery-runbook](https://github.com/MAGA2010/hackathon-run/blob/main/skills/recovery-runbook/SKILL.md) | Live demo fails            | P0–P3 fallback + 30s script          |
 
 ## Where to go next
 

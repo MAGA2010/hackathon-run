@@ -19,7 +19,8 @@ import { Command } from "commander";
 
 import { init } from "./commands/init.js";
 import { list } from "./commands/list.js";
-import { status } from "./commands/status.js";
+import { status } from './commands/status.js';
+import { doctor } from './commands/doctor.js';
 import { validate } from "./commands/validate.js";
 import { loadAllSkills } from "../harness/loader.js";
 import { matchSkill } from "../harness/trigger.js";
@@ -48,7 +49,13 @@ program
   .action(() => process.exit(list(process.cwd())));
 
 program
-  .command("status")
+  .command('doctor')
+  .description('Self-check the environment and state-file health')
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'use a different working directory', process.cwd())
+  .action((opts) => process.exit(doctor({ cwd: opts.cwd, json: Boolean(opts.json) })))
+
+  .command('status')
   .description("Show current lifecycle state across all 5 state files")
   .option("--json", "machine-readable JSON output")
   .option("-C, --cwd <path>", "use a different working directory", process.cwd())

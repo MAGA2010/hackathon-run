@@ -88,6 +88,53 @@ Maintainers only. Tag-driven, automated by `.github/workflows/release.yml`:
 - Marketing copy in skill bodies.
 - Dependencies that are not absolutely required.
 
+## Adding a new skill — the fast path
+
+Skip the manual SKILL.md writing. Use the scaffolding CLI:
+
+```bash
+# 1. Scaffold
+hackathon new-skill my-cool-skill \
+  --description "Does X when Y" \
+  --when-to-use "Run when ... Do not invoke when ..." \
+  --with-tests
+
+# 2. Fill in the stub: SKILL.md sections + scripts/my-cool-skill.py
+# 3. Add a JSON schema at src/state/schemas/my-cool-skill.schema.json
+# 4. Lint your work
+hackathon validate-skill skills/my-cool-skill --json
+```
+
+The validator checks 8 things (frontmatter, folder-name match, trigger
+budget, action-verb lead, required body sections, trigger phrases,
+script shebang + VERSION, schema references). CI runs it against every
+shipped skill on every PR.
+
+## Adding a state file
+
+If your skill writes a state file, you also need a schema.
+
+```bash
+# 1. Write the JSON schema at src/state/schemas/<your-skill>.schema.json
+# 2. Reference it from your SKILL.md (e.g. .hackathon/state/<your-skill>.json)
+# 3. Use writeState from the harness, OR call the JSON schema validator
+#    directly via Ajv (see src/cli/commands/validate.ts for the pattern)
+```
+
+## Comparing two state files
+
+```bash
+# Side-by-side after a pivot or post-mortem
+hackathon diff .hackathon/state/plan.json /tmp/previous-plan.json
+hackathon diff --stat .hackathon/state/ examples/web-app/.hackathon/state/
+```
+
+## State schema migrations
+
+If you bump a schema version, write a one-shot `scripts/migrate-<from>-<to>.py`
+under `src/state/migrations/` and call it from `hackathon doctor`'s
+"migrate" hint. See ROADMAP.md.
+
 ## What we want
 
 - Bug reports with reproducible steps.

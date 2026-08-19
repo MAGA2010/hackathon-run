@@ -48,6 +48,13 @@ jobs:
       - name: Unit tests
         run: npm run test:unit
 
+      - name: Validate skill protocol
+        run: |
+          for d in skills/*/; do
+            echo "== $d =="
+            node dist/cli/index.js validate-skill "$d"
+          done
+
       - name: Acceptance + integration tests
         run: npm test
 
@@ -79,5 +86,6 @@ jobs:
             --time-remaining 240 \
             --out-dir $TMP/repo/.hackathon
           test -f $TMP/repo/.hackathon/state/plan.json
+
 
 

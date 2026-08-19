@@ -104,8 +104,19 @@ assert 'sk-' not in cmd and 'AKIA' not in cmd
 "
 pass "packaging command excludes secrets and build artifacts"
 
+section "Acceptance: webhook failure is non-fatal"
+HACKATHON_SHIP_WEBHOOK="http://127.0.0.1:1" \
+    "$PY" "$ROOT/skills/ship-pack/scripts/audit.py" --repo-root "$REPO_A" --out-dir "$REPO_A/.hackathon" >/dev/null 2>/dev/null
+test -f "$JSON_A" || fail "ship.json missing after webhook failure"
+python3 -c "
+import json
+d = json.load(open(r'$JSON_A'))
+assert d['secret_scan']['clean'] is True
+"
+pass "unreachable webhook does not block the audit"
+
 section "Acceptance: ship.json validates against schema"
-node "$ROOT/dist/cli/commands/validate.js" "$REPO_A/.hackathon/state" >/dev/null
+node "$ROOT/dist/cli/index.js" validate "$REPO_A/.hackathon/state" >/dev/null
 pass "schema validation passes"
 
 echo

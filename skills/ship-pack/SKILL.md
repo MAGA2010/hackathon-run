@@ -15,6 +15,11 @@ Required:
 
 - `repo_root`: project root
 
+Optional:
+
+- `HACKATHON_SHIP_WEBHOOK`: HTTP endpoint that receives the ship audit as JSON after it is written. Delivery is non-fatal; failure only prints a warning.
+- `HACKATHON_SHIP_WEBHOOK_TIMEOUT_SECONDS`: request timeout (default 3).
+
 ## Execution
 
 ### 1. README check

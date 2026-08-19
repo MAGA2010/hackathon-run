@@ -15,6 +15,8 @@ import json
 import os
 import re
 import sys
+import urllib.error
+import urllib.request
 from datetime import datetime, timezone
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -29,6 +31,9 @@ SECRET_PATTERNS = [
     re.compile(r"sk-[A-Za-z0-9]{20,}"),                            # OpenAI-style key
     re.compile(r"eyJ[A-Za-z0-9_=-]+\.eyJ[A-Za-z0-9_=-]+"),        # JWT shape
 ]
+
+SHIP_WEBHOOK_ENV = "HACKATHON_SHIP_WEBHOOK"
+SHIP_WEBHOOK_TIMEOUT_ENV = "HACKATHON_SHIP_WEBHOOK_TIMEOUT_SECONDS"
 
 
 SKIP_DIRS = {".git", "node_modules", ".venv", "venv", "__pycache__",
@@ -153,6 +158,25 @@ def packaging_command(repo: str) -> str:
     return f"tar czf submit.tar.gz {' '.join(excludes)} ."
 
 
+def post_webhook(url: str, payload: dict) -> bool:
+    """Post the ship audit to a team webhook; return True only on success."""
+    try:
+        timeout = float(os.environ.get(SHIP_WEBHOOK_TIMEOUT_ENV, "3") or "3")
+    except ValueError:
+        timeout = 3.0
+    request = urllib.request.Request(
+        url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as resp:
+            return 200 <= resp.status < 300
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+        return False
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--repo-root", required=True)
@@ -176,6 +200,17 @@ def main() -> int:
     os.makedirs(artifact_dir, exist_ok=True)
     with open(os.path.join(state_dir, "ship.json"), "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
+
+    webhook = os.environ.get(SHIP_WEBHOOK_ENV, "").strip()
+    if webhook:
+        if post_webhook(webhook, {"event": "ship-pack-audit", "ship": result}):
+            print("webhook: delivered ship audit")
+        else:
+            print(
+                f"warn: ship webhook delivery failed "
+                f"(set {SHIP_WEBHOOK_ENV} to a reachable HTTP endpoint)",
+                file=sys.stderr,
+            )
 
     md = ["# Ship Pack Audit", "",
           f"_Generated: {result['generated_at']}_", ""]

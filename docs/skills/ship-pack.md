@@ -7,10 +7,11 @@ The last skill. Run immediately before submission. Re-run if review.json changes
 
 ## Inputs
 
-| Field                          | Type | Required | Description                     |
-| ------------------------------ | ---- | -------- | ------------------------------- |
-| `repo_root`                    | path | required | current project root            |
-| `.hackathon/state/review.json` | file | required | to derive the final polish list |
+| Field                          | Type | Required | Description                                      |
+| ------------------------------ | ---- | -------- | ------------------------------------------------ |
+| `repo_root`                    | path | required | current project root                             |
+| `.hackathon/state/review.json` | file | required | to derive the final polish list                  |
+| `HACKATHON_SHIP_WEBHOOK`       | URL  | optional | receives the audit as JSON; failure is non-fatal |
 
 ## Outputs
 

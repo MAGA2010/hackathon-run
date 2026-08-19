@@ -1,10 +1,10 @@
----
 name: Docs
 
 on:
   push:
     branches: [main]
     paths: ["docs/**", "mkdocs.yml"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,18 +16,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install mkdocs + material
+        run: pip install mkdocs mkdocs-material
+
+      - name: Build
+        run: mkdocs build --strict
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site/
+
   deploy:
+    name: Deploy to GitHub Pages
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - run: pip install mkdocs mkdocs-material
-      - run: mkdocs gh-deploy --force
       - id: deployment
         uses: actions/configure-pages@v4
----
+
+      - uses: actions/deploy-pages@v4

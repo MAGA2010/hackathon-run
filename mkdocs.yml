@@ -77,33 +77,21 @@ plugins:
 nav:
   - Home: index.md
   - Getting Started:
-      - getting-started/installation.md
-      - getting-started/quickstart.md
-      - getting-started/concepts.md
-  - Skills:
-      - skills/scope-knife.md
-      - skills/fast-verify.md
-      - skills/demo-coach.md
-      - skills/judge-sim.md
-      - skills/ship-pack.md
-      - skills/recovery-runbook.md
+      - Installation: getting-started/installation.md
+      - Quickstart: getting-started/quickstart.md
   - Guides:
-      - guides/36-hour-walkthrough.md
-      - guides/team-coordination.md
-      - guides/emergency-handling.md
+      - 36-Hour Walkthrough: guides/36-hour-walkthrough.md
   - Architecture:
-      - architecture/overview.md
-      - architecture/state-schemas.md
-      - architecture/skill-protocol.md
+      - Overview: architecture/overview.md
+      - State Schemas: architecture/state-schemas.md
+      - Skill Protocol: architecture/skill-protocol.md
       - ADRs: architecture/adr/index.md
   - Contributing:
-      - contributing/contributing.md
-      - contributing/skill-template.md
-      - contributing/local-development.md
+      - Contributing Guide: contributing/contributing.md
+      - Skill Template: contributing/skill-template.md
   - About:
-      - about/motivation.md
-      - about/faq.md
-      - about/changelog.md
+      - Motivation: about/motivation.md
+      - FAQ: about/faq.md
 
 extra:
   social:

@@ -138,6 +138,40 @@ describe('validate-skill', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
+  it('does not accept a VERSION pin hidden inside the docstring', () => {
+    const dir = makeSkillDir(GOOD_BODY, {
+      withScript: true,
+      folder: 'scope-knife',
+      scriptBody:
+        '#!/usr/bin/env python3\n"""\nVERSION = "1.0"\nnot real code\n"""\nimport argparse\nap = argparse.ArgumentParser()\n--feature x\n',
+    });
+    captured = '';
+    validateSkill({ target: dir, cwd: process.cwd(), json: true });
+    const out = JSON.parse(captured);
+    assert.ok(
+      out.findings.some((f) => /VERSION/.test(f.message)),
+      'a VERSION pin inside the docstring must still warn',
+    );
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('accepts a real module-level VERSION pin', () => {
+    const dir = makeSkillDir(GOOD_BODY, {
+      withScript: true,
+      folder: 'scope-knife',
+      scriptBody:
+        '#!/usr/bin/env python3\n"""\nDocstring.\n"""\nimport argparse\n\nVERSION = "1.0"\n\nap = argparse.ArgumentParser()\n',
+    });
+    captured = '';
+    validateSkill({ target: dir, cwd: process.cwd(), json: true });
+    const out = JSON.parse(captured);
+    assert.ok(
+      !out.findings.some((f) => /VERSION/.test(f.message)),
+      'a real module-level VERSION pin must not warn',
+    );
+    rmSync(dir, { recursive: true, force: true });
+  });
+
   it('returns 2 for a non-existent directory', () => {
     const code = validateSkill({ target: '/no/such/dir/anywhere' });
     assert.equal(code, 2);

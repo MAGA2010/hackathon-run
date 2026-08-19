@@ -127,10 +127,8 @@ function checkSkill(skillDir: string, cwd: string): Finding[] {
     });
   } else {
     // Pick the most likely "main" script: folder-named first, else the only file, else the first.
-    const candidate =
-      scriptsPresent.find((n) => n === `${folder}.py`) ??
-      (scriptsPresent.length === 1 ? scriptsPresent[0] : scriptsPresent[0]);
-    const mainScript = join(scriptsDir, candidate!);
+    const candidate = scriptsPresent.find((n) => n === `${folder}.py`) ?? scriptsPresent[0];
+    const mainScript = join(scriptsDir, candidate);
     const s = readFileSync(mainScript, 'utf-8');
     if (!s.startsWith('#!/usr/bin/env python3')) {
       out.push({
@@ -138,16 +136,22 @@ function checkSkill(skillDir: string, cwd: string): Finding[] {
         message: `${mainScript} is missing the #!/usr/bin/env python3 shebang`,
       });
     }
-    if (!/--repo-root|--plan|--demo|--symptom|--repo|--utterance/i.test(s)) {
+    if (!/--[a-z][a-z0-9-]+/i.test(s)) {
       out.push({
         severity: 'warn',
-        message: `${mainScript} does not declare a --repo-root (or related) argument`,
+        message: `${mainScript} does not declare any CLI arguments (--flag)`,
       });
     }
-    if (!/^VERSION\s*=\s*["'']1\.0["'']/m.test(s)) {
+    // Strip the leading module docstring so a version pin typed as prose
+    // inside a docstring cannot pass the check (real code must define it).
+    const codeOnly = s
+      .replace(/^#!.*\n?/, '')
+      .replace(/^\s*"""(?:.|\n)*?"""\s*\n?/, '')
+      .replace(/^\s*'''(?:.|\n)*?'''\s*\n?/, '');
+    if (!/^VERSION\s*=\s*["'']1\.0["'']/m.test(codeOnly)) {
       out.push({
         severity: 'warn',
-        message: `${mainScript} does not pin VERSION = "1.0" at the top`,
+        message: `${mainScript} does not define VERSION = "1.0" at module level`,
       });
     }
   }

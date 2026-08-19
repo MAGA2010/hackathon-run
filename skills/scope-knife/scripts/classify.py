@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
 """
-
-VERSION = "1.0"
-
 classify.py — turn a feature inventory into KEEP/CUT/DEFER decisions under
 time pressure.
 
@@ -30,6 +27,8 @@ import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+VERSION = "1.0"
 
 # Pressure thresholds (minimum CUT rate by remaining time).
 PRESSURE_TABLE = [

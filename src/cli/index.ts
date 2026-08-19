@@ -32,6 +32,7 @@ import { validate } from './commands/validate.js';
 import { loadAllSkills } from '../harness/loader.js';
 import { runSkill } from './commands/run.js';
 import { replay } from './commands/replay.js';
+import { report } from './commands/report.js';
 import { skills } from './commands/skills.js';
 import { matchSkill } from '../harness/trigger.js';
 import { startMcpServer } from '../mcp/server.js';
@@ -89,9 +90,13 @@ program
 program
   .command('list')
   .description('List every bundled skill')
-  .action(() => process.exit(list(process.cwd())));
+  .option(
+    '-C, --cwd <path>',
+    'use a different working directory (where skills/ live)',
+    process.cwd(),
+  )
+  .action((opts: { cwd?: string }) => process.exit(list(opts.cwd ?? process.cwd())));
 
-program;
 program
   .command('doctor')
   .description('Self-check the environment and state-file health')
@@ -146,6 +151,7 @@ program
   )
   .option('--apply', 'actually write the pre-filled state file to .hackathon/state/')
   .option('--no-banner', 'skip the "# Skill:" + trigger budget header')
+  .option('-C, --cwd <path>', 'repo root (where skills/ and .hackathon/ live)', process.cwd())
   .action(
     (
       skillName: string,
@@ -155,6 +161,7 @@ program
         timeRemaining?: number;
         apply?: boolean;
         banner?: boolean;
+        cwd?: string;
       },
     ) => {
       const code = runSkill({
@@ -164,6 +171,7 @@ program
         timeRemaining: opts.timeRemaining,
         apply: opts.apply,
         noBanner: opts.banner === false,
+        cwd: opts.cwd,
       });
       process.exit(code);
     },
@@ -176,6 +184,16 @@ program
   .option('-C, --cwd <path>', 'use a different repo root', process.cwd())
   .action((opts: { json?: boolean; cwd?: string }) => {
     process.exit(replay({ json: opts.json, cwd: opts.cwd }));
+  });
+
+program
+  .command('report')
+  .description('Generate a post-hackathon markdown report from state files')
+  .option('--out <path>', 'write the markdown report to a file (default: stdout)')
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'use a different repo root', process.cwd())
+  .action((opts: { out?: string; json?: boolean; cwd?: string }) => {
+    process.exit(report({ out: opts.out, json: opts.json, cwd: opts.cwd }));
   });
 
 const skillsCmd = program

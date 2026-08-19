@@ -247,6 +247,12 @@ function buildSkeleton(stateFile: string, opts: RunOptions): unknown {
         members: [],
         bottleneck: { member: '', reason: '' },
       };
+    case 'decision-log.json':
+      return {
+        version: '1.0',
+        generated_at: now,
+        entries: [],
+      };
   }
   return { version: '1.0', generated_at: now };
 }

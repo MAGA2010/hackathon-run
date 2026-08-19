@@ -33,6 +33,13 @@ interface TimelineEntry {
   summary: string;
 }
 
+type TimedTimelineEntry = TimelineEntry & { delta_min: number };
+
+export interface CollectedTimeline {
+  stateDir: string;
+  entries: TimedTimelineEntry[];
+}
+
 const STAGE_ORDER: Record<string, number> = {
   plan: 1,
   time: 1.5,
@@ -80,13 +87,10 @@ function summarize(file: string, json: any): string {
   }
 }
 
-export function replay(opts: ReplayOptions): number {
-  const cwd = opts.cwd ?? process.cwd();
+export function collectTimeline(cwd: string): CollectedTimeline {
   const stateDir = resolve(cwd, '.hackathon/state');
   if (!existsSync(stateDir)) {
-    log.err(`.hackathon/state/ not found in ${cwd}`);
-    log.dim(`run ${c.cyan('hackathon init')} first`);
-    return 2;
+    throw new Error(`.hackathon/state/ not found in ${cwd}`);
   }
 
   const files = readdirSync(stateDir).filter((f) => f.endsWith('.json'));
@@ -125,6 +129,21 @@ export function replay(opts: ReplayOptions): number {
     prev = t;
     return { ...e, delta_min: deltaMin };
   });
+
+  return { stateDir, entries: timeline };
+}
+
+export function replay(opts: ReplayOptions): number {
+  const cwd = opts.cwd ?? process.cwd();
+  let collected: CollectedTimeline;
+  try {
+    collected = collectTimeline(cwd);
+  } catch (e) {
+    log.err((e as Error).message);
+    log.dim(`run ${c.cyan('hackathon init')} first`);
+    return 2;
+  }
+  const { stateDir, entries: timeline } = collected;
 
   if (opts.json) {
     const out = {

@@ -15,6 +15,9 @@ specifies.
 | [ship-pack](ship-pack.md)               | Final ship audit (secrets, README, packaging)           | `ship.json`     |
 | [recovery-runbook](recovery-runbook.md) | Detect a 2am-class failure and emit a runbook           | `recovery.json` |
 | [pivot](pivot.md)                       | Re-run scope-knife after a mid-build direction change   | (artifact only) |
+| [time-box](time-box.md)                 | Allocate remaining clock to each pipeline stage         | `time-box.json` |
+| [stack-picker](stack-picker.md)         | Recommend a tech stack when the team has no preference  | `stack.json`    |
+| [retro](retro.md)                       | Post-event retrospective with 4 ratios + 3 buckets      | `retro.json`    |
 
 ## How to read each page
 

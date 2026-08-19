@@ -32,3 +32,21 @@ Each skill writes JSON state files into `.hackathon/state/`. Schemas live in
 `tests/run-acceptance.sh` and `tests/run-integration.sh` call
 `hackathon validate` after every run. CI fails if any state file is
 malformed.
+
+## Index of schemas
+
+Every state file in `.hackathon/state/` has a matching schema under `src/state/schemas/`. The pack ships nine schemas as of v0.4.0:
+
+| Schema file            | Skill that writes it      | Required keys                                                        |
+| ---------------------- | ------------------------- | -------------------------------------------------------------------- |
+| `plan.schema.json`     | scope-knife               | version, generated_at, demo_goal, features, demo_path, next_tasks    |
+| `verify.schema.json`   | fast-verify               | version, generated_at, demo_path, steps                              |
+| `demo.schema.json`     | demo-coach                | version, generated_at, script                                        |
+| `review.schema.json`   | judge-sim                 | version, generated_at, scores                                        |
+| `ship.schema.json`     | ship-pack                 | version, generated_at, gates, status                                 |
+| `recovery.schema.json` | recovery-runbook          | version, generated_at, fallback_script                               |
+| `time-box.schema.json` | time-box (new in 0.4)     | version, generated_at, schedule                                      |
+| `stack.schema.json`    | stack-picker (new in 0.4) | version, generated_at, recommendation, runners_up, bootstrap         |
+| `retro.schema.json`    | retro (new in 0.4)        | version, generated_at, ratios, keep_doing, stop_doing, try_next_time |
+
+To add a new one: see [How to add a new state file](#how-to-add-a-new-state-file) above.

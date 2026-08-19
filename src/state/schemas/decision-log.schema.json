@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maga2010.github.io/hackathon-run/schemas/decision-log.schema.json",
+  "title": "Decision Log",
+  "description": "Output of decision-log. Append-only record of every KEEP/CUT/DEFER/PIVOT decision with rationale.",
+  "type": "object",
+  "required": ["version", "generated_at", "entries"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "1.0"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["at", "feature", "classification", "rationale"],
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "feature": {
+            "type": "string",
+            "minLength": 1
+          },
+          "classification": {
+            "enum": ["KEEP", "CUT", "DEFER", "PIVOT"]
+          },
+          "rationale": {
+            "type": "string",
+            "minLength": 1
+          },
+          "author": {
+            "type": "string"
+          },
+          "relates_to": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

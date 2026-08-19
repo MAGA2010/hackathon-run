@@ -2,10 +2,10 @@
 
 > **Ship the demo, not the dream.**
 
-A decision-making and execution system for hackathon teams operating under time pressure. Eleven skills, one workflow: **clarify, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro.**
+A decision-making and execution system for hackathon teams operating under time pressure. Thirteen skills, one workflow: **clarify, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
-[![Version](https://img.shields.io/badge/version-0.4.0-blue)](https://github.com/MAGA2010/hackathon-run/releases)
+[![Version](https://img.shields.io/badge/version-0.5.0-blue)](https://github.com/MAGA2010/hackathon-run/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2)](https://discord.gg/hackathon-surgeon)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
@@ -32,7 +32,7 @@ A hackathon is not a coding problem. It is a **time-pressure, decision-making, e
 
 ## How it works
 
-Eight skills, mapped to the hackathon lifecycle:
+Thirteen skills, mapped to the hackathon lifecycle:
 
 `   idea-clarify (pre)             pivot (mid-build redirect)
               │                              │
@@ -40,20 +40,28 @@ Eight skills, mapped to the hackathon lifecycle:
    scope-knife ─► time-box ─► fast-verify ─► demo-coach ─► judge-sim ─► ship-pack
         │              │            │              │             │            │
         └──────────────┴────────────┴──────────────┴─────────────┴────────────┘
-              │                                              │
-        stack-picker (cold-start)                    retro (post-event)
-                                       │
-                              recovery-runbook (anytime)`
+        │             │         │             │           │             │      
+        stack-picker (cold-start)                         retro (post-event)   
+                      │         │             │                         │      
+                                team-roster (build start)               recovery-runbook (anytime)
+                      │                       │                                
+                                              demo-rehearsal (final 2h)        `
 
-| Skill             | When                                              | Output                                              |
-| ----------------- | ------------------------------------------------- | --------------------------------------------------- |
-| **scope-knife**   | Too many ideas, no MVP consensus, clock shrinking | KEEP/CUT/DEFER classification + demo path           |
-| **ast-verify**    | "Will this demo work?"                            | Step-by-step verification, stops at first failure   |
-| **demo-coach**    | 30/60/90-second pitch, no clear narrative         | Flow script + risk flags                            |
-| **judge-sim**     | Pre-submission self-review                        | 0-5 rating across 7 dimensions + fix priorities     |
-| **ship-pack**     | Submitting now, worried about secrets             | README check, secret scan, packaging command        |
-| **                |
-| ecovery-runbook** | Demo fails on stage                               | P0-P3 severity, fallback strategy, 30-second script |
+| Skill                | When                                              | Output                                              |
+| -------------------- | ------------------------------------------------- | --------------------------------------------------- |
+| **idea-clarify**     | One-paragraph brief, no demo_goal yet             | (artifact only)                                     |
+| **scope-knife**      | Too many ideas, no MVP consensus, clock shrinking | KEEP/CUT/DEFER classification + demo path           |
+| **fast-verify**      | "Will this demo work?"                            | Step-by-step verification, stops at first failure   |
+| **demo-coach**       | 30/60/90-second pitch, no clear narrative         | Flow script + risk flags                            |
+| **judge-sim**        | Pre-submission self-review                        | 0-5 rating across 7 dimensions + fix priorities     |
+| **ship-pack**        | Submitting now, worried about secrets             | README check, secret scan, packaging command        |
+| **recovery-runbook** | Demo fails on stage                               | P0-P3 severity, fallback strategy, 30-second script |
+| **pivot**            | Mid-build direction change                        | Re-runs scope-knife with new constraints            |
+| **time-box**         | "How much time for each stage?"                   | Schedule + per-stage checkpoints                    |
+| **stack-picker**     | "What stack should we use?"                       | Recommendation + 30-min bootstrap walkthrough       |
+| **retro**            | After submission, want ratios + action list       | 4 ratios + keep_doing/stop_doing/try_next_time      |
+| **demo-rehearsal**   | Final 2 hours, want a timed mock run              | Per-segment score + fix list                        |
+| **team-roster**      | Build phase, >2 KEEP features, roles unclear      | Role assignments + bottleneck + rescuer             |
 
 Each skill is **independently invokable**. You can run any of them at any time without running the others.
 
@@ -109,9 +117,12 @@ Full docs at [maga2010.github.io/hackathon-run](https://maga2010.github.io/hacka
 
 Three real-style projects that use the pack end-to-end:
 
-- [xamples/web-app](examples/web-app/) — Next.js SaaS in 36 hours
-- [xamples/ai-ml](examples/ai-ml/) — FastAPI + LLM app
-- [xamples/mobile](examples/mobile/) — React Native client
+- [examples/web-app](examples/web-app/) — Next.js SaaS in 36 hours
+- [examples/ai-ml](examples/ai-ml/) — FastAPI + LLM app
+- [examples/mobile](examples/mobile/) — React Native client
+- [examples/chrome-extension](examples/chrome-extension/) — Manifest V3 TODO highlighter
+- [examples/data-eng](examples/data-eng/) — Python stdlib ETL (CSV → TSV)
+- [examples/devtool-cli](examples/devtool-cli/) — Node ESM CLI tool
 
 Each example includes the full .hackathon/ directory with state and artifacts from a real run.
 

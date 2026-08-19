@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-08-19
+
+### Added
+
+- **Two new skills** (the pack now ships 13):
+  - `demo-rehearsal` — runs the team through a timed mock demo with a stopwatch, scores each segment for over/under-time, and emits a per-segment fix list. Use in the final 2 hours before the live demo. Pairs with demo-coach (one drafts the script, the other times the run).
+  - `team-roster` — assigns each teammate a role + current task + blocker status, then surfaces the critical-path bottleneck. Use at the start of the build phase and any time the team feels stuck. Pairs with scope-knife (without a plan there is nothing to assign).
+- **Three new CLI commands** (`hackathon run --apply`, `hackathon replay`, `hackathon skills`):
+  - `hackathon run <skill> --apply` — parses 5 flags (`--demo-goal`, `--team-size`, `--time-remaining`, `--apply`, `--no-banner`) and pre-fills the skill's target state file via the schema-validated `writeState()` helper. Unknown flags now fail loudly instead of being silently accepted.
+  - `hackathon replay` — reconstructs the team's timeline from `.hackathon/state/`. Each file's `generated_at` (or `started_at` for verify.json) is used for chronological ordering; output is human-readable by default, `--json` for machines. Pairs with retro.
+  - `hackathon skills {list,pin,diff,show}` — manages a per-team `.hackathon/skills.json` catalog. `pin` writes name + version + sha256 checksum; `diff` shows what changed since the pin; `show` prints the current pin. Useful for CI reproducibility.
+- **Two new JSON schemas** under `src/state/schemas/`:
+  - `rehearsal.schema.json` (per-step timings + scores + fix list)
+  - `roster.schema.json` (role assignments + bottleneck detection)
+- **ADR-0006: v0.5 — run-time argument parsing + replay + skills.json catalog + 2 new skills**. Documents the four CLI/structural changes and the two new skills. Updated `docs/architecture/adr/index.md`.
+- **Skill detail pages for `demo-rehearsal` and `team-roster`** in `docs/skills/`, with mkdocs nav entries.
+- **3 new docs pages + index updates** (skills/index.md, mkdocs.yml, state-schemas.md).
+- **13 new unit tests** (7 new `run --apply` tests covering flag parsing + skeleton building + state validation, 6 new `replay`/`skills` tests covering timeline reconstruction + catalog management). Total: 111/111 passing.
+
+### Changed
+
+- **`hackathon run`** — unknown flags now fail loudly (`error: unknown option '--foo'`) instead of being silently accepted via `allowUnknownOption(true)`. The target state file is inferred by taking the **last** `state/<x>.json` reference in the SKILL.md body.
+- **`validate-skill`** action-verb regex gained `assign|rehearse` so the two new skills' descriptions pass the validator.
+
+### Fixed
+
+- **`skills/scope-knife/scripts/classify.py`** — `VERSION` was only set inside a dict literal; now pinned as a module-level constant `VERSION = "1.0"` at the top of the file. The validate-skill "script lacks VERSION pin" warning now correctly reports zero findings for scope-knife.
+
 ## [0.4.0] - 2026-08-19
 
 ### Added

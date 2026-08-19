@@ -8,8 +8,8 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [x] Skill matcher v2 (bigram + phrase + action-verb scoring)
 - [x] `hackathon status` / `doctor` / `flow` CLI commands
 - [x] Unit-test suite via Node's built-in `node:test` runner
-- [x] 9 skill detail pages + state-machine index
-- [x] Real source scaffolds for the three example projects
+- [x] 13 skill detail pages + state-machine index
+- [x] Real source scaffolds for the six example projects
 - [x] ESLint v9 flat config wired to CI
 - [x] Frontmatter parser supports YAML-style `- item` arrays
 - [x] `state.ts` correctly maps `<file>.json` -> `<stem>.schema.json`
@@ -21,16 +21,21 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [x] 8 MCP tools after v0.4.0: adds validate_skill, apply_skill_advice, list_examples, get_recovery_plan
 - [x] 6 example projects after v0.4.0: adds data-eng, chrome-extension, devtool-cli
 - [x] 98/98 unit tests passing after v0.4.0
+- [x] **13 skills after v0.5.0**: adds demo-rehearsal, team-roster
+- [x] **`hackathon run <skill> --apply`** with `--demo-goal` / `--team-size` / `--time-remaining` flag parsing + skeleton pre-fill via `writeState()` (v0.5.0)
+- [x] **`hackathon replay`** — timeline reconstruction from `.hackathon/state/` with per-file `generated_at` ordering and `--json` output (v0.5.0)
+- [x] **`hackathon skills {list,pin,diff,show}`** — `.hackathon/skills.json` catalog with name + version + sha256 checksum (v0.5.0)
+- [x] **2 new JSON schemas** in v0.5.0: `rehearsal.schema.json`, `roster.schema.json`
+- [x] **ADR-0006** documenting the v0.5 CLI/structural changes (v0.5.0)
+- [x] **111/111 unit tests passing** after v0.5.0 (was 98 after v0.4.0)
 
-## Now (0.4.x)
+## Now (0.5.x)
 
 - [ ] **Embedding-based fallback matcher** — when token-based score = 0, fall back to a small embedding model (configurable; opt-in). Required because the current matcher fails on paraphrased trigger phrases.
-- [ ] **`hackathon replay`** — given a `plan.json` + `verify.json` + `review.json` + `ship.json` quartet, replay what the team did at each stage (good for post-mortems; pairs with the new `retro` skill).
-- [ ] **`hackathon run` argument parsing** — currently `hackathon run <skill>` just dumps the SKILL.md. Pass `--demo-goal="..."` style options to the SKILL.md body and pre-fill the state file with the user's args.
 - [ ] **Codecov + coverage report** in CI once the unit-test suite stabilizes.
 - [ ] **GitHub Pages deployment** of `site/` is already wired (`docs.yml`) but currently builds against `main` without a release tag. Tag-triggered builds are tracked separately.
 
-## Later (0.5+)
+## Later (0.6+)
 
 - [ ] **Skill marketplace format** — a JSON catalog at `.hackathon/skills.json` listing every skill with version + checksum, so teams can pin a known set.
 - [ ] **Typed CLI options** — replace `any` args in `run` with per-skill option specs derived from the skill's input contract section.

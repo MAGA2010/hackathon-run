@@ -1,5 +1,5 @@
 {
-  "name": "hackathon-surgeon",
+  "name": "@maga2010/hackathon-surgeon",
   "version": "0.1.0",
   "description": "A decision-making and execution system for hackathon teams operating under time pressure.",
   "type": "module",
@@ -19,15 +19,15 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "eslint src/ --ext .ts",
+    "lint": "tsc --noEmit",
     "format": "prettier --write \"**/*.{ts,md,json}\"",
     "format:check": "prettier --check \"**/*.{ts,md,json}\"",
-    "test": "bash tests/run-all.sh",
-    "test:acceptance": "bash tests/run-acceptance.sh",
-    "test:integration": "bash tests/run-integration.sh",
-    "validate": "node dist/cli/commands/validate.js",
-    "dogfood": "bash scripts/dogfood.sh",
-    "release": "bash scripts/release.sh"
+    "test": "npm run build --silent && node scripts/run-sh.mjs tests/run-all.sh",
+    "test:acceptance": "npm run build --silent && node scripts/run-sh.mjs tests/run-acceptance.sh",
+    "test:integration": "npm run build --silent && node scripts/run-sh.mjs tests/run-integration.sh",
+    "validate": "npm run build --silent && node dist/cli/commands/validate.js",
+    "dogfood": "node scripts/run-sh.mjs scripts/dogfood.sh",
+    "release": "node scripts/run-sh.mjs scripts/release.sh"
   },
   "keywords": [
     "hackathon",
@@ -49,12 +49,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hackathon-surgeon/hackathon-surgeon.git"
+    "url": "git+https://github.com/MAGA2010/hackathon-run.git"
   },
   "bugs": {
-    "url": "https://github.com/hackathon-surgeon/hackathon-surgeon/issues"
+    "url": "https://github.com/MAGA2010/hackathon-run/issues"
   },
-  "homepage": "https://hackathon-surgeon.dev",
+  "homepage": "https://maga2010.github.io/hackathon-run/",
   "dependencies": {
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",

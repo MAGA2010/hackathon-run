@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint, build, test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+      - name: Acceptance + integration tests
+        run: npm test
+
+      - name: Validate state schemas
+        run: npm run validate -- .hackathon/state
+        continue-on-error: true
+
+  python-smoke:
+    name: Python scripts smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Scan + classify on synthetic repo
+        run: |
+          set -euo pipefail
+          TMP=$(mktemp -d)
+          mkdir -p $TMP/repo/src/auth $TMP/repo/src/notes
+          touch $TMP/repo/src/auth/index.ts $TMP/repo/src/notes/index.ts
+          printf '# Demo\n## Auth\n## Notes\n' > $TMP/repo/README.md
+          python3 skills/scope-knife/scripts/scan_repo.py $TMP/repo > $TMP/inv.json
+          python3 skills/scope-knife/scripts/classify.py \
+            --inventory $TMP/inv.json \
+            --demo-goal "sign in and save a note" \
+            --time-remaining 240 \
+            --out-dir $TMP/repo/.hackathon
+          test -f $TMP/repo/.hackathon/state/plan.json

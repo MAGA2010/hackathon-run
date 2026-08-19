@@ -1,13 +1,25 @@
-# Default code owners
-*              @hackathon-surgeon/core-maintainers
+# CODEOWNERS — required reviewers per path.
+#
+# This file currently defines NO required reviewers. GitHub teams
+# (e.g. @hackathon-surgeon/core-maintainers) referenced in earlier
+# revisions do not exist yet, so listing them here would block every PR
+# forever (required-review never satisfied).
+#
+# To re-enable required reviews once the org + teams are created:
+#   1. Create @hackathon-surgeon/core-maintainers and @hackathon-surgeon/maintainers
+#      in https://github.com/orgs/hackathon-surgeon/teams
+#   2. Replace the placeholders below with real team handles.
+#   3. Restore the path-based rules you want enforced.
+
+# Default owner (placeholder, intentionally inactive)
+# *              @hackathon-surgeon/core-maintainers
 
 # Core SKILL.md files require senior review
-/skills/       @hackathon-surgeon/core-maintainers
+# /skills/       @hackathon-surgeon/core-maintainers
 
 # Schemas and shared infrastructure
-/src/state/    @hackathon-surgeon/core-maintainers
-/src/core/     @hackathon-surgeon/core-maintainers
+# /src/state/    @hackathon-surgeon/core-maintainers
 
 # Docs and examples can be reviewed by any maintainer
-/docs/         @hackathon-surgeon/maintainers
-/examples/     @hackathon-surgeon/maintainers
+# /docs/         @hackathon-surgeon/maintainers
+# /examples/     @hackathon-surgeon/maintainers

@@ -1,11 +1,18 @@
 {
-  "name": "qrme-mobile",
+  "name": "hackathon-surgeon-mobile-example",
   "version": "0.1.0",
   "private": true,
+  "description": "Example React Native scaffold used by the Hackathon Surgeon pack mobile walkthrough.",
+  "type": "module",
+  "scripts": {
+    "lint": "node --check src/api.ts",
+    "verify": "python3 ../../skills/fast-verify/scripts/verify_step.py --plan .hackathon/state/plan.json --step 1"
+  },
   "dependencies": {
     "react": "18.3.1",
-    "react-native": "0.74.0",
-    "react-native-camera": "4.2.1",
-    "react-native-qrcode-scanner": "1.5.7"
+    "react-native": "0.74.5"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.3"
   }
 }

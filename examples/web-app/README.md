@@ -10,22 +10,23 @@ examples/web-app/
 ├── README.md
 ├── package.json
 ├── src/
-│   ├── auth/
-│   ├── billing/
-│   ├── dashboard/
-│   └── api/
-└── .hackathon/
-    ├── state/
-    │   ├── plan.json
-    │   ├── verify.json
-    │   ├── demo.json
-    │   ├── review.json
-    │   └── ship.json
-    └── artifacts/
-        ├── scope-knife-output.md
-        ├── demo-script.md
-        ├── judge-sim-output.md
-        └── ship-pack-output.md
+│   ├── auth/        # email + password sign-up / sign-in
+│   ├── notes/       # CRUD + in-memory pub/sub for 3s sync
+│   ├── billing/     # Stripe webhook handler (signature + idempotency)
+│   └── dev-server.mjs  # minimal http server that wires it all together
+├── public/          # the three pages the demo_path navigates
+└── scripts/
+    ├── build.mjs    # stub build that asserts every file exists
+    └── smoke.mjs    # boots the server, hits each demo step, tears down
+```
+
+## Quick start
+
+```bash
+cd examples/web-app
+node src/dev-server.mjs     # serves the demo on http://localhost:3000
+# or, to smoke-test the whole demo_path:
+node scripts/smoke.mjs
 ```
 
 ## What the pack produced
@@ -77,10 +78,9 @@ A 60-second pitch built by `demo-coach`:
 
 ```bash
 cd examples/web-app
-npm install
-hackathon init --force
-# Walk through each skill with the values from .hackathon/state/*.json
-hackathon run scope-knife    # reads demo_goal from artifacts
+node src/dev-server.mjs       # in one terminal
+node scripts/smoke.mjs        # in another: walks the full demo path
+hackathon run scope-knife     # reads demo_goal from artifacts
 hackathon run fast-verify
 hackathon run demo-coach
 hackathon run judge-sim

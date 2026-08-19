@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Notes</title>
+    <style>
+      body {
+        font:
+          14px/1.5 -apple-system,
+          sans-serif;
+        max-width: 640px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      textarea {
+        width: 100%;
+        height: 6rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Your notes</h1>
+    <form id="f">
+      <textarea id="b" placeholder="Write a note..."></textarea>
+      <p><button>Save</button></p>
+    </form>
+    <ul id="list"></ul>
+    <script>
+      const f = document.getElementById('f');
+      const b = document.getElementById('b');
+      const list = document.getElementById('list');
+      f.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const r = await fetch('/api/notes', { method: 'POST', body: b.value });
+        const note = await r.json();
+        const li = document.createElement('li');
+        li.textContent = note.body;
+        list.prepend(li);
+        b.value = '';
+      });
+    </script>
+  </body>
+</html>

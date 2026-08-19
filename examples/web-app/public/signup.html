@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sign up</title>
+    <style>
+      body {
+        font:
+          14px/1.5 -apple-system,
+          sans-serif;
+        max-width: 480px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      input,
+      button {
+        font: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Sign up</h1>
+    <form
+      onsubmit="
+        event.preventDefault();
+        location.href = '/notes';
+      "
+    >
+      <p>
+        <input required name="email" placeholder="email" style="width: 100%; padding: 0.5rem" />
+      </p>
+      <p>
+        <input
+          required
+          name="password"
+          type="password"
+          placeholder="password"
+          style="width: 100%; padding: 0.5rem"
+        />
+      </p>
+      <p><button>Create account</button></p>
+    </form>
+  </body>
+</html>

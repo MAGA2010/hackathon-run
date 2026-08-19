@@ -1,0 +1,24 @@
+{
+  "name": "hackathon-surgeon-webapp-example",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Example Next.js SaaS scaffold used by the Hackathon Surgeon pack's web-app walkthrough.",
+  "type": "module",
+  "scripts": {
+    "dev": "node src/dev-server.mjs",
+    "build": "node scripts/build.mjs",
+    "start": "node src/dev-server.mjs",
+    "verify": "python3 ../../skills/fast-verify/scripts/verify_step.py --plan .hackathon/state/plan.json --step 1",
+    "lint": "node --check src/auth/index.ts src/notes/index.ts src/billing/index.ts"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "postgres": "3.4.4"
+  },
+  "devDependencies": {
+    "@types/node": "20.14.0",
+    "typescript": "5.5.4"
+  }
+}

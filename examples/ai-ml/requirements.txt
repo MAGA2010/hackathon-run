@@ -1,5 +1,5 @@
-fastapi==0.110.0
-uvicorn==0.29.0
-openai==1.30.0
-pypdf==4.0.0
-python-multipart==0.0.9
+# Python deps for the ai-ml example.
+# Real hackathon projects would pin versions; the example uses only stdlib.
+# numpy>=2.0.0
+# scikit-learn>=1.4.0
+# pandas>=2.2.0

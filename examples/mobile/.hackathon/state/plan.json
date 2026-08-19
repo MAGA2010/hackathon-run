@@ -1,0 +1,53 @@
+{
+  "version": "1.0",
+  "generated_at": "2025-06-01T09:00:00Z",
+  "demo_goal": "A user scans a QR code and instantly sees their friend's profile.",
+  "time_remaining_minutes": 240,
+  "features": [
+    {
+      "name": "QR scanner",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Entry point.",
+      "time_estimate_minutes": 30
+    },
+    {
+      "name": "Profile view",
+      "status": "implemented",
+      "classification": "KEEP",
+      "rationale": "Demo target.",
+      "time_estimate_minutes": 60
+    },
+    {
+      "name": "Push notifications",
+      "status": "unimplemented",
+      "classification": "CUT",
+      "rationale": "Off path.",
+      "time_estimate_minutes": 180
+    },
+    {
+      "name": "Offline mode",
+      "status": "unimplemented",
+      "classification": "DEFER",
+      "rationale": "Post-MVP.",
+      "time_estimate_minutes": 240
+    },
+    {
+      "name": "Auth (OAuth)",
+      "status": "half-implemented",
+      "classification": "KEEP",
+      "rationale": "Required for profile fetch.",
+      "time_estimate_minutes": 90
+    }
+  ],
+  "demo_path": [
+    { "step": 1, "action": "Open the app.", "expected_outcome": "Camera permission prompt." },
+    { "step": 2, "action": "Scan QR code.", "expected_outcome": "Profile loads in <2s." },
+    { "step": 3, "action": "Tap 'Add Friend'.", "expected_outcome": "Friend added." }
+  ],
+  "next_tasks": [
+    { "priority": "P0", "task": "Verify demo path end-to-end.", "estimate_minutes": 30 },
+    { "priority": "P0", "task": "Finish OAuth.", "estimate_minutes": 90 },
+    { "priority": "P1", "task": "Polish profile view.", "estimate_minutes": 30 }
+  ]
+}

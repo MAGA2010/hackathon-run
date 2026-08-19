@@ -3,7 +3,7 @@
 A 36-hour-build example: a tiny rule-based text classifier wrapped in the
 shape of a real ML project (package, CLI, eval report). The classifier
 itself is intentionally trivial — the goal of the example is to show the
-*shape* of an ML project that a hackathon team would actually ship.
+_shape_ of an ML project that a hackathon team would actually ship.
 
 ## Project structure
 

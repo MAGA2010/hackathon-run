@@ -20,6 +20,7 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "lint": "tsc --noEmit",
+    "lint:eslint": "eslint scripts/ examples/web-app/scripts/",
     "format": "prettier --write \"**/*.{ts,md,json}\"",
     "format:check": "prettier --check \"**/*.{ts,md,json}\"",
     "test": "npm run build --silent && node scripts/run-sh.mjs tests/run-all.sh",
@@ -70,4 +71,3 @@
     "typescript": "^5.5.4"
   }
 }
-

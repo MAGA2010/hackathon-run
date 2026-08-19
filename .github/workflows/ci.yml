@@ -36,6 +36,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Lint (eslint)
+        run: npm run lint:eslint
+
       - name: Format check
         run: npm run format:check
 
@@ -76,4 +79,5 @@ jobs:
             --time-remaining 240 \
             --out-dir $TMP/repo/.hackathon
           test -f $TMP/repo/.hackathon/state/plan.json
+
 

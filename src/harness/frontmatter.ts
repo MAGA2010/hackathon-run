@@ -80,8 +80,7 @@ export function parseFrontmatter(raw: string): ParseResult {
     blockBuffer = [];
   };
 
-  const isIndented = (line: string): boolean =>
-    line.startsWith(' ') || line.startsWith('\t');
+  const isIndented = (line: string): boolean => line.startsWith(' ') || line.startsWith('\t');
 
   for (const line of lines) {
     const km = line.match(KEY_RE);
@@ -105,14 +104,17 @@ export function parseFrontmatter(raw: string): ParseResult {
           // We had buffered scalar content; treat list start as boundary.
           const text = blockBuffer.join('\n').trim();
           if (text && !currentList) {
-            fm[currentKey] = currentKey === 'when_to_use'
-              ? text
-              : text.replace(/\s+/g, ' ').trim();
+            fm[currentKey] = currentKey === 'when_to_use' ? text : text.replace(/\s+/g, ' ').trim();
           }
           blockBuffer = [];
         }
         if (!currentList) currentList = [];
-        currentList.push(stripped.slice(2).trim().replace(/^["'']|["'']$/g, ''));
+        currentList.push(
+          stripped
+            .slice(2)
+            .trim()
+            .replace(/^["'']|["'']$/g, ''),
+        );
       } else if (stripped === '') {
         // Blank indented line; skip but keep list state.
         continue;

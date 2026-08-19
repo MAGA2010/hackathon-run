@@ -10,7 +10,7 @@ import { matchSkill } from '../../dist/harness/trigger.js';
 function mk(
   name,
   description,
-  when_to_use,
+  when_to_use = '',
   body = '',
   triggerBudget = description.length + (when_to_use ?? '').length,
 ) {
@@ -107,5 +107,42 @@ describe('matchSkill', () => {
     const r = matchSkill('', skills);
     assert.equal(r.skill, null);
     assert.equal(r.score, 0);
+  });
+
+  // ---- v2 additions: bigrams + phrase boost ----
+
+  it('bigram overlap boosts score beyond unigram alone', () => {
+    // Skill A has the bigram "demo path"; B only has "demo" and "path" separately
+    // but in different contexts. The exact bigram in A should win.
+    const skills = [
+      mk('a', 'verify the demo path step by step', ''),
+      mk('b', 'demo of the path is shown here', ''),
+    ];
+    const r = matchSkill('verify the demo path', skills);
+    assert.equal(r.skill?.frontmatter.name, 'a');
+    assert.ok(
+      r.candidates[0].reasons.some((s) => s.includes('bigram')),
+      'expected bigram overlap to be credited, reasons=' + r.candidates[0].reasons.join(' | '),
+    );
+  });
+
+  it('exact trigger phrase gives a strong boost', () => {
+    const body = ['## Trigger phrases', '- run the fast verify script', '## Other section'].join(
+      '\n',
+    );
+    const skills = [mk('a', 'do nothing relevant', ''), mk('b', 'verify stuff', '', body)];
+    const r = matchSkill('please run the fast verify script now', skills);
+    assert.equal(r.skill?.frontmatter.name, 'b');
+    assert.ok(r.candidates[0].reasons.some((s) => s.includes('phrase')));
+  });
+
+  it('first-word (action verb) match adds a small bonus', () => {
+    const skills = [
+      mk('shipper', 'Ship a working demo to production', ''),
+      mk('unrelated', 'manage a list of unrelated items', ''),
+    ];
+    const r = matchSkill('ship a working demo to production now', skills);
+    assert.equal(r.skill?.frontmatter.name, 'shipper');
+    assert.ok(r.candidates[0].reasons.some((s) => s.includes('action verb')));
   });
 });

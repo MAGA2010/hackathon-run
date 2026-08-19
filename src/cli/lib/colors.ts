@@ -4,8 +4,7 @@
  * that touches escape codes.
  */
 
-const wrap = (open: number, close: number) => (s: string) =>
-  `\x1b[${open}m${s}\x1b[${close}m`;
+const wrap = (open: number, close: number) => (s: string) => `\x1b[${open}m${s}\x1b[${close}m`;
 
 export const c = {
   red: wrap(31, 39),
@@ -33,5 +32,5 @@ export function row(cols: string[], widths: number[]): string {
     const w = widths[i] ?? 20;
     return col.padEnd(w).slice(0, w);
   });
-  return parts.join("  ");
+  return parts.join('  ');
 }

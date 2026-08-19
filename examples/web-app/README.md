@@ -35,14 +35,14 @@ examples/web-app/
 `scope-knife` was invoked at hour 0 with 36 hours remaining. After scanning,
 it classified the features:
 
-| Feature | Status | Decision |
-|---|---|---|
-| Auth (sign up / login) | implemented | KEEP |
-| Notes CRUD | implemented | KEEP |
-| Search | unimplemented | CUT |
-| Dark mode | unimplemented | DEFER |
-| Billing (Stripe) | half-implemented | KEEP (P0 polish) |
-| Notifications | unimplemented | CUT |
+| Feature                | Status           | Decision         |
+| ---------------------- | ---------------- | ---------------- |
+| Auth (sign up / login) | implemented      | KEEP             |
+| Notes CRUD             | implemented      | KEEP             |
+| Search                 | unimplemented    | CUT              |
+| Dark mode              | unimplemented    | DEFER            |
+| Billing (Stripe)       | half-implemented | KEEP (P0 polish) |
+| Notifications          | unimplemented    | CUT              |
 
 ### Demo script (`demo.json`)
 

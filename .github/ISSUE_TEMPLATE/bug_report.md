@@ -1,8 +1,8 @@
 ---
 name: 🐛 Bug Report
 about: Something in a skill is broken or wrong
-title: "[bug] "
-labels: ["bug", "triage"]
+title: '[bug] '
+labels: ['bug', 'triage']
 assignees: []
 ---
 

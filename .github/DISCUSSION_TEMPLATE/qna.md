@@ -1,6 +1,6 @@
 ---
-title: ""
-labels: ["question"]
+title: ''
+labels: ['question']
 ---
 
 ## What I want to do

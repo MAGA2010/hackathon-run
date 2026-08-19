@@ -31,14 +31,14 @@ hackathon run scope-knife
 
 ## The six skills
 
-| Skill | When | Output |
-|---|---|---|
-| [scope-knife](skills/scope-knife.md) | Too many ideas, no MVP | KEEP/CUT/DEFER + demo path |
-| [fast-verify](skills/fast-verify.md) | "Will it demo?" | Step-by-step verification log |
-| [demo-coach](skills/demo-coach.md) | 30/60/90s pitch | Flow script with SAY/CLICK/SHOW/NOT |
-| [judge-sim](skills/skill-judge-sim.md) | Pre-submission self-review | 7-dimension scoring + fix priorities |
-| [ship-pack](skills/ship-pack.md) | Submitting now | README check, secret scan, packaging |
-| [recovery-runbook](skills/recovery-runbook.md) | Live demo fails | P0–P3 fallback + 30s script |
+| Skill                                          | When                       | Output                               |
+| ---------------------------------------------- | -------------------------- | ------------------------------------ |
+| [scope-knife](skills/scope-knife.md)           | Too many ideas, no MVP     | KEEP/CUT/DEFER + demo path           |
+| [fast-verify](skills/fast-verify.md)           | "Will it demo?"            | Step-by-step verification log        |
+| [demo-coach](skills/demo-coach.md)             | 30/60/90s pitch            | Flow script with SAY/CLICK/SHOW/NOT  |
+| [judge-sim](skills/skill-judge-sim.md)         | Pre-submission self-review | 7-dimension scoring + fix priorities |
+| [ship-pack](skills/ship-pack.md)               | Submitting now             | README check, secret scan, packaging |
+| [recovery-runbook](skills/recovery-runbook.md) | Live demo fails            | P0–P3 fallback + 30s script          |
 
 ## Where to go next
 

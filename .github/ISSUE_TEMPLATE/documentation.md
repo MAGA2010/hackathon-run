@@ -1,8 +1,8 @@
 ---
 name: 📚 Documentation
 about: Improve docs, fix typos, clarify examples
-title: "[docs] "
-labels: ["documentation"]
+title: '[docs] '
+labels: ['documentation']
 assignees: []
 ---
 
@@ -14,13 +14,14 @@ assignees: []
 
 `
 <!-- paste -->
+
 `
 
 ## Proposed text
 
 `
 <!-- paste -->
+
 `
 
 ## Reason
-

@@ -12,6 +12,7 @@ when_to_use: |
 ## Input contract
 
 Required:
+
 - `repo_root`: project root
 
 ## Execution

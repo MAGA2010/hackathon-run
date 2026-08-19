@@ -4,7 +4,15 @@
   "title": "Hackathon Plan",
   "description": "Output of scope-knife. Lists every feature with its KEEP/CUT/DEFER classification, the demo path, and a prioritized next-steps task list.",
   "type": "object",
-  "required": ["version", "generated_at", "demo_goal", "time_remaining_minutes", "features", "demo_path", "next_tasks"],
+  "required": [
+    "version",
+    "generated_at",
+    "demo_goal",
+    "time_remaining_minutes",
+    "features",
+    "demo_path",
+    "next_tasks"
+  ],
   "additionalProperties": false,
   "properties": {
     "version": { "const": "1.0" },
@@ -88,26 +96,43 @@
       "demo_goal": "A user signs up and saves their first note.",
       "time_remaining_minutes": 240,
       "features": [
-        {"name": "Auth", "status": "implemented", "classification": "KEEP",
-         "rationale": "Core demo path.", "time_estimate_minutes": 30},
-        {"name": "Notes CRUD", "status": "half-implemented", "classification": "KEEP",
-         "rationale": "Core demo path.", "time_estimate_minutes": 90},
-        {"name": "Search", "status": "unimplemented", "classification": "CUT",
-         "rationale": "Off demo path.", "time_estimate_minutes": 120},
-        {"name": "Dark mode", "status": "unimplemented", "classification": "DEFER",
-         "rationale": "Polish, not critical.", "time_estimate_minutes": 60}
+        {
+          "name": "Auth",
+          "status": "implemented",
+          "classification": "KEEP",
+          "rationale": "Core demo path.",
+          "time_estimate_minutes": 30
+        },
+        {
+          "name": "Notes CRUD",
+          "status": "half-implemented",
+          "classification": "KEEP",
+          "rationale": "Core demo path.",
+          "time_estimate_minutes": 90
+        },
+        {
+          "name": "Search",
+          "status": "unimplemented",
+          "classification": "CUT",
+          "rationale": "Off demo path.",
+          "time_estimate_minutes": 120
+        },
+        {
+          "name": "Dark mode",
+          "status": "unimplemented",
+          "classification": "DEFER",
+          "rationale": "Polish, not critical.",
+          "time_estimate_minutes": 60
+        }
       ],
       "demo_path": [
-        {"step": 1, "action": "Open the app URL.",
-         "expected_outcome": "Landing page renders."},
-        {"step": 2, "action": "Click Sign Up.",
-         "expected_outcome": "Auth modal opens."},
-        {"step": 3, "action": "Save a note.",
-         "expected_outcome": "Note appears in list."}
+        { "step": 1, "action": "Open the app URL.", "expected_outcome": "Landing page renders." },
+        { "step": 2, "action": "Click Sign Up.", "expected_outcome": "Auth modal opens." },
+        { "step": 3, "action": "Save a note.", "expected_outcome": "Note appears in list." }
       ],
       "next_tasks": [
-        {"priority": "P0", "task": "Finish Notes CRUD.", "estimate_minutes": 90},
-        {"priority": "P1", "task": "Polish Auth.", "estimate_minutes": 30}
+        { "priority": "P0", "task": "Finish Notes CRUD.", "estimate_minutes": 90 },
+        { "priority": "P1", "task": "Polish Auth.", "estimate_minutes": 30 }
       ]
     }
   ]

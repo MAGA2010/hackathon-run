@@ -17,14 +17,14 @@ skills/<skill-name>/
 
 ```yaml
 ---
-name: kebab-case-name           # required, must match folder name
-description: |                   # required, <= 1536 chars combined with when_to_use
+name: kebab-case-name # required, must match folder name
+description: | # required, <= 1536 chars combined with when_to_use
   Verb-led sentence describing what the skill does and when to invoke.
-when_to_use: |                   # optional but recommended
+when_to_use: | # optional but recommended
   More trigger context: scenarios, sample utterances, situations.
-paths: ['**/*.ts']               # optional: only activate when matching files exist
-allowed_tools: [Bash, Read]      # optional: tools the skill needs
-model: claude-opus-4             # optional: pin a model
+paths: ['**/*.ts'] # optional: only activate when matching files exist
+allowed_tools: [Bash, Read] # optional: tools the skill needs
+model: claude-opus-4 # optional: pin a model
 ---
 ```
 
@@ -55,7 +55,7 @@ by CI (`ci.yml > trigger-phrase-length` job).
 
 ## Versioning
 
-The skill folder's contents do not have a version — the *pack* does. Bump
+The skill folder's contents do not have a version — the _pack_ does. Bump
 `package.json` `version` on any change to any skill.
 
 ## See also

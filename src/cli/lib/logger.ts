@@ -2,7 +2,7 @@
  * logger.ts — uniform output for the CLI. Honors NO_COLOR if set.
  */
 
-import { c } from "./colors.js";
+import { c } from './colors.js';
 
 const useColor = !process.env.NO_COLOR && process.stdout.isTTY !== false;
 

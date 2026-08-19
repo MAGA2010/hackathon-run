@@ -8,17 +8,17 @@
  * Used by CI to make sure state files conform to their schemas.
  */
 
-import { readdirSync, readFileSync, statSync, existsSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { readdirSync, readFileSync, statSync, existsSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 
-import Ajv from "ajv";
-import addFormats from "ajv-formats";
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
 
 export function validate(dir: string): number {
-  const schemasRoot = resolve("src/state/schemas");
+  const schemasRoot = resolve('src/state/schemas');
   const target = resolve(dir);
 
   if (!existsSync(target)) {
@@ -29,13 +29,17 @@ export function validate(dir: string): number {
   let errors = 0;
   const entries = readdirSync(target);
   for (const name of entries) {
-    if (!name.endsWith(".json")) continue;
+    if (!name.endsWith('.json')) continue;
     const file = join(target, name);
     let stat;
-    try { stat = statSync(file); } catch { continue; }
+    try {
+      stat = statSync(file);
+    } catch {
+      continue;
+    }
     if (!stat.isFile()) continue;
 
-    const base = name.replace(/\.json$/i, "");
+    const base = name.replace(/\.json$/i, '');
     const schemaPath = join(schemasRoot, `${base}.schema.json`);
     if (!existsSync(schemaPath)) {
       console.error(`X ${file}: no schema at ${schemaPath}`);
@@ -45,8 +49,8 @@ export function validate(dir: string): number {
 
     let schema, data;
     try {
-      schema = JSON.parse(readFileSync(schemaPath, "utf-8"));
-      data = JSON.parse(readFileSync(file, "utf-8"));
+      schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
+      data = JSON.parse(readFileSync(file, 'utf-8'));
     } catch (e) {
       console.error(`X ${file}: parse error ${(e as Error).message}`);
       errors++;

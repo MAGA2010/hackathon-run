@@ -1,6 +1,6 @@
 ---
-title: "💡 Idea: "
-labels: ["idea"]
+title: '💡 Idea: '
+labels: ['idea']
 ---
 
 ## Problem

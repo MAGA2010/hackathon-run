@@ -9,11 +9,11 @@
  *   - file unreadable -> throw
  */
 
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, join, resolve } from 'node:path';
 
-import Ajv from "ajv";
-import addFormats from "ajv-formats";
+import Ajv from 'ajv';
+import addFormats from 'ajv-formats';
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
@@ -24,7 +24,7 @@ function validatorFor(schemaPath: string) {
   if (validatorCache.has(schemaPath)) {
     return validatorCache.get(schemaPath)!;
   }
-  const schema = JSON.parse(readFileSync(schemaPath, "utf-8"));
+  const schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
   const validate = ajv.compile(schema);
   validatorCache.set(schemaPath, validate);
   return validate;
@@ -42,14 +42,16 @@ export interface StateWriteOptions {
 }
 
 export function writeState(opts: StateWriteOptions): string {
-  const schemasRoot = resolve(opts.repoRoot, "src/state/schemas");
+  const schemasRoot = resolve(opts.repoRoot, 'src/state/schemas');
   const schemaPath = opts.schema ?? join(schemasRoot, opts.file);
   const validate = validatorFor(schemaPath);
   if (!validate(opts.data)) {
-    const errs = (validate.errors ?? []).map((e) => `  - ${e.instancePath} ${e.message}`).join("\n");
+    const errs = (validate.errors ?? [])
+      .map((e) => `  - ${e.instancePath} ${e.message}`)
+      .join('\n');
     throw new Error(`state validation failed for ${opts.file}:\n${errs}`);
   }
-  const target = resolve(opts.repoRoot, ".hackathon/state", opts.file);
+  const target = resolve(opts.repoRoot, '.hackathon/state', opts.file);
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, JSON.stringify(opts.data, null, 2));
   return target;
@@ -62,19 +64,21 @@ export interface StateReadOptions {
 }
 
 export function readState<T = unknown>(opts: StateReadOptions): T | null {
-  const target = resolve(opts.repoRoot, ".hackathon/state", opts.file);
+  const target = resolve(opts.repoRoot, '.hackathon/state', opts.file);
   let raw: string;
   try {
-    raw = readFileSync(target, "utf-8");
+    raw = readFileSync(target, 'utf-8');
   } catch {
     return null;
   }
   const data = JSON.parse(raw);
-  const schemasRoot = resolve(opts.repoRoot, "src/state/schemas");
+  const schemasRoot = resolve(opts.repoRoot, 'src/state/schemas');
   const schemaPath = opts.schema ?? join(schemasRoot, opts.file);
   const validate = validatorFor(schemaPath);
   if (!validate(data)) {
-    const errs = (validate.errors ?? []).map((e) => `  - ${e.instancePath} ${e.message}`).join("\n");
+    const errs = (validate.errors ?? [])
+      .map((e) => `  - ${e.instancePath} ${e.message}`)
+      .join('\n');
     throw new Error(`state file ${opts.file} failed schema validation:\n${errs}`);
   }
   return data as T;

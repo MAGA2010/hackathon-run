@@ -1,6 +1,6 @@
 ---
-title: "🎉 Show & Tell: "
-labels: ["show-and-tell"]
+title: '🎉 Show & Tell: '
+labels: ['show-and-tell']
 ---
 
 ## What I built

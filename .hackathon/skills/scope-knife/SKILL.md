@@ -13,11 +13,13 @@ when_to_use: |
 ## Input contract
 
 Required:
+
 - `repo_root`: path to current project root
 - `time_remaining_minutes`: integer (>= 0)
 - `demo_goal`: one-sentence string ("what should judges see at the end?")
 
 Optional:
+
 - `.hackathon/state/plan.json` (load if exists)
 - `features`: array (else inferred from repo scan)
 
@@ -27,29 +29,30 @@ Optional:
 
 Run `scripts/scan_repo.py <repo_root>` to produce a feature inventory:
 
-| Status | Meaning |
-|---|---|
-| `implemented` | Code present, tests pass |
+| Status             | Meaning                                     |
+| ------------------ | ------------------------------------------- |
+| `implemented`      | Code present, tests pass                    |
 | `half-implemented` | Code exists but incomplete or tests failing |
-| `unimplemented` | In README/plan only |
-| `broken` | Was working, now failing |
+| `unimplemented`    | In README/plan only                         |
+| `broken`           | Was working, now failing                    |
 
 ### 2. Compute pressure
 
 Based on `time_remaining_minutes`:
 
-| Time left | Minimum CUT rate |
-|---|---|
-| `> 6h` | warn if `< 30%` |
-| `3–6h` | enforce `>= 50%` |
-| `1–3h` | enforce `>= 70%` |
-| `< 1h` | enforce `>= 90%` (demo path only) |
+| Time left | Minimum CUT rate                  |
+| --------- | --------------------------------- |
+| `> 6h`    | warn if `< 30%`                   |
+| `3–6h`    | enforce `>= 50%`                  |
+| `1–3h`    | enforce `>= 70%`                  |
+| `< 1h`    | enforce `>= 90%` (demo path only) |
 
 ### 3. Force classification
 
 For every feature: KEEP / CUT / DEFER.
 
 Hard rules:
+
 - Cannot mark all features as KEEP.
 - Features off the demo path default to CUT or DEFER.
 - If user insists all-KEEP, refuse, output pressure calc, ask again.
@@ -61,6 +64,7 @@ Linear sequence: `open URL → trigger core action → see result → understand
 ### 5. Task list
 
 Priorities:
+
 1. **P0**: critical path (cannot demo without)
 2. **P1**: demo polish
 3. **P2**: nice-to-haves (skip if time runs out)
@@ -68,6 +72,7 @@ Priorities:
 ## Output contract
 
 Files written:
+
 - `.hackathon/state/plan.json` (matches `src/state/schemas/plan.schema.json`)
 - `.hackathon/artifacts/scope-knife-output.md` (human-readable)
 
@@ -82,12 +87,12 @@ Files written:
 
 ## Failure modes
 
-| Mode | Behavior |
-|---|---|
-| Empty repo | Suggest running `idea-clarify` first |
-| Missing `demo_goal` | Ask once, refuse to guess |
-| User rejects all cuts | Output pressure calc, ask once more |
-| Schema mismatch | Fail loud with diff, do not silently coerce |
+| Mode                  | Behavior                                    |
+| --------------------- | ------------------------------------------- |
+| Empty repo            | Suggest running `idea-clarify` first        |
+| Missing `demo_goal`   | Ask once, refuse to guess                   |
+| User rejects all cuts | Output pressure calc, ask once more         |
+| Schema mismatch       | Fail loud with diff, do not silently coerce |
 
 ## Trigger phrases (for agent intent matching)
 

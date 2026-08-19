@@ -3,14 +3,14 @@
 Each skill writes JSON state files into `.hackathon/state/`. Schemas live in
 `src/state/schemas/`.
 
-| State file | Producer | Consumers |
-|---|---|---|
-| `plan.json` | `scope-knife` | `fast-verify`, `demo-coach`, `judge-sim` |
-| `verify.json` | `fast-verify` | `judge-sim`, `recovery-runbook` |
-| `demo.json` | `demo-coach` | `judge-sim`, `recovery-runbook` |
-| `review.json` | `judge-sim` | humans, future `portfolio-convert` |
-| `ship.json` | `ship-pack` | humans, CI |
-| `recovery.json` | `recovery-runbook` | humans, future log tools |
+| State file      | Producer           | Consumers                                |
+| --------------- | ------------------ | ---------------------------------------- |
+| `plan.json`     | `scope-knife`      | `fast-verify`, `demo-coach`, `judge-sim` |
+| `verify.json`   | `fast-verify`      | `judge-sim`, `recovery-runbook`          |
+| `demo.json`     | `demo-coach`       | `judge-sim`, `recovery-runbook`          |
+| `review.json`   | `judge-sim`        | humans, future `portfolio-convert`       |
+| `ship.json`     | `ship-pack`        | humans, CI                               |
+| `recovery.json` | `recovery-runbook` | humans, future log tools                 |
 
 ## Why JSON + Schema?
 

@@ -57,7 +57,7 @@ export interface SkillInvocation {
 
 export interface SkillResult {
   skill: string;
-  status: "ok" | "refused" | "error";
+  status: 'ok' | 'refused' | 'error';
   /** exit code 0 / 1 / 2 */
   exitCode: number;
   /** short summary line(s) the agent should surface */

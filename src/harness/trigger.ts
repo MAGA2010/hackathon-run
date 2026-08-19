@@ -17,17 +17,17 @@
  * based fallback would be added behind a flag.
  */
 
-import type { SkillManifest } from "./types.js";
+import type { SkillManifest } from './types.js';
 
 const TOKEN_RE = /[a-z][a-z0-9_-]+/g;
 const PHRASE_HEADER_RE = /^## Trigger phrases/i;
 
 function tokens(text: string): string[] {
-  return (text.toLowerCase().match(TOKEN_RE) ?? []);
+  return text.toLowerCase().match(TOKEN_RE) ?? [];
 }
 
 function extractTriggerPhrases(body: string): string[] {
-  const lines = body.split("\n");
+  const lines = body.split('\n');
   const out: string[] = [];
   let inBlock = false;
   for (const line of lines) {
@@ -36,7 +36,7 @@ function extractTriggerPhrases(body: string): string[] {
       continue;
     }
     if (inBlock) {
-      if (line.startsWith("## ")) break;
+      if (line.startsWith('## ')) break;
       const m = line.match(/^[-*]\s*"?(.+?)"?\s*$/);
       if (m && m[1]) out.push(m[1]);
     }
@@ -47,8 +47,8 @@ function extractTriggerPhrases(body: string): string[] {
 function score(utterance: Set<string>, skill: SkillManifest): number {
   const bag = new Set<string>([
     ...tokens(skill.frontmatter.description),
-    ...tokens(skill.frontmatter.when_to_use ?? ""),
-    ...tokens(extractTriggerPhrases(skill.body).join(" ")),
+    ...tokens(skill.frontmatter.when_to_use ?? ''),
+    ...tokens(extractTriggerPhrases(skill.body).join(' ')),
   ]);
   let hits = 0;
   for (const t of utterance) {
@@ -71,10 +71,7 @@ export interface MatchResult {
   candidates: Array<{ name: string; score: number }>;
 }
 
-export function matchSkill(
-  utterance: string,
-  skills: SkillManifest[],
-): MatchResult {
+export function matchSkill(utterance: string, skills: SkillManifest[]): MatchResult {
   const utt = new Set(tokens(utterance));
   const byName = new Map(skills.map((s) => [s.frontmatter.name, s]));
   const candidates = skills

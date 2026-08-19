@@ -20,8 +20,8 @@
 <!-- If you added or changed a skill, paste the relevant acceptance criteria from its SKILL.md and mark which are exercised by your tests. -->
 
 | Criterion | Test |
-|---|---|
-| | |
+| --------- | ---- |
+|           |      |
 
 ## Test plan
 

@@ -13,10 +13,12 @@ when_to_use: |
 ## Input contract
 
 Required:
+
 - `repo_root`: project root
 - `demo_path`: ordered list of steps (from `.hackathon/state/plan.json` or user-supplied)
 
 Optional:
+
 - `.hackathon/state/verify.json` (previous run, for diff)
 - `time_budget_minutes`: stop verifying after this elapses (default 10)
 
@@ -70,4 +72,3 @@ If a step fails, run `scripts/diagnose.py`:
 - "smoke test"
 - "does it still run"
 - "verify the path"
-

@@ -21,12 +21,12 @@ A skill is a folder named in `kebab-case`. It contains one mandatory
 `scripts/`, `templates/`, `tests/`, `references/` are optional and
 convention-driven:
 
-| Folder | Purpose |
-|---|---|
-| `scripts/` | Executable code invoked by the skill |
-| `templates/` | Output scaffolding (markdown, JSON, HTML) |
-| `tests/` | Acceptance tests run by CI |
-| `references/` | Heuristics, decision tables, lookup data |
+| Folder        | Purpose                                   |
+| ------------- | ----------------------------------------- |
+| `scripts/`    | Executable code invoked by the skill      |
+| `templates/`  | Output scaffolding (markdown, JSON, HTML) |
+| `tests/`      | Acceptance tests run by CI                |
+| `references/` | Heuristics, decision tables, lookup data  |
 
 ## Consequences
 
@@ -40,4 +40,3 @@ convention-driven:
 - **Monolithic skill file with all skills in one place**: rejected; harder to
   diff, slower to load.
 - **Per-skill sub-repo**: rejected; too much overhead for 6–12 skills.
-

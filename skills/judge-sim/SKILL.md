@@ -12,11 +12,13 @@ when_to_use: |
 ## Input contract
 
 Required:
+
 - `repo_root`: project root
 - `.hackathon/state/plan.json` (preferred; uses demo_path and KEEP list)
 - `.hackathon/state/demo.json` (preferred; uses one_liner)
 
 Optional:
+
 - `time_remaining_minutes`: influences the fix priority list
 
 ## Execution
@@ -25,15 +27,15 @@ Optional:
 
 Each dimension: 0 (catastrophic) to 5 (excellent).
 
-| Dimension | What judges look for |
-|---|---|
-| **problem_clarity** | Is the pain obvious in 10 seconds? |
-| **originality** | Is this novel vs. existing solutions? |
-| **completeness** | Does the demo path actually work? |
-| **technical_depth** | Is the implementation non-trivial? |
-| **demo_quality** | Is the pitch tight and rehearsed? |
-| **business_value** | Would someone pay / use this? |
-| **submission_readiness** | README, run steps, secret hygiene? |
+| Dimension                | What judges look for                  |
+| ------------------------ | ------------------------------------- |
+| **problem_clarity**      | Is the pain obvious in 10 seconds?    |
+| **originality**          | Is this novel vs. existing solutions? |
+| **completeness**         | Does the demo path actually work?     |
+| **technical_depth**      | Is the implementation non-trivial?    |
+| **demo_quality**         | Is the pitch tight and rehearsed?     |
+| **business_value**       | Would someone pay / use this?         |
+| **submission_readiness** | README, run steps, secret hygiene?    |
 
 ### 2. For each dimension, output
 

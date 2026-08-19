@@ -4,7 +4,15 @@
   "title": "Ship Pack Audit",
   "description": "Output of ship-pack. A submission-readiness audit with secret scan results, checklist status, and a safe packaging command.",
   "type": "object",
-  "required": ["version", "generated_at", "readme", "secret_scan", "checklist", "reproducible", "packaging_command"],
+  "required": [
+    "version",
+    "generated_at",
+    "readme",
+    "secret_scan",
+    "checklist",
+    "reproducible",
+    "packaging_command"
+  ],
   "additionalProperties": false,
   "properties": {
     "version": { "const": "1.0" },

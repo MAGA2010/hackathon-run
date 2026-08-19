@@ -45,4 +45,3 @@ We exceed the spec in two ways:
 - https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills
 - https://openai.com/codex (Codex Skills docs)
 - This project's own `src/harness/frontmatter.ts` for the parser.
-

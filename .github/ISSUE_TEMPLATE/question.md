@@ -1,8 +1,8 @@
 ---
 name: ❓ Question
 about: Ask how something works
-title: ""
-labels: ["question"]
+title: ''
+labels: ['question']
 assignees: []
 ---
 
@@ -13,4 +13,3 @@ assignees: []
 ## What I expected
 
 ## Relevant docs or skill
-

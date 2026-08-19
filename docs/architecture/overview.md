@@ -71,17 +71,17 @@ For semantic matching, see the
 
 ## What's in the repo
 
-| Path | Purpose |
-|---|---|
-| `skills/` | Each skill folder with `SKILL.md` + scripts |
-| `src/harness/` | TypeScript harness (loader, frontmatter, trigger, state) |
-| `src/cli/` | The `hackathon` CLI |
-| `src/state/schemas/` | Published JSON Schemas for state files |
-| `tests/acceptance/` | One shell test per skill |
-| `tests/integration/` | End-to-end 36h-flow tests |
-| `examples/` | Three real-style projects with `.hackathon/` artifacts |
-| `docs/` | MkDocs site source |
-| `.github/workflows/` | CI, release, docs |
+| Path                 | Purpose                                                  |
+| -------------------- | -------------------------------------------------------- |
+| `skills/`            | Each skill folder with `SKILL.md` + scripts              |
+| `src/harness/`       | TypeScript harness (loader, frontmatter, trigger, state) |
+| `src/cli/`           | The `hackathon` CLI                                      |
+| `src/state/schemas/` | Published JSON Schemas for state files                   |
+| `tests/acceptance/`  | One shell test per skill                                 |
+| `tests/integration/` | End-to-end 36h-flow tests                                |
+| `examples/`          | Three real-style projects with `.hackathon/` artifacts   |
+| `docs/`              | MkDocs site source                                       |
+| `.github/workflows/` | CI, release, docs                                        |
 
 ## See also
 

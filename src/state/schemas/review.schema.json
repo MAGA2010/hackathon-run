@@ -20,9 +20,15 @@
         "additionalProperties": false,
         "properties": {
           "name": {
-            "enum": ["problem_clarity", "originality", "completeness",
-                     "technical_depth", "demo_quality", "business_value",
-                     "submission_readiness"]
+            "enum": [
+              "problem_clarity",
+              "originality",
+              "completeness",
+              "technical_depth",
+              "demo_quality",
+              "business_value",
+              "submission_readiness"
+            ]
           },
           "score": { "type": "integer", "minimum": 0, "maximum": 5 },
           "deduction_reason": { "type": "string", "minLength": 1 },

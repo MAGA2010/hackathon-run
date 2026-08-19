@@ -28,4 +28,3 @@ nothing is required.
 - **SQLite sidecar**: rejected; one more binary to ship and one more way to
   lose user data.
 - **In-memory only**: rejected; forces every skill to start from scratch.
-

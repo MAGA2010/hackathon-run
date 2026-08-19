@@ -28,7 +28,11 @@
         "properties": {
           "name": { "enum": ["opening", "pain", "product", "core_action", "result", "close"] },
           "max_seconds": { "type": "integer", "minimum": 1 },
-          "say": { "type": "string", "minLength": 1, "description": "What to say out loud (max 2 sentences)." },
+          "say": {
+            "type": "string",
+            "minLength": 1,
+            "description": "What to say out loud (max 2 sentences)."
+          },
           "click": { "type": "string", "description": "UI interaction." },
           "show": { "type": "string", "description": "What the screen shows." },
           "not": { "type": "string", "description": "What NOT to do or say." },

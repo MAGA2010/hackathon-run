@@ -10,13 +10,13 @@ By participating you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ## How to contribute
 
-| Contribution type | Where to start |
-|---|---|
-| Fix a bug | Comment on the issue, then open a PR |
-| Add a new skill | Follow the [skill template](docs/contributing/skill-template.md). Open a discussion first. |
-| Improve docs | Open a PR directly |
-| Add an example | Open a discussion first to align on the project |
-| Triage issues | Comment on issues with reproductions, then tag |
+| Contribution type | Where to start                                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------ |
+| Fix a bug         | Comment on the issue, then open a PR                                                       |
+| Add a new skill   | Follow the [skill template](docs/contributing/skill-template.md). Open a discussion first. |
+| Improve docs      | Open a PR directly                                                                         |
+| Add an example    | Open a discussion first to align on the project                                            |
+| Triage issues     | Comment on issues with reproductions, then tag                                             |
 
 ## Development environment
 
@@ -56,12 +56,10 @@ Use the [skill template](docs/contributing/skill-template.md) as your starting p
 
 We use [Conventional Commits](https://www.conventionalcommits.org/). Examples:
 
-`
-feat(scope-knife): add pressure-aware cut enforcement
+`feat(scope-knife): add pressure-aware cut enforcement
 fix(demo-coach): clamp 30s scripts to <= 32 lines
 docs(readme): clarify init workflow
-test(fast-verify): add fixture for half-implemented repo
-`
+test(fast-verify): add fixture for half-implemented repo`
 
 ## Pull request process
 
@@ -95,6 +93,6 @@ Maintainers only. Tag-driven, automated by `.github/workflows/release.yml`:
 - Bug reports with reproducible steps.
 - Tests that fail before the fix.
 - Skills with a real hackathon story behind them.
-- Docs that explain *why*, not just *what*.
+- Docs that explain _why_, not just _what_.
 
 Welcome aboard. 🔪

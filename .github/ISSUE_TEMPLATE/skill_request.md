@@ -1,8 +1,8 @@
 ---
 name: 🆕 Skill Proposal
 about: Propose a new skill for the pack
-title: "[skill] "
-labels: ["enhancement", "discussion-needed"]
+title: '[skill] '
+labels: ['enhancement', 'discussion-needed']
 assignees: []
 ---
 

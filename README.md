@@ -34,22 +34,21 @@ A hackathon is not a coding problem. It is a **time-pressure, decision-making, e
 
 Six skills, mapped to the hackathon lifecycle:
 
-`
-   scope-knife ─► fast-verify ─► demo-coach ─► judge-sim ─► ship-pack
+`   scope-knife ─► fast-verify ─► demo-coach ─► judge-sim ─► ship-pack
         │              │              │             │            │
         └──────────────┴──────────────┴─────────────┴────────────┘
                                        │
-                              recovery-runbook (anytime)
-`
+                              recovery-runbook (anytime)`
 
-| Skill | When | Output |
-|---|---|---|
-| **scope-knife** | Too many ideas, no MVP consensus, clock shrinking | KEEP/CUT/DEFER classification + demo path |
-| **ast-verify** | "Will this demo work?" | Step-by-step verification, stops at first failure |
-| **demo-coach** | 30/60/90-second pitch, no clear narrative | Flow script + risk flags |
-| **judge-sim** | Pre-submission self-review | 0-5 rating across 7 dimensions + fix priorities |
-| **ship-pack** | Submitting now, worried about secrets | README check, secret scan, packaging command |
-| **ecovery-runbook** | Demo fails on stage | P0-P3 severity, fallback strategy, 30-second script |
+| Skill             | When                                              | Output                                              |
+| ----------------- | ------------------------------------------------- | --------------------------------------------------- |
+| **scope-knife**   | Too many ideas, no MVP consensus, clock shrinking | KEEP/CUT/DEFER classification + demo path           |
+| **ast-verify**    | "Will this demo work?"                            | Step-by-step verification, stops at first failure   |
+| **demo-coach**    | 30/60/90-second pitch, no clear narrative         | Flow script + risk flags                            |
+| **judge-sim**     | Pre-submission self-review                        | 0-5 rating across 7 dimensions + fix priorities     |
+| **ship-pack**     | Submitting now, worried about secrets             | README check, secret scan, packaging command        |
+| **                |
+| ecovery-runbook** | Demo fails on stage                               | P0-P3 severity, fallback strategy, 30-second script |
 
 Each skill is **independently invokable**. You can run any of them at any time without running the others.
 
@@ -58,17 +57,20 @@ Each skill is **independently invokable**. You can run any of them at any time w
 ## 30-second quickstart
 
 `ash
+
 # One-time install
+
 npm install -g @maga2010/hackathon-surgeon
 
 # Inside any hackathon project
+
 cd my-hackathon-project
-hackathon init                  # creates .hackathon/ in your repo
-hackathon run scope-knife       # forces a KEEP/CUT/DEFER decision
-hackathon run fast-verify       # verifies the demo path
-hackathon run demo-coach        # drafts the pitch
-hackathon run judge-sim         # self-reviews before submitting
-hackathon run ship-pack         # packages and checks for leaks
+hackathon init # creates .hackathon/ in your repo
+hackathon run scope-knife # forces a KEEP/CUT/DEFER decision
+hackathon run fast-verify # verifies the demo path
+hackathon run demo-coach # drafts the pitch
+hackathon run judge-sim # self-reviews before submitting
+hackathon run ship-pack # packages and checks for leaks
 `
 
 Each command is interactive. State is saved to .hackathon/state/ and is never required by the next step.

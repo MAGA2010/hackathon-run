@@ -59,3 +59,11 @@ venv/
 # OS
 .DS_Store
 desktop.ini
+
+# Local helper script (do not commit)
+.hackathon/commit-and-push.sh
+
+# Runtime artifacts produced by hackathon init / dogfood runs.
+# Templates (.hackathon/skills/, scripts) are tracked; state and artifacts are not.
+.hackathon/state/*.json
+.hackathon/artifacts/*

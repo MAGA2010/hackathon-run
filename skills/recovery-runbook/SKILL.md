@@ -12,23 +12,25 @@ when_to_use: |
 ## Input contract
 
 Required:
+
 - `failure_description`: one-sentence description of what broke
 - `severity`: P0 | P1 | P2 | P3
 - `demo_path` (from `.hackathon/state/plan.json` or user-supplied)
 
 Optional:
+
 - `.hackathon/state/verify.json` (last failure signatures)
 
 ## Execution
 
 ### 1. Classify severity
 
-| Severity | Meaning | Default fallback |
-|---|---|---|
-| P0 | Demo entirely broken | Video recording + verbal narrative |
-| P1 | Core feature crashes | Static screenshots + verbal walkthrough |
-| P2 | Peripheral feature fails | Skip the failing step, narrate the rest |
-| P3 | UI / copy issue | Acknowledge, continue |
+| Severity | Meaning                  | Default fallback                        |
+| -------- | ------------------------ | --------------------------------------- |
+| P0       | Demo entirely broken     | Video recording + verbal narrative      |
+| P1       | Core feature crashes     | Static screenshots + verbal walkthrough |
+| P2       | Peripheral feature fails | Skip the failing step, narrate the rest |
+| P3       | UI / copy issue          | Acknowledge, continue                   |
 
 ### 2. Pick a fallback strategy
 

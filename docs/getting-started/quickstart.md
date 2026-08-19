@@ -26,6 +26,7 @@ The agent will ask:
 - How many minutes remain? (your time_remaining_minutes)
 
 Output:
+
 - `.hackathon/state/plan.json` — the machine-readable plan
 - `.hackathon/artifacts/scope-knife-output.md` — human-readable summary
 

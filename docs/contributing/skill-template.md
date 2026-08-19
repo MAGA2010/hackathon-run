@@ -2,7 +2,7 @@
 
 Copy this into `skills/<name>/SKILL.md` and fill in.
 
-````markdown
+```markdown
 ---
 name: <kebab-case-name>
 description: |
@@ -16,25 +16,31 @@ when_to_use: |
 ## Input contract
 
 Required:
+
 - `field`: description
 
 Optional:
+
 - `field`: description
 
 ## Execution
 
 ### 1. <Step name>
+
 <What this step does.>
 
 ### 2. <Step name>
+
 <What this step does.>
 
 ### 3. <Step name>
+
 <What this step does.>
 
 ## Output contract
 
 Files written:
+
 - `<path>` (matches `<schema>.schema.json`)
 - `<path>` (human-readable)
 
@@ -46,15 +52,15 @@ Files written:
 
 ## Failure modes
 
-| Mode | Behavior |
-|---|---|
+| Mode        | Behavior |
+| ----------- | -------- |
 | <condition> | <action> |
 
 ## Trigger phrases
 
 - "<phrase>"
 - "<phrase>"
-````
+```
 
 ## Companion files
 
@@ -62,4 +68,7 @@ Files written:
 - `references/<table>.md` — lookup data the agent may consult.
 - `tests/acceptance/test_<skill>.sh` — at least one shell test per
   acceptance criterion.
-````
+
+```
+
+```

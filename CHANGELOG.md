@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-08-20
+
+### Added
+
+- **Skill Format v2** — frontmatter now supports `version`, `category`, `tags`, `dependencies`, `side_effects`, and `triggers` in addition to the existing `name`, `description`, `when_to_use`, `paths`, `allowed_tools`, `model`. All 14 bundled skills have been updated with v2 metadata.
+- **`hackathon skills search`** — new subcommand with `--tag`, `--category`, `--writes`, `--depends-on` filters, and `--json` output. AND-combines filters; lists every skill when no filter is given.
+- **MCP tool `find_skills`** — JSON-RPC counterpart to the new CLI search; lets agents discover skills by Format v2 metadata.
+- **Linter checks for Format v2** — `validate-skill` now warns when `version` is missing, when `category` is not one of the 8 lifecycle categories, and when `dependencies` or `side_effects` reference unknown skills / state files.
+- **`SKILL_CATEGORIES` + `isSkillCategory`** exported from `src/harness/types.ts` for programmatic consumers.
+- **`audit.py` now defines `VERSION = "1.0"` at module level** (was the last Python script missing it).
+- **11 new unit tests** covering Format v2 parser fields, the new SKILL_CATEGORIES export, `skills search` filters, JSON output, and the new `validate-skill` checks. Total: 132/132 passing (was 121/121).
+
+### Changed
+
+- **`.nvmrc` now pins Node `20.9.0`** and `engines.node` is `>=20.9.0`. Required because `npm run test:coverage` uses Node 20.9.0+ `--experimental-test-coverage` flag.
+- **`eslint.config.js`** now also covers `.cjs` files in `scripts/` with the right CommonJS globals (`require`, `module`, `exports`, `__dirname`, `__filename`).
+- **`hackathon validate-skill`** prints info-level lines for tags / explicit trigger phrases.
+
+### Compatibility
+
+- No breaking changes. The new frontmatter fields are optional; skills without them still load and validate. The new CLI subcommand is additive.
+
 ## [0.8.0] - 2026-08-20
 
 ### Added

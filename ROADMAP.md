@@ -39,8 +39,12 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [x] **LLM judge backend** — `HACKATHON_JUDGE_BACKEND` in judge-sim with heuristic fallback (v0.8.0)
 - [x] **Ship webhook** — `HACKATHON_SHIP_WEBHOOK` in ship-pack, non-fatal delivery (v0.8.0)
 - [x] **Validation no-op fix** — `validate` now routes through the real CLI; `judge_questions` minItems fixed (v0.8.0)
+- [x] **Skill Format v2** — `version` / `category` / `tags` / `dependencies` / `side_effects` / `triggers` in YAML frontmatter, validated by `validate-skill`, surfaced by new `skills search` subcommand + `find_skills` MCP tool (v0.9.0)
+- [x] **All 14 skills carry Format v2 metadata** — v0.9.0
+- [x] **`.nvmrc` pinned to Node 20.9.0** — fixes CI `npm run test:coverage` step (v0.9.0)
+- [x] **132/132 unit tests passing** after v0.9.0 (was 121/121)
 
-## Now (0.8.x)
+## Now (0.9.x)
 
 - [ ] **Embedding-based backend** — optional pluggable semantic backend behind `HACKATHON_EMBED_BACKEND` for teams that want real vector similarity; the zero-dep synonym fallback remains the default.
 - [ ] **Re-enable GitHub Pages deployment** — `docs.yml` build step is green; the deploy step needs Pages enabled in repo settings (Source: GitHub Actions).
@@ -51,6 +55,10 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [ ] **VS Code extension** that surfaces the `hackathon status` lifecycle in the status bar.
 - [ ] **Discord / Slack webhook** that posts `ship-pack` results to a team channel.
 - [ ] **Typed LLM judge protocol** — document a stricter request/response schema for `HACKATHON_JUDGE_BACKEND` providers and add an example adapter.
+- [ ] **`hackathon run --chain`** — follow `dependencies` from Format v2 metadata to invoke multiple skills in order. (v1.1.0)
+- [ ] **Per-skill version pin** — `.hackathon/skills.json` records individual skill versions instead of only the pack version. (v1.1.0)
+- [ ] **Auto-derive the state-machine diagram** in `docs/skills/index.md` from Format v2 `side_effects` + `dependencies`. (v1.0.0)
+- [ ] **Optional `homepage` / `repository` / `author` / `license` fields** so third-party skills can ship a complete manifest. (v1.2.0)
 
 ## Won't do (out of scope)
 

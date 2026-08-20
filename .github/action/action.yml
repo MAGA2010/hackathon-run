@@ -46,10 +46,7 @@ runs:
       run: |
         case "${{ inputs.command }}" in
           validate-skills)
-            for d in skills/*/; do
-              echo "== $d =="
-              hackathon validate-skill "$d"
-            done
+            hackathon skills lint
             ;;
           validate-state)
             hackathon validate .hackathon/state

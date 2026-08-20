@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1.3] - 2026-08-22
+
+### Added
+
+- `hackathon skills lint` - bulk-lint every bundled skill in one shot. Prints a summary table (skill | errors | warns) and exits 0 / 1 / 2. Supports `--json`, `--verbose`, `--category <name>`, and `-C <cwd>`. Useful for CI and pre-commit hooks.
+- 5 new unit tests in `tests/unit/v1213-skills-lint.test.mjs` covering missing `skills/` dir, full repo lint, `--category` filter, JSON output, and error-path exit code.
+
+### Changed
+
+- `.github/action/action.yml` now calls `hackathon skills lint` for the `validate-skills` command instead of looping `hackathon validate-skill` per directory. CI logs are shorter and the exit code is uniform across the bundle.
+- `checkSkill()` and the `Finding` type are now `export`ed from `src/cli/commands/validate-skill.ts` so the bulk linter can call them directly without going through the console-printing `validateSkill()` wrapper.
+
+### Compatibility
+
+- No breaking changes. The new subcommand is additive; `hackathon validate-skill <dir>` still works exactly as before for single-skill use.
+
 ## [1.2.1] - 2026-08-21
 
 ### Fixed

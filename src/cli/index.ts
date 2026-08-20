@@ -36,6 +36,7 @@ import { report } from './commands/report.js';
 import { skills } from './commands/skills.js';
 import { search as skillsSearch } from './commands/skills-search.js';
 import { graph as skillsGraph } from './commands/skills-graph.js';
+import { skillsLint } from './commands/skills-lint.js';
 import { matchSkill } from '../harness/trigger.js';
 import { startMcpServer } from '../mcp/server.js';
 
@@ -282,6 +283,23 @@ skillsCmd
           cwd: opts.cwd,
         }),
       ),
+  );
+skillsCmd
+  .command('lint')
+  .description('Bulk-lint every bundled skill and print a summary table')
+  .option('--json', 'emit JSON instead of a table')
+  .option('--verbose', 'print every finding, not just errors')
+  .option('--category <name>', 'only lint skills in this Format v2 category')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts: { json?: boolean; verbose?: boolean; category?: string; cwd?: string }) =>
+    process.exit(
+      skillsLint({
+        cwd: opts.cwd,
+        json: !!opts.json,
+        verbose: !!opts.verbose,
+        category: opts.category,
+      }),
+    ),
   );
 
 program

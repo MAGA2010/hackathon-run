@@ -34,7 +34,7 @@ import { findSkillDirs } from '../../harness/loader.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
 
-type Finding = { severity: 'error' | 'warn' | 'info'; message: string };
+export type Finding = { severity: 'error' | 'warn' | 'info'; message: string };
 
 const REQUIRED_SECTIONS = [
   '## Input contract',
@@ -47,7 +47,7 @@ const REQUIRED_SECTIONS = [
 const ACTION_VERB_LEAD =
   /^(force|run|generate|emit|produce|detect|simulate|classify|score|audit|scan|ship|recover|list|review|cut|verify|demo|coach|build|write|recommend|suggest|draft|prioritize|prioritise|trim|narrow|expand|identify|find|spot|trace|pick|choose|select|surface|reshape|rebuild|pivot|clarif|prioritis|verif|verifi|allocate|retro|retrospect|bootstrap|assign|rehearse)(?:s|es|ies|ied|ing|ed)?\b/i;
 
-function checkSkill(skillDir: string, cwd: string): Finding[] {
+export function checkSkill(skillDir: string, cwd: string): Finding[] {
   const out: Finding[] = [];
   const skillMd = join(skillDir, 'SKILL.md');
   if (!existsSync(skillMd)) {

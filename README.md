@@ -95,7 +95,7 @@ hackathon run demo-rehearsal --chain # scope-knife -> fast-verify -> demo-coach 
 
 State is saved to .hackathon/state/ and is never required by the next step.
 
-Pin the team's skill versions for CI reproducibility with hackathon skills pin --all, and opt into a semantic matcher by setting HACKATHON_EMBED_BACKEND to an HTTP ranking endpoint.
+For CI, run hackathon skills lint to validate every bundled skill in one shot. Pin the team's skill versions for reproducibility with hackathon skills pin --all. Opt into a semantic matcher by setting HACKATHON_EMBED_BACKEND to an HTTP ranking endpoint.
 
 Third-party skills can ship a full manifest (`license`, `author`, `homepage`, `repository`, `compatibility`) that `hackathon skills search --json` and the `find_skills` MCP tool surface.
 

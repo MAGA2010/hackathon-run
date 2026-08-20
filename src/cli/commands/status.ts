@@ -40,7 +40,7 @@ const STAGE_ORDER: LifecycleStage[] = [
 const NEXT_SUGGESTION: Record<LifecycleStage, string | null> = {
   empty: 'hackathon init then hackathon run scope-knife',
   scoping: 'hackathon run fast-verify on the demo_path steps',
-  verifying: 'hackathon run demo-coach --duration 60',
+  verifying: 'hackathon run fast-verify, then hackathon run demo-coach',
   demoing: 'hackathon run judge-sim',
   judging: 'address the fix_now list from judge-sim, then hackathon run ship-pack',
   shipping: 'tar -xzf with packaging_command from ship.json',

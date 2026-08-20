@@ -63,6 +63,45 @@ describe('hackathon replay', () => {
       rmSync(tmp, { recursive: true, force: true });
     }
   });
+
+  it('orders time-box.json before stack.json when timestamps tie (v1.2.1)', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'hs-replay-tie-'));
+    try {
+      const stateDir = join(tmp, '.hackathon', 'state');
+      mkdirSync(stateDir, { recursive: true });
+      const ts = '2026-08-19T09:00:00.000Z';
+      writeFileSync(
+        join(stateDir, 'stack.json'),
+        JSON.stringify({
+          version: '1.0',
+          generated_at: ts,
+          demo_format: 'web',
+          recommendation: { stack: 'next', score: 8, rationale: 'r' },
+          runners_up: [],
+          bootstrap: { steps: [] },
+        }),
+      );
+      writeFileSync(
+        join(stateDir, 'time-box.json'),
+        JSON.stringify({
+          version: '1.0',
+          generated_at: ts,
+          time_remaining_minutes: 240,
+          team_size: 4,
+          current_stage: 'build',
+          schedule: [],
+        }),
+      );
+      const r = run(['replay', '-C', tmp, '--json']);
+      assert.equal(r.status, 0, r.stderr);
+      const payload = JSON.parse(r.stdout);
+      assert.equal(payload.entries.length, 2);
+      assert.equal(payload.entries[0].file, 'time-box.json');
+      assert.equal(payload.entries[1].file, 'stack.json');
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('hackathon skills catalog', () => {
@@ -104,3 +143,4 @@ describe('hackathon skills catalog', () => {
     assert.equal(pin.version, '1.1');
   });
 });
+

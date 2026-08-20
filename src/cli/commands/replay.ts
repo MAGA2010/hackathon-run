@@ -42,7 +42,7 @@ export interface CollectedTimeline {
 
 const STAGE_ORDER: Record<string, number> = {
   plan: 1,
-  time: 1.5,
+  'time-box': 1.5,
   stack: 1.6,
   verify: 2,
   demo: 3,

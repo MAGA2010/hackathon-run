@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-08-21
+
+### Fixed
+
+- hackathon status no longer suggests `hackathon run demo-coach --duration 60` for the `verifying` stage — the `--duration` flag does not exist on `hackathon run`. The suggestion now points to `hackathon run fast-verify` then `hackathon run demo-coach`.
+- hackathon flow corrected the `judge-sim` stage description from "5 dimensions" to "7 dimensions" to match `review.json` and the rest of the docs.
+- hackathon replay now sorts `time-box.json` by its real stage order (1.5) instead of falling through to the default 99; the `STAGE_ORDER` map used the key `time` instead of `time-box`.
+
+### Compatibility
+
+- No breaking changes. All three fixes are internal-string / map-key corrections; command output changes only for the verifying-stage suggestion and (when two state files share a timestamp) the replay ordering.
+
 ## [1.2.0] - 2026-08-20
 
 ### Added

@@ -80,7 +80,7 @@ const STAGES: StageSpec[] = [
     order: 4,
     skill: 'judge-sim',
     produces: 'review.json',
-    summary: 'simulate a judge panel + score across 5 dimensions',
+    summary: 'simulate a judge panel + score across 7 dimensions',
     requires: 'demo.json',
     commands: [
       'python3 skills/judge-sim/scripts/score.py --demo {repoRoot}/.hackathon/state/demo.json',

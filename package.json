@@ -1,6 +1,6 @@
 {
   "name": "@maga2010/hackathon-run",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A decision-making and execution system for hackathon teams operating under time pressure.",
   "type": "module",
   "main": "dist/index.js",

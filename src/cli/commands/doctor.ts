@@ -21,6 +21,7 @@
  */
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
 import { join, resolve } from 'node:path';
 
 import Ajv from 'ajv';
@@ -54,7 +55,6 @@ export interface DoctorReport {
 
 function spawnCapture(cmd: string, args: string[]): { ok: boolean; stdout: string } {
   try {
-    const { spawnSync } = require('node:child_process') as typeof import('node:child_process');
     const r = spawnSync(cmd, args, { encoding: 'utf-8', timeout: 5000 });
     if (r.status === 0) return { ok: true, stdout: r.stdout.trim() };
     return { ok: false, stdout: r.stdout.trim() };
@@ -249,6 +249,7 @@ export function doctor(opts: { cwd: string; json?: boolean }): number {
 
   const failCount = checks.filter((c) => c.severity === 'fail').length;
   const warnCount = checks.filter((c) => c.severity === 'warn').length;
+  const okCount = checks.length - failCount - warnCount;
   const report: DoctorReport = {
     cwd,
     nodeVersion,
@@ -278,7 +279,7 @@ export function doctor(opts: { cwd: string; json?: boolean }): number {
     console.log();
     console.log(
       c.bold('Summary: ') +
-        c.green(failCount + ' ok / ') +
+        c.green(okCount + ' ok / ') +
         c.yellow(warnCount + ' warn / ') +
         c.red(failCount + ' fail'),
     );

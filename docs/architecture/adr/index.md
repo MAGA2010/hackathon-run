@@ -13,6 +13,7 @@ significant architectural choice, its context, and its consequences.
 | [0006](0006-v050-run-replay-catalog.md)    | v0.5 run-time argument parsing + replay + skills.json catalog + demo-rehearsal + team-roster | Accepted |
 | [0007](0007-v060-report-decision-log.md)   | v0.6 report + decision-log skill + MCP closure + validation hardening                        | Accepted |
 | [0008](0008-v070-v080-matcher-backends.md) | v0.7-v0.8 semantic fallback + pluggable backends + validation no-op fix                      | Accepted |
+| [0009](0009-skill-format-v2.md)            | Skill Format v2 — first-class metadata for discovery                                         | Accepted |
 
 ## Adding a new ADR
 

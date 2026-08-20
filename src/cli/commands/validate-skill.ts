@@ -29,6 +29,8 @@ import {
   TRIGGER_BUDGET,
   enforceTriggerBudget,
 } from '../../harness/frontmatter.js';
+import { SKILL_CATEGORIES, isSkillCategory } from '../../harness/types.js';
+import { findSkillDirs } from '../../harness/loader.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
 
@@ -156,6 +158,50 @@ function checkSkill(skillDir: string, cwd: string): Finding[] {
     }
   }
 
+  // Format v2: enrich-check the new optional fields.
+  const fm = parsed.frontmatter;
+  if (!fm.version) {
+    out.push({
+      severity: 'warn',
+      message: 'frontmatter missing optional Format v2 field: version (recommended)',
+    });
+  } else if (!/^\d+\.\d+/.test(fm.version)) {
+    out.push({
+      severity: 'warn',
+      message: `frontmatter version "${fm.version}" does not look like semver`,
+    });
+  }
+  if (fm.category && !isSkillCategory(fm.category)) {
+    out.push({
+      severity: 'warn',
+      message: `frontmatter category "${fm.category}" is not one of: ${SKILL_CATEGORIES.join(', ')}`,
+    });
+  }
+  if (fm.tags && fm.tags.length > 0) {
+    out.push({
+      severity: 'info',
+      message: `tags: [${fm.tags.join(', ')}]`,
+    });
+  }
+  if (fm.dependencies && fm.dependencies.length > 0) {
+    const knownDirs = findSkillDirs(cwd);
+    const known = new Set(knownDirs.map((d) => basename(d)));
+    for (const dep of fm.dependencies) {
+      if (!known.has(dep)) {
+        out.push({
+          severity: 'warn',
+          message: `dependency "${dep}" not found in skills/`,
+        });
+      }
+    }
+  }
+  if (fm.triggers && fm.triggers.length > 0) {
+    out.push({
+      severity: 'info',
+      message: `${fm.triggers.length} explicit trigger phrase(s)`,
+    });
+  }
+
   const stateRefs = Array.from(parsed.body.matchAll(/state\/([a-z_-]+)\.json/g)).map((m) => m[1]);
   const schemaDir = resolve(cwd, 'src', 'state', 'schemas');
   for (const ref of stateRefs) {
@@ -165,6 +211,18 @@ function checkSkill(skillDir: string, cwd: string): Finding[] {
         severity: 'error',
         message: `references state/${ref}.json but no schema at ${schemaPath}`,
       });
+    }
+  }
+  // Also accept side_effects declarations as state-file references.
+  if (fm.side_effects && fm.side_effects.length > 0) {
+    for (const ref of fm.side_effects) {
+      const schemaPath = join(schemaDir, `${ref}.schema.json`);
+      if (!existsSync(schemaPath)) {
+        out.push({
+          severity: 'warn',
+          message: `side_effects references "${ref}" but no schema at ${schemaPath}`,
+        });
+      }
     }
   }
 

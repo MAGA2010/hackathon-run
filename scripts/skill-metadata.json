@@ -1,0 +1,154 @@
+{
+  "idea-clarify": {
+    "category": "scoping",
+    "tags": ["empty-repo", "vague-brief", "pre-scope"],
+    "dependencies": ["scope-knife"],
+    "side_effects": [],
+    "triggers": [
+      "we have no idea",
+      "what are we building",
+      "empty repo",
+      "vague brief",
+      "scope is unclear"
+    ]
+  },
+  "pivot": {
+    "category": "scoping",
+    "tags": ["mid-build-redirect", "cut-rewrite", "preserves-keep"],
+    "dependencies": ["scope-knife", "decision-log"],
+    "side_effects": ["plan"],
+    "triggers": ["pivot", "change direction", "rebuild", "mid-build redirect", "start over"]
+  },
+  "scope-knife": {
+    "category": "scoping",
+    "tags": ["keep-cut-defer", "mvp", "demo-path"],
+    "dependencies": ["idea-clarify", "team-roster", "time-box"],
+    "side_effects": ["plan"],
+    "triggers": [
+      "scope is too big",
+      "too many features",
+      "no MVP consensus",
+      "time is running out",
+      "trim the scope"
+    ]
+  },
+  "stack-picker": {
+    "category": "scoping",
+    "tags": ["tech-stack", "bootstrap", "30-min"],
+    "dependencies": ["idea-clarify", "scope-knife"],
+    "side_effects": ["plan"],
+    "triggers": [
+      "what stack should we use",
+      "tech stack",
+      "how do we bootstrap",
+      "pick the framework",
+      "recommended stack"
+    ]
+  },
+  "team-roster": {
+    "category": "scoping",
+    "tags": ["roles", "assignments", "bottleneck"],
+    "dependencies": ["scope-knife"],
+    "side_effects": ["roster"],
+    "triggers": [
+      "who does what",
+      "team assignments",
+      "role assignments",
+      "who is blocked",
+      "bottleneck"
+    ]
+  },
+  "time-box": {
+    "category": "scoping",
+    "tags": ["allocation", "checkpoints", "alarms"],
+    "dependencies": ["scope-knife"],
+    "side_effects": ["time-box"],
+    "triggers": [
+      "how much time per stage",
+      "time allocation",
+      "checkpoints",
+      "set timers",
+      "allocate remaining time"
+    ]
+  },
+  "demo-coach": {
+    "category": "demoing",
+    "tags": ["pitch", "narrative", "30-60-90"],
+    "dependencies": ["fast-verify"],
+    "side_effects": ["demo"],
+    "triggers": ["draft a pitch", "demo script", "what do we say", "pitch is unclear", "narrative"]
+  },
+  "demo-rehearsal": {
+    "category": "demoing",
+    "tags": ["mock-demo", "stopwatch", "timing"],
+    "dependencies": ["demo-coach"],
+    "side_effects": ["rehearsal"],
+    "triggers": ["rehearse", "practice the demo", "timed run", "mock demo", "run through"]
+  },
+  "fast-verify": {
+    "category": "verifying",
+    "tags": ["smoke-test", "cross-platform", "30-second"],
+    "dependencies": ["scope-knife"],
+    "side_effects": ["verify"],
+    "triggers": ["verify it works", "smoke test", "does it run", "quick check", "fast verify"]
+  },
+  "judge-sim": {
+    "category": "judging",
+    "tags": ["scoring", "7-dimensions", "feedback"],
+    "dependencies": ["demo-coach"],
+    "side_effects": ["review"],
+    "triggers": [
+      "how would judges score",
+      "pre-submission review",
+      "judge this",
+      "what would judges say",
+      "review my submission"
+    ]
+  },
+  "ship-pack": {
+    "category": "shipping",
+    "tags": ["audit", "release", "non-fatal-webhook"],
+    "dependencies": ["judge-sim"],
+    "side_effects": ["ship"],
+    "triggers": ["ship it", "submit", "package the submission", "final audit", "release"]
+  },
+  "recovery-runbook": {
+    "category": "recovering",
+    "tags": ["fallback", "decision-tree", "30-second"],
+    "dependencies": ["fast-verify", "demo-coach"],
+    "side_effects": ["recovery"],
+    "triggers": [
+      "demo is broken",
+      "fallback",
+      "recovery",
+      "what do we do if X fails",
+      "30-second fallback"
+    ]
+  },
+  "decision-log": {
+    "category": "lifecycle",
+    "tags": ["append-only", "audit-trail", "keep-cut-defer-pivot"],
+    "dependencies": ["scope-knife", "retro"],
+    "side_effects": ["decision-log"],
+    "triggers": [
+      "log a decision",
+      "record what we decided",
+      "decision history",
+      "keep cut defer",
+      "append-only"
+    ]
+  },
+  "retro": {
+    "category": "lifecycle",
+    "tags": ["post-mortem", "ratios", "learn"],
+    "dependencies": ["decision-log", "ship-pack"],
+    "side_effects": ["retro"],
+    "triggers": [
+      "retrospective",
+      "what did we learn",
+      "post-mortem",
+      "keep doing stop doing",
+      "try next time"
+    ]
+  }
+}

@@ -30,6 +30,36 @@ export interface SkillFrontmatter {
   allowed_tools?: string[];
   /** Optional: pin a specific model. */
   model?: string;
+  /** Optional: semver of the skill itself (e.g. "1.0"). Required by Format v2. */
+  version?: string;
+  /** Optional: lifecycle category (scoping | building | verifying | demoing | judging | shipping | recovering | lifecycle). */
+  category?: string;
+  /** Optional: free-form tags for filtering and discovery. */
+  tags?: string[];
+  /** Optional: other skill names this skill chains to / pairs with. */
+  dependencies?: string[];
+  /** Optional: state files this skill writes (.hackathon/state/<x>.json). */
+  side_effects?: string[];
+  /** Optional: explicit trigger phrases the matcher also scores. */
+  triggers?: string[];
+}
+
+/** Lifecycle categories a skill can belong to (Format v2). */
+export const SKILL_CATEGORIES = [
+  'scoping',
+  'building',
+  'verifying',
+  'demoing',
+  'judging',
+  'shipping',
+  'recovering',
+  'lifecycle',
+] as const;
+
+export type SkillCategory = (typeof SKILL_CATEGORIES)[number];
+
+export function isSkillCategory(value: string): value is SkillCategory {
+  return (SKILL_CATEGORIES as readonly string[]).includes(value);
 }
 
 export interface SkillManifest {

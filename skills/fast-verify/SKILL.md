@@ -6,6 +6,13 @@ when_to_use: |
   is about to present, or asks "will this work". Do not invoke for unit
   tests, code review, or static analysis. Apply after scope-knife so the
   demo path is known.
+
+version: 1.0
+category: verifying
+tags: ['smoke-test', 'cross-platform', '30-second']
+dependencies: ['scope-knife']
+side_effects: ['verify']
+triggers: ['verify it works', 'smoke test', 'does it run', 'quick check', 'fast verify']
 ---
 
 # fast-verify

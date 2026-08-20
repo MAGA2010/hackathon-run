@@ -5,6 +5,13 @@ when_to_use: |
   Trigger when the user is about to submit, mentions "shipping" or
   "packaging",", or asks "is this safe to commit". Do not invoke during
   development. Apply after judge-sim so submission_readiness is grounded.
+
+version: 1.0
+category: shipping
+tags: ['audit', 'release', 'non-fatal-webhook']
+dependencies: ['judge-sim']
+side_effects: ['ship']
+triggers: ['ship it', 'submit', 'package the submission', 'final audit', 'release']
 ---
 
 # ship-pack

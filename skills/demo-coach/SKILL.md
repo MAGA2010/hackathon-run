@@ -6,6 +6,13 @@ when_to_use: |
   has too many features to show, or wants to sharpen the message. Apply
   after fast-verify so the demo path is confirmed runnable. Do not invoke
   if the demo does not yet run.
+
+version: 1.0
+category: demoing
+tags: ['pitch', 'narrative', '30-60-90']
+dependencies: ['fast-verify']
+side_effects: ['demo']
+triggers: ['draft a pitch', 'demo script', 'what do we say', 'pitch is unclear', 'narrative']
 ---
 
 # demo-coach

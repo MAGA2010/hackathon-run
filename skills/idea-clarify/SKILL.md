@@ -6,6 +6,13 @@ when_to_use: |
   idea is too vague, or the user gave a one-paragraph brief. Run as a
   pre-step to scope-knife. Do not invoke once scope-knife has produced
   a plan; switch to scope-knife directly.
+
+version: 1.0
+category: scoping
+tags: ['empty-repo', 'vague-brief', 'pre-scope']
+dependencies: ['scope-knife']
+triggers:
+  ['we have no idea', 'what are we building', 'empty repo', 'vague brief', 'scope is unclear']
 ---
 
 # idea-clarify

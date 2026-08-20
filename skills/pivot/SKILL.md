@@ -6,6 +6,13 @@ when_to_use: |
   idea is wrong", or after a demo that landed flat with judges. Do
   not invoke pre-build; switch to scope-knife directly for greenfield
   ideas.
+
+version: 1.0
+category: scoping
+tags: ['mid-build-redirect', 'cut-rewrite', 'preserves-keep']
+dependencies: ['scope-knife', 'decision-log']
+side_effects: ['plan']
+triggers: ['pivot', 'change direction', 'rebuild', 'mid-build redirect', 'start over']
 ---
 
 # pivot

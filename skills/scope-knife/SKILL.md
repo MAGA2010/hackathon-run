@@ -6,6 +6,20 @@ when_to_use: |
   team has no MVP consensus, time is running out, or any skill invocation
   fails because scope is undefined. Apply before any other skill if scope is
   ambiguous. Do not invoke when scope is already agreed and stable.
+
+version: 1.0
+category: scoping
+tags: ['keep-cut-defer', 'mvp', 'demo-path']
+dependencies: ['idea-clarify', 'team-roster', 'time-box']
+side_effects: ['plan']
+triggers:
+  [
+    'scope is too big',
+    'too many features',
+    'no MVP consensus',
+    'time is running out',
+    'trim the scope',
+  ]
 ---
 
 # scope-knife

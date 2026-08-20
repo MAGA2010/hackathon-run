@@ -3,6 +3,14 @@ name: decision-log
 description: Writes every KEEP/CUT/DEFER/PIVOT scope decision into an append-only team log with rationale, author, and timestamp. Use after scope-knife or any time the team changes direction.
 when_to_use: |
 Trigger when the user says "log the decision", "record the cut", "why did we cut X", or right after scope-knife classifies a feature. Do not invoke before scope-knife; without a decision there is nothing to log.
+
+
+version: 1.0
+category: lifecycle
+tags: ["append-only", "audit-trail", "keep-cut-defer-pivot"]
+dependencies: ["scope-knife", "retro"]
+side_effects: ["decision-log"]
+triggers: ["log a decision", "record what we decided", "decision history", "keep cut defer", "append-only"]
 ---
 
 # decision-log

@@ -5,6 +5,14 @@ when_to_use: |
   Trigger when the demo fails on stage, the dev server is down, the API
   times out, or any skill invocation surfaces a P0/P1 failure. Do not
   invoke preemptively; this skill is for live emergencies.
+
+
+version: 1.0
+category: recovering
+tags: ["fallback", "decision-tree", "30-second"]
+dependencies: ["fast-verify", "demo-coach"]
+side_effects: ["recovery"]
+triggers: ["demo is broken", "fallback", "recovery", "what do we do if X fails", "30-second fallback"]
 ---
 
 # recovery-runbook

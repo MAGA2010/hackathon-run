@@ -3,6 +3,14 @@ name: team-roster
 description: Assigns each teammate a role + current task + blocker status, then surfaces the critical-path bottleneck. Use at the start of the build phase and any time the team feels stuck.
 when_to_use: |
 Trigger when the user says "who is doing what", "assign roles", "who is free", "who is blocked", or after scope-knife emits a plan with > 2 KEEP features. Do not invoke before scope-knife; without a plan, role assignment is guessing.
+
+
+version: 1.0
+category: scoping
+tags: ["roles", "assignments", "bottleneck"]
+dependencies: ["scope-knife"]
+side_effects: ["roster"]
+triggers: ["who does what", "team assignments", "role assignments", "who is blocked", "bottleneck"]
 ---
 
 # team-roster

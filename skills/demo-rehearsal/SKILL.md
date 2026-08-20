@@ -3,6 +3,14 @@ name: demo-rehearsal
 description: Runs the team through a timed mock demo with a stopwatch, scores each segment for over/under-time, and emits a per-segment fix list. Use in the final 2 hours before the live demo.
 when_to_use: |
 Trigger when the user says "let's rehearse", "practice the demo", "timing run", or 2 hours before the live slot. Do not invoke on day 1; the demo path is not stable yet.
+
+
+version: 1.0
+category: demoing
+tags: ["mock-demo", "stopwatch", "timing"]
+dependencies: ["demo-coach"]
+side_effects: ["rehearsal"]
+triggers: ["rehearse", "practice the demo", "timed run", "mock demo", "run through"]
 ---
 
 # demo-rehearsal

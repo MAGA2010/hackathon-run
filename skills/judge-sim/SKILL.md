@@ -5,6 +5,20 @@ when_to_use: |
   Trigger when the user is about to submit, wants feedback before the final
   hour, or asks "how would judges score this". Do not invoke before the
   demo path runs. Apply after demo-coach so the pitch is in place.
+
+version: 1.0
+category: judging
+tags: ['scoring', '7-dimensions', 'feedback']
+dependencies: ['demo-coach']
+side_effects: ['review']
+triggers:
+  [
+    'how would judges score',
+    'pre-submission review',
+    'judge this',
+    'what would judges say',
+    'review my submission',
+  ]
 ---
 
 # judge-sim

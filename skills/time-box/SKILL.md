@@ -3,6 +3,14 @@ name: time-box
 description: Allocates time across the hackathon lifecycle (idea -> scope -> build -> verify -> demo -> ship) and warns before each deadline slips. Use when the clock is the constraint or when scope-knife reports time pressure.
 when_to_use: |
 Trigger when the user says "we have X hours left", "how should we split the time", "we're falling behind", or after scope-knife reports a tight timeline. Do not invoke on day 1 when the team has 30+ hours and no plan yet; use scope-knife first.
+
+
+version: 1.0
+category: scoping
+tags: ["allocation", "checkpoints", "alarms"]
+dependencies: ["scope-knife"]
+side_effects: ["time-box"]
+triggers: ["how much time per stage", "time allocation", "checkpoints", "set timers", "allocate remaining time"]
 ---
 
 # time-box

@@ -3,6 +3,14 @@ name: stack-picker
 description: Recommends a tech stack when the team has no preference, the prize category biases a stack, or time pressure forces the simplest viable choice. Use at the start of a hackathon before any code is written.
 when_to_use: |
 Trigger when the user says "what should we build with", "we don't know the stack", "what language for a hackathon", or after idea-clarify surfaces a domain that maps cleanly to a known stack. Do not invoke when the user has already chosen a stack or has prior art in another language.
+
+
+version: 1.0
+category: scoping
+tags: ["tech-stack", "bootstrap", "30-min"]
+dependencies: ["idea-clarify", "scope-knife"]
+side_effects: ["plan"]
+triggers: ["what stack should we use", "tech stack", "how do we bootstrap", "pick the framework", "recommended stack"]
 ---
 
 # stack-picker

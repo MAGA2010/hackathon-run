@@ -3,6 +3,14 @@ name: retro
 description: Reviews the hackathon journey after submission and produces a prioritized list of learnings for next time. Use after ship-pack has marked the project ready to submit; do not invoke mid-build.
 when_to_use: |
 Trigger when the user says "what did we learn", "post-mortem", "retrospective", "what should we do differently next time", or after ship-pack marks all gates green. Do not invoke during the build; the team is too busy to answer honestly.
+
+
+version: 1.0
+category: lifecycle
+tags: ["post-mortem", "ratios", "learn"]
+dependencies: ["decision-log", "ship-pack"]
+side_effects: ["retro"]
+triggers: ["retrospective", "what did we learn", "post-mortem", "keep doing stop doing", "try next time"]
 ---
 
 # retro

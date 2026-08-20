@@ -121,21 +121,6 @@ Full docs at [maga2010.github.io/hackathon-run](https://maga2010.github.io/hacka
 
 ---
 
-## Examples
-
-Three real-style projects that use the pack end-to-end:
-
-- [examples/web-app](examples/web-app/) — Next.js SaaS in 36 hours
-- [examples/ai-ml](examples/ai-ml/) — FastAPI + LLM app
-- [examples/mobile](examples/mobile/) — React Native client
-- [examples/chrome-extension](examples/chrome-extension/) — Manifest V3 TODO highlighter
-- [examples/data-eng](examples/data-eng/) — Python stdlib ETL (CSV → TSV)
-- [examples/devtool-cli](examples/devtool-cli/) — Node ESM CLI tool
-
-Each example includes the full .hackathon/ directory with state and artifacts from a real run.
-
----
-
 ## Contributing
 
 We welcome skill proposals, bug fixes, and docs improvements. See [CONTRIBUTING.md](CONTRIBUTING.md).

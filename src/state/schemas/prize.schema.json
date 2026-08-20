@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "prize.schema.json",
+  "title": "prize-strategy output",
+  "type": "object",
+  "required": ["version", "generated_at", "target_prize", "anti_targets", "positioning"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "string" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "target_prize": {
+      "type": "object",
+      "required": ["name", "fit_score", "weight", "breakdown", "rationale"],
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "fit_score": { "type": "number", "minimum": 0, "maximum": 1 },
+        "weight": { "type": "integer", "minimum": 0 },
+        "breakdown": {
+          "type": "object",
+          "required": ["criteria_overlap", "demo_goal_match", "stack_match", "team_fit"],
+          "additionalProperties": false,
+          "properties": {
+            "criteria_overlap": { "type": "number", "minimum": 0, "maximum": 1 },
+            "demo_goal_match": { "type": "number", "minimum": 0, "maximum": 1 },
+            "stack_match": { "type": "number", "minimum": 0, "maximum": 1 },
+            "team_fit": { "type": "number", "minimum": 0, "maximum": 1 }
+          }
+        },
+        "rationale": { "type": "string" }
+      }
+    },
+    "anti_targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "fit_score", "reason"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "fit_score": { "type": "number" },
+          "reason": { "type": "string" }
+        }
+      }
+    },
+    "positioning": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    }
+  }
+}

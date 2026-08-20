@@ -240,6 +240,39 @@ const TOOLS: ToolDef[] = [
       additionalProperties: false,
     },
   },
+  {
+    name: 'find_skills',
+    description:
+      'Filter the skill catalog by Format v2 metadata. Multiple filters are AND-combined; no filters returns every skill with its v2 metadata.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        tag: { type: 'string', description: 'match skills with this tag' },
+        category: {
+          type: 'string',
+          enum: [
+            'scoping',
+            'building',
+            'verifying',
+            'demoing',
+            'judging',
+            'shipping',
+            'recovering',
+            'lifecycle',
+          ],
+        },
+        writes: {
+          type: 'string',
+          description: 'match skills that write .hackathon/state/<writes>.json',
+        },
+        depends_on: {
+          type: 'string',
+          description: 'match skills that pair with / chain to this name',
+        },
+      },
+      additionalProperties: false,
+    },
+  },
 ];
 
 function captureJsonCommand(fn: () => number): unknown {
@@ -419,6 +452,34 @@ function toolCall(name: string, args: Record<string, unknown>): unknown {
       return captureJsonCommand(() =>
         skillsCommand({ subcommand: 'diff', cwd: String(args.cwd ?? cwd) }),
       );
+    }
+    case 'find_skills': {
+      const tag = args.tag ? String(args.tag) : undefined;
+      const category = args.category ? String(args.category) : undefined;
+      const writes = args.writes ? String(args.writes) : undefined;
+      const depends_on = args.depends_on ? String(args.depends_on) : undefined;
+      const matched = skills.filter((s) => {
+        const fm = s.frontmatter;
+        if (tag && !(fm.tags ?? []).includes(tag)) return false;
+        if (category && fm.category !== category) return false;
+        if (writes && !(fm.side_effects ?? []).includes(writes)) return false;
+        if (depends_on && !(fm.dependencies ?? []).includes(depends_on)) return false;
+        return true;
+      });
+      return {
+        total: skills.length,
+        matched: matched.length,
+        filters: { tag, category, writes, depends_on },
+        skills: matched.map((s) => ({
+          name: s.frontmatter.name,
+          version: s.frontmatter.version ?? null,
+          category: s.frontmatter.category ?? null,
+          tags: s.frontmatter.tags ?? [],
+          dependencies: s.frontmatter.dependencies ?? [],
+          side_effects: s.frontmatter.side_effects ?? [],
+          trigger_phrases: s.frontmatter.triggers ?? [],
+        })),
+      };
     }
     default:
       throw new Error('unknown tool: ' + name);

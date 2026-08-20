@@ -45,6 +45,12 @@ name: ${opts.name}
 description: ${opts.description}
 when_to_use: |
   ${opts.whenToUse}
+version: 0.1
+category: lifecycle
+tags: []
+dependencies: []
+side_effects: []
+triggers: []
 ---
 
 # ${opts.name}

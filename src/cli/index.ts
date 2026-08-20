@@ -34,6 +34,7 @@ import { runSkill } from './commands/run.js';
 import { replay } from './commands/replay.js';
 import { report } from './commands/report.js';
 import { skills } from './commands/skills.js';
+import { search as skillsSearch } from './commands/skills-search.js';
 import { matchSkill } from '../harness/trigger.js';
 import { startMcpServer } from '../mcp/server.js';
 
@@ -224,6 +225,39 @@ skillsCmd
   .description('Print the current .hackathon/skills.json pin')
   .option('-C, --cwd <path>', 'repo root', process.cwd())
   .action((opts: { cwd?: string }) => process.exit(skills({ subcommand: 'show', cwd: opts.cwd })));
+
+skillsCmd
+  .command('search')
+  .description('Filter skills by Format v2 metadata (--tag / --category / --writes / --depends-on)')
+  .option('--tag <name>', 'match skills with this tag')
+  .option(
+    '--category <name>',
+    'match skills in this lifecycle category (scoping|building|verifying|demoing|judging|shipping|recovering|lifecycle)',
+  )
+  .option('--writes <state>', 'match skills that write .hackathon/state/<state>.json')
+  .option('--depends-on <name>', 'match skills that pair with / chain to <name>')
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action(
+    (opts: {
+      tag?: string;
+      category?: string;
+      writes?: string;
+      dependsOn?: string;
+      json?: boolean;
+      cwd?: string;
+    }) =>
+      process.exit(
+        skillsSearch({
+          tag: opts.tag,
+          category: opts.category,
+          writes: opts.writes,
+          dependsOn: opts.dependsOn,
+          json: opts.json,
+          cwd: opts.cwd,
+        }),
+      ),
+  );
 
 program
   .command('match <utterance>')

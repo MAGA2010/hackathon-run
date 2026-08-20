@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1.8] - 2026-08-22
+
+Final of five big iterations synthesized from online research on Agent Skills spec, time-budgeting methodology, WSJF scoring, and prize-strategy heuristics.
+
+### Added (roll-up of v1.2.1.4 - v1.2.1.8)
+
+- agents/openai.yaml (v1.2.1.4) - pack-level Codex / Claude Code integration manifest.
+- prize-strategy skill (v1.2.1.7) - new 15th skill.
+- Time-budgeting v1.2.1.5: burn-rate, escalation alarms, recovery budget, MVD check, --demo-at HH:MM.
+- WSJF scoring in scope-knife (v1.2.1.6): --enable-wsjf flag ranks off-demo-path features.
+- 33 new unit tests across 5 new files.
+
+### Changed
+
+- skills lint now reports 15 bundled skills (was 14).
+
+## [1.2.1.7] - 2026-08-22
+
+### Added
+
+- New skill prize-strategy with SKILL.md, scripts/target.py, and src/state/schemas/prize.schema.json.
+- 7 new unit tests in tests/unit/v1217-prize-strategy.test.mjs.
+
+## [1.2.1.6] - 2026-08-22
+
+### Changed
+
+- scripts/classify.py now supports WSJF tie-breaking among off-demo-path features via --enable-wsjf.
+
+### Added
+
+- 8 new unit tests in tests/unit/v1216-scope-knife-wsjf.test.mjs.
+- A real main() CLI on classify.py (previously library-only).
+
+## [1.2.1.5] - 2026-08-22
+
+### Changed
+
+- scripts/compute.py adds burn-rate, three escalating alarms per stage at 50%/80%/100%, recovery-budget stealing, minimum-viable-demo feasibility check, and --demo-at HH:MM.
+- 7 new unit tests in tests/unit/v1215-timebox-upgrade.test.mjs.
+
+## [1.2.1.4] - 2026-08-22
+
+### Added
+
+- agents/openai.yaml - pack-level Codex / Claude Code integration manifest.
+- 6 new unit tests in tests/unit/v1214-openai-yaml.test.mjs.
+
+## [1.2.1.3] - 2026-08-22
+
 ## [1.2.1.3] - 2026-08-22
 
 ### Added

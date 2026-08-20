@@ -2,10 +2,10 @@
 
 > **Ship the demo, not the dream.**
 
-A decision-making and execution system for hackathon teams operating under time pressure. Fourteen skills, one workflow: **clarify, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro, decide-log.**
+A decision-making and execution system for hackathon teams operating under time pressure. Fifteen skills, one workflow: **clarify, prize-target, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro, decide-log.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
-[![Version](https://img.shields.io/badge/version-1.2.1.3-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.2.1.8-blue)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
 
@@ -61,6 +61,7 @@ Fourteen skills, mapped to the hackathon lifecycle:
 | **retro**            | After submission, want ratios + action list       | 4 ratios + keep_doing/stop_doing/try_next_time      |
 | **demo-rehearsal**   | Final 2 hours, want a timed mock run              | Per-segment score + fix list                        |
 | **team-roster**      | Build phase, >2 KEEP features, roles unclear      | Role assignments + bottleneck + rescuer             |
+| **prize-strategy**   | Multi-track hackathon, picks which prize to chase | Target prize + 3-5 positioning actions              |
 | **decision-log**     | Every cut needs a recorded "why"                  | Append-only decision record with rationale          |
 
 Each skill is **independently invokable**. You can run any of them at any time without running the others.

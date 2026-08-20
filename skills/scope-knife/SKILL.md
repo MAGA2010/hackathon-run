@@ -83,6 +83,23 @@ Priorities:
 2. **P1**: demo polish
 3. **P2**: nice-to-haves (skip if time runs out)
 
+## Helper
+
+The skill ships scripts/classify.py (Python stdlib only). It reads a features inventory, applies the pressure table, and emits .hackathon/state/plan.json. The CLI now supports WSJF tie-breaking:
+
+    python3 skills/scope-knife/scripts/classify.py --inventory features.json --demo-goal user_signup --time-remaining 180 --enable-wsjf
+
+When --enable-wsjf is set, every feature should carry WSJF inputs:
+
+- user_business_value (1-10, what it earns you in the demo)
+- time_criticality (1-10, will it hurt to ship without it?)
+- risk_reduction (1-10, does it de-risk the demo?)
+- job_size (1-10, person-hours to build)
+
+wsjf_score = (user_business_value + time_criticality + risk_reduction) / job_size
+
+Off-demo-path features are sorted by WSJF before KEEP vs CUT vs DEFER is decided, so high-WSJF non-path features can be DEFERred rather than CUT when time pressure lets you.
+
 ## Output contract
 
 Files written:

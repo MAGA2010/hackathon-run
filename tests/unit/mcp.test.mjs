@@ -43,7 +43,7 @@ describe('MCP server', () => {
     assert.equal(res.length, 1);
     assert.equal(res[0].id, 1);
     assert.ok(res[0].result.protocolVersion);
-    assert.equal(res[0].result.serverInfo.name, 'hackathon-surgeon');
+    assert.equal(res[0].result.serverInfo.name, 'hackathon-run');
   });
 
   it('responds to tools/list with 14 tools', async () => {

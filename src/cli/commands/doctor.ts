@@ -243,7 +243,7 @@ export function doctor(opts: { cwd: string; json?: boolean }): number {
       name: 'skills',
       severity: 'warn',
       message: 'no skills found under skills/',
-      detail: 'Run from the hackathon-surgeon package root or inside a project that has skills/.',
+      detail: 'Run from the hackathon-run package root or inside a project that has skills/.',
     });
   }
 

@@ -23,7 +23,7 @@ three gaps:
 
 The MCP surface was also small (4 tools) and the bundled examples only
 covered web-app / ai-ml / mobile. Both limited how well external agents
-could adopt Hackathon Surgeon.
+could adopt Hackathon Run.
 
 ## Decision
 

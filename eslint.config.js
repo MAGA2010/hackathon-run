@@ -1,4 +1,4 @@
-// ESLint v9 flat config for the hackathon-surgeon CLI.
+// ESLint v9 flat config for the hackathon-run CLI.
 //
 // Strategy: TypeScript handles all type-aware checks via `npm run lint`
 // (= `tsc --noEmit`). ESLint here covers the .mjs / .cjs helpers in

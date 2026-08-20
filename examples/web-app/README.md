@@ -1,6 +1,6 @@
 # Example: Web App (Next.js SaaS)
 
-A complete example showing Hackathon Surgeon applied to a 36-hour build of a
+A complete example showing Hackathon Run applied to a 36-hour build of a
 Next.js + Postgres SaaS app.
 
 ## Project structure

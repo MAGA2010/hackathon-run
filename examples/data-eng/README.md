@@ -1,7 +1,7 @@
 # Example: Data Engineering (Python ETL)
 
 A minimal Python ETL pipeline that ingests a CSV, cleans rows, and writes
-a TSV. Demonstrates Hackathon Surgeon applied to a "data" demo_format.
+a TSV. Demonstrates Hackathon Run applied to a "data" demo_format.
 
 ## Stack
 
@@ -26,7 +26,7 @@ cd examples/data-eng
 python3 src/etl.py --in data/sample.csv --out /tmp/out.tsv
 ```
 
-## What Hackathon Surgeon says about this project
+## What Hackathon Run says about this project
 
 Run from the repo root:
 

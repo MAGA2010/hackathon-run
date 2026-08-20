@@ -1,6 +1,6 @@
 # FAQ
 
-**Q: Is Hackathon Surgeon an AI agent?**
+**Q: Is Hackathon Run an AI agent?**
 A: No. It's a pack of skills that runs inside any agent that supports the
 [Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills)
 open standard — Codex, Claude Code, Cursor, our CLI.

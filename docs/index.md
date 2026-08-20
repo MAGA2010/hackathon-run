@@ -1,4 +1,4 @@
-# Hackathon Surgeon
+# Hackathon Run
 
 > **Ship the demo, not the dream.**
 
@@ -17,13 +17,13 @@ execution** problem.
 - The demo crashes on stage and you have 60 seconds to recover.
 - A judge asks "what's novel here?" and you have no answer.
 
-Hackathon Surgeon does not help you write code faster. It helps you **make the
+Hackathon Run does not help you write code faster. It helps you **make the
 right cut, at the right time, every time**.
 
 ## Quick start
 
 ```bash
-npm install -g @maga2010/hackathon-surgeon
+npm install -g @maga2010/hackathon-run
 cd my-hackathon-project
 hackathon init
 hackathon run scope-knife

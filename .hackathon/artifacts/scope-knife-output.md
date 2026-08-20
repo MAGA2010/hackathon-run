@@ -26,7 +26,7 @@ _Generated: 2026-08-18T17:04:28.087945+00:00_
 - **bin** — Valuable post-demo; ship later.
 - **bugs** — Valuable post-demo; ship later.
 - **engines** — Valuable post-demo; ship later.
-- **🔪 Hackathon Surgeon** — Valuable post-demo; ship later.
+- **🔪 Hackathon Run** — Valuable post-demo; ship later.
 
 ## Demo path
 

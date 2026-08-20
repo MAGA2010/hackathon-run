@@ -14,7 +14,7 @@ Surgeon must publish skills that load in either runtime without translation.
 
 ## Decision
 
-Hackathon Surgeon skills conform to the Agent Skills spec:
+Hackathon Run skills conform to the Agent Skills spec:
 
 - One folder per skill under `skills/`.
 - A `SKILL.md` with YAML frontmatter (`name`, `description`, optional

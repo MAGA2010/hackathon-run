@@ -1,6 +1,6 @@
 # 36-Hour Walkthrough
 
-A typical hackathon is 36 hours. Here's how to use Hackathon Surgeon across
+A typical hackathon is 36 hours. Here's how to use Hackathon Run across
 the timeline. Times are relative to start (T+0).
 
 ## T+0 — Ideation

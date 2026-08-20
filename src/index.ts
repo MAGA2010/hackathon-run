@@ -1,5 +1,5 @@
 /**
- * index.ts — public API of the Hackathon Surgeon library.
+ * index.ts — public API of the Hackathon Run library.
  *
  * Most users will interact via the CLI. This module exists for
  * programmatic embedding (e.g., an MCP server, a web UI, or a test

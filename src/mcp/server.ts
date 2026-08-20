@@ -1,6 +1,6 @@
 /**
  * server.ts — minimal Model Context Protocol (MCP) server that exposes the
- * Hackathon Surgeon harness to any MCP-compatible agent (Codex, Claude Code,
+ * Hackathon Run harness to any MCP-compatible agent (Codex, Claude Code,
  * Cursor, etc.).
  *
  * The server speaks JSON-RPC 2.0 over stdio (per the MCP spec). It exposes
@@ -123,7 +123,7 @@ const TOOLS: ToolDef[] = [
   {
     name: 'validate_skill',
     description:
-      'Lint a skill directory against the Hackathon Surgeon skill protocol. ' +
+      'Lint a skill directory against the Hackathon Run skill protocol. ' +
       'Returns findings with severity and message; non-zero exit code on errors.',
     inputSchema: {
       type: 'object',
@@ -523,7 +523,7 @@ async function handleRequest(req: JsonRpcRequest): Promise<JsonRpcResponse | nul
           id: req.id,
           result: {
             protocolVersion: '2024-11-05',
-            serverInfo: { name: 'hackathon-surgeon', version: PKG_VERSION },
+            serverInfo: { name: 'hackathon-run', version: PKG_VERSION },
             capabilities: { tools: {} },
           },
         };

@@ -2,7 +2,7 @@
 
 - Status: Accepted
 - Date: 2026-08-20
-- Deciders: hackathon-surgeon maintainers
+- Deciders: hackathon-run maintainers
 
 ## Context
 

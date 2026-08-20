@@ -1,5 +1,5 @@
-name: 'Hackathon Surgeon'
-description: 'Run the hackathon-surgeon skill pack in CI: lint skills, validate state, run the matcher, or scaffold a new skill.'
+name: 'Hackathon Run'
+description: 'Run the hackathon-run skill pack in CI: lint skills, validate state, run the matcher, or scaffold a new skill.'
 author: 'MAGA2010 <https://github.com/MAGA2010>'
 
 inputs:
@@ -19,7 +19,7 @@ inputs:
     required: false
     default: '.'
   version:
-    description: 'hackathon-surgeon version to install. Default "latest".'
+    description: 'hackathon-run version to install. Default "latest".'
     required: false
     default: 'latest'
 
@@ -31,47 +31,47 @@ runs:
       with:
         node-version: '20'
 
-    - name: Install hackathon-surgeon
+    - name: Install hackathon-run
       shell: bash
       run: |
-          if [ "${{ inputs.version }}" = "latest" ]; then
-            npm install -g @maga2010/hackathon-surgeon
-          else
-            npm install -g "@maga2010/hackathon-surgeon@${{ inputs.version }}"
-          fi
+        if [ "${{ inputs.version }}" = "latest" ]; then
+          npm install -g @maga2010/hackathon-run
+        else
+          npm install -g "@maga2010/hackathon-run@${{ inputs.version }}"
+        fi
 
     - name: Run
       shell: bash
       working-directory: ${{ inputs.cwd }}
       run: |
-          case "${{ inputs.command }}" in
-            validate-skills)
-              for d in skills/*/; do
-                echo "== $d =="
-                hackathon validate-skill "$d"
-              done
-              ;;
-            validate-state)
-              hackathon validate .hackathon/state
-              ;;
-            list)
-              hackathon list
-              ;;
-            status)
-              hackathon status
-              ;;
-            match)
-              hackathon match "${{ inputs.utterance }}" --debug
-              ;;
-            new-skill)
-              hackathon new-skill "${{ inputs.skill }}"
-              ;;
-            *)
-              echo "::error::unknown command: ${{ inputs.command }}"
-              echo "Valid: validate-skills, validate-state, list, status, match, new-skill"
-              exit 2
-              ;;
-          esac
+        case "${{ inputs.command }}" in
+          validate-skills)
+            for d in skills/*/; do
+              echo "== $d =="
+              hackathon validate-skill "$d"
+            done
+            ;;
+          validate-state)
+            hackathon validate .hackathon/state
+            ;;
+          list)
+            hackathon list
+            ;;
+          status)
+            hackathon status
+            ;;
+          match)
+            hackathon match "${{ inputs.utterance }}" --debug
+            ;;
+          new-skill)
+            hackathon new-skill "${{ inputs.skill }}"
+            ;;
+          *)
+            echo "::error::unknown command: ${{ inputs.command }}"
+            echo "Valid: validate-skills, validate-state, list, status, match, new-skill"
+            exit 2
+            ;;
+        esac
 
 branding:
   icon: 'activity'

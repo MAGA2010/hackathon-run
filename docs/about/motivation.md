@@ -1,4 +1,4 @@
-# Why Hackathon Surgeon exists
+# Why Hackathon Run exists
 
 Hackathons are won in the last 4 hours, not the first 4. The teams that
 ship clean demos at hour 36 are the teams that **made ruthless cuts at hour
@@ -7,7 +7,7 @@ ship clean demos at hour 36 are the teams that **made ruthless cuts at hour
 Most open-source "hackathon tools" are code scaffolds (`sahat/hackathon-starter`,
 PurdueHackers' kit). They help you start. They don't help you finish.
 
-Hackathon Surgeon is a **decision system**. It does not help you write code.
+Hackathon Run is a **decision system**. It does not help you write code.
 It helps you decide:
 
 - Which features to keep (KEEP).

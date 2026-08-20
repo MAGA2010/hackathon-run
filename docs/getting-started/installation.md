@@ -3,7 +3,7 @@
 ## Option A — npm (recommended)
 
 ```bash
-npm install -g @maga2010/hackathon-surgeon
+npm install -g @maga2010/hackathon-run
 ```
 
 Requires Node.js 20+ (LTS).
@@ -12,7 +12,7 @@ Requires Node.js 20+ (LTS).
 
 ```bash
 git clone https://github.com/MAGA2010/hackathon-run
-cd hackathon-surgeon
+cd hackathon-run
 npm install
 npm run build
 node dist/cli/index.js init

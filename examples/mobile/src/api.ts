@@ -1,5 +1,5 @@
 /**
- * Mobile-side API client for the Hackathon Surgeon example.
+ * Mobile-side API client for the Hackathon Run example.
  *
  * Talks to the web-app backend in the canonical 36-hour demo:
  * sign up, list notes, create a note.

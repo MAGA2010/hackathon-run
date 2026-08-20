@@ -125,7 +125,7 @@ program
 
 program
   .command('validate-skill <dir>')
-  .description('Lint a SKILL.md against the Hackathon Surgeon skill protocol')
+  .description('Lint a SKILL.md against the Hackathon Run skill protocol')
   .option('--json', 'machine-readable JSON output')
   .action((dir: string, opts) =>
     process.exit(validateSkill({ target: dir, json: Boolean(opts.json) })),

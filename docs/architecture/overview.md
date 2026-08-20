@@ -1,6 +1,6 @@
 # Architecture overview
 
-Hackathon Surgeon is a **skill pack**, not a runtime. The runtime is whatever
+Hackathon Run is a **skill pack**, not a runtime. The runtime is whatever
 agent you load it into (Codex, Claude Code, Cursor, or our CLI).
 
 ## Components

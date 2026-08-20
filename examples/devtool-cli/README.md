@@ -1,7 +1,7 @@
 # Example: Devtool CLI (Node ESM)
 
 A minimal Node CLI that reads JSON from stdin and pretty-prints it with a
-timestamp prefix. Demonstrates Hackathon Surgeon applied to a "cli"
+timestamp prefix. Demonstrates Hackathon Run applied to a "cli"
 demo_format.
 
 ## Stack
@@ -26,7 +26,7 @@ cd examples/devtool-cli
 echo '{"hello":"world"}' | node src/cli.mjs
 ```
 
-## What Hackathon Surgeon says about this project
+## What Hackathon Run says about this project
 
 ```bash
 hackathon match "we want to ship a small CLI tool today"

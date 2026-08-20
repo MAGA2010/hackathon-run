@@ -29,7 +29,7 @@ assignees: []
 - OS:
 - Node version (`node --version`):
 - Python version (`python3 --version`):
-- `hackathon-surgeon` version (`hackathon --version`):
+- `hackathon-run` version (`hackathon --version`):
 
 ## Logs / screenshots
 

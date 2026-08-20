@@ -1,4 +1,4 @@
-# Contributing to Hackathon Surgeon
+# Contributing to Hackathon Run
 
 > Ship the demo, not the dream. **Including your contributions.**
 
@@ -30,7 +30,7 @@ Setup:
 
 `ash
 git clone https://github.com/MAGA2010/hackathon-run
-cd hackathon-surgeon
+cd hackathon-run
 nvm use                        # or fnm use
 npm install
 ./scripts/bootstrap.sh
@@ -77,7 +77,7 @@ Maintainers only. Tag-driven, automated by `.github/workflows/release.yml`:
 - Push a `vX.Y.Z` tag
 - CI runs full test matrix
 - CHANGELOG entry generated from commits since last tag
-- npm package published to `@maga2010/hackathon-surgeon`
+- npm package published to `@maga2010/hackathon-run`
 - GitHub Release created
 
 ## What we will (probably) reject

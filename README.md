@@ -1,4 +1,4 @@
-# 🔪 Hackathon Surgeon
+# 🏁 Hackathon Run
 
 > **Ship the demo, not the dream.**
 
@@ -11,7 +11,7 @@ A decision-making and execution system for hackathon teams operating under time 
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
 
 <p align="center">
-  <img src="docs/assets/images/hero.svg" alt="Hackathon Surgeon hero" width="800">
+  <img src="docs/assets/images/hero.svg" alt="Hackathon Run hero" width="800">
 </p>
 
 ---
@@ -26,7 +26,7 @@ A hackathon is not a coding problem. It is a **time-pressure, decision-making, e
 - Your README references API keys that you cannot ship.
 - Your teammate has been debugging the wrong thing for 4 hours.
 
-**Hackathon Surgeon does not help you write code faster.** It helps you **make the right cut, at the right time, every time**.
+**Hackathon Run does not help you write code faster.** It helps you **make the right cut, at the right time, every time**.
 
 ---
 
@@ -74,7 +74,7 @@ Each skill is **independently invokable**. You can run any of them at any time w
 
 # One-time install
 
-npm install -g @maga2010/hackathon-surgeon
+npm install -g @maga2010/hackathon-run
 
 # Inside any hackathon project
 
@@ -146,9 +146,9 @@ The [skill template](docs/contributing/skill-template.md) is the source of truth
 
 ## Community
 
-- **Discord:** [discord.gg/hackathon-surgeon](https://discord.gg/hackathon-surgeon)
+- **Discord:** [Join the Discord](https://discord.gg/hackathon-surgeon)
 - **Discussions:** [GitHub Discussions](https://github.com/MAGA2010/hackathon-run/discussions)
-- **Twitter:** [@HackathonSurgeon](https://twitter.com/HackathonSurgeon)
+- **Twitter:** [Follow on X](https://twitter.com/HackathonSurgeon)
 
 ---
 

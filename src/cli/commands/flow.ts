@@ -1,7 +1,7 @@
 /**
  * flow.ts — guided end-to-end pipeline (scope → verify → demo → judge → ship).
  *
- * The Hackathon Surgeon skills are designed to be invoked by an agent that
+ * The Hackathon Run skills are designed to be invoked by an agent that
  * reads each SKILL.md, runs the Python scripts, and writes the state files.
  * `hackathon flow` is a planning aid that:
  *

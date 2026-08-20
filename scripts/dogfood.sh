@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# dogfood.sh - run Hackathon Surgeon against its own repo.
+# dogfood.sh - run Hackathon Run against its own repo.
 #
 # Usage:
 #   bash scripts/dogfood.sh            # full run, exit non-zero on any failure
@@ -31,7 +31,7 @@ for arg in "$@"; do
     esac
 done
 
-step "scope-knife on hackathon-surgeon itself"
+step "scope-knife on hackathon-run itself"
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 INV="$TMP/inv.json"

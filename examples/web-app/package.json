@@ -1,8 +1,8 @@
 {
-  "name": "hackathon-surgeon-webapp-example",
+  "name": "hackathon-run-webapp-example",
   "version": "0.1.0",
   "private": true,
-  "description": "Example Next.js SaaS scaffold used by the Hackathon Surgeon pack's web-app walkthrough.",
+  "description": "Example Next.js SaaS scaffold used by the Hackathon Run pack's web-app walkthrough.",
   "type": "module",
   "scripts": {
     "dev": "node src/dev-server.mjs",

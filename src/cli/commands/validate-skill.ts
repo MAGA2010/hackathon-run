@@ -1,5 +1,5 @@
 /**
- * validate-skill.ts - lint a single SKILL.md against the Hackathon Surgeon
+ * validate-skill.ts - lint a single SKILL.md against the Hackathon Run
  * skill protocol.
  *
  * Checks:

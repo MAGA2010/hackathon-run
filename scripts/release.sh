@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# release.sh - prepare and tag a Hackathon Surgeon release locally.
+# release.sh - prepare and tag a Hackathon Run release locally.
 #
 # The actual npm publish + GitHub release happen in CI (.github/workflows/release.yml)
 # once a v* tag is pushed. This script enforces the local preconditions and pushes

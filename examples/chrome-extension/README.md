@@ -1,7 +1,7 @@
 # Example: Chrome Extension (Manifest V3)
 
 A minimal Manifest V3 Chrome extension that highlights hackathon-team todo
-items on any page. Demonstrates Hackathon Surgeon applied to a
+items on any page. Demonstrates Hackathon Run applied to a
 "browser-extension" demo_format.
 
 ## Stack
@@ -30,7 +30,7 @@ examples/chrome-extension/
 3. Click "Load unpacked" -> select `examples/chrome-extension/`
 4. Visit any page; the extension highlights TODO items in yellow.
 
-## What Hackathon Surgeon says about this project
+## What Hackathon Run says about this project
 
 ```bash
 hackathon match "we have 8 hours and want a browser extension"

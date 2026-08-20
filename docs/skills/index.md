@@ -35,7 +35,7 @@ Every skill page has the same six sections:
 
 ## Skill format
 
-Each skill's `SKILL.md` follows the [Hackathon Surgeon Skill Format
+Each skill's `SKILL.md` follows the [Hackathon Run Skill Format
 v2](../architecture/skill-protocol.md#format-v2-fields), which extends YAML
 frontmatter with `version`, `category`, `tags`, `dependencies`,
 `side_effects`, and `triggers`. The fields drive

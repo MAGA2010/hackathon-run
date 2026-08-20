@@ -1,6 +1,6 @@
 # Roadmap
 
-This is the live roadmap for `@maga2010/hackathon-surgeon`. It is updated
+This is the live roadmap for `@maga2010/hackathon-run`. It is updated
 when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANGELOG.md).
 
 ## Shipped

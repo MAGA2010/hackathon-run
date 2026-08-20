@@ -1,5 +1,5 @@
 /**
- * types.ts — the contract every Hackathon Surgeon skill must satisfy.
+ * types.ts — the contract every Hackathon Run skill must satisfy.
  *
  * This is the *harness* of the skill pack. It defines:
  *   - how a SKILL.md is parsed (frontmatter + body)

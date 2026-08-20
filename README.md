@@ -5,7 +5,7 @@
 A decision-making and execution system for hackathon teams operating under time pressure. Fourteen skills, one workflow: **clarify, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro, decide-log.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
-[![Version](https://img.shields.io/badge/version-1.2.1.3-blue)](https://github.com/MAGA2010/hackathon-run/releases)
+[![Version](https://img.shields.io/badge/version-1.2.1.3-blue)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
 
@@ -114,7 +114,7 @@ Third-party skills can ship a full manifest (`license`, `author`, `homepage`, `r
 
 ## Documentation
 
-Full docs at [maga2010.github.io/hackathon-run](https://maga2010.github.io/hackathon-run/) or in [docs/](docs/index.md).
+Full docs in [docs/index.md](docs/index.md). (A hosted site is not deployed yet.)
 
 - [Getting Started](docs/getting-started/installation.md)
 - [36-Hour Walkthrough](docs/guides/36-hour-walkthrough.md)
@@ -129,12 +129,6 @@ Full docs at [maga2010.github.io/hackathon-run](https://maga2010.github.io/hacka
 We welcome skill proposals, bug fixes, and docs improvements. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 The [skill template](docs/contributing/skill-template.md) is the source of truth for adding new skills.
-
----
-
-## Community
-
-- **Discussions:** [GitHub Discussions](https://github.com/MAGA2010/hackathon-run/discussions)
 
 ---
 

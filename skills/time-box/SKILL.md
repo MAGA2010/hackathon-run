@@ -8,7 +8,7 @@ Trigger when the user says "we have X hours left", "how should we split the time
 version: 1.0
 category: scoping
 tags: ["allocation", "checkpoints", "alarms"]
-dependencies: ["scope-knife"]
+dependencies: []
 side_effects: ["time-box"]
 triggers: ["how much time per stage", "time allocation", "checkpoints", "set timers", "allocate remaining time"]
 ---

@@ -11,11 +11,14 @@
  *   hackathon skills pin --all           pin every bundled skill
  *   hackathon skills diff                show what changed since the pin
  *   hackathon skills show                print the current pin (if any)
+ *
+ * Since v1.1.0 each entry records the skill's own Format v2 `version`
+ * (falling back to the pack version), not only the pack-level version.
  */
 
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { join, resolve } from 'node:path';
+import { join, resolve, dirname } from 'node:path';
 
 import { loadAllSkills } from '../../harness/loader.js';
 import { c } from '../lib/colors.js';
@@ -55,6 +58,10 @@ function checksumOf(raw: string, refs: string): string {
   return 'sha256:' + h.digest('hex').slice(0, 16);
 }
 
+function skillVersion(frontmatter: { version?: string }, packVersion: string): string {
+  return frontmatter.version ?? packVersion;
+}
+
 function readPin(cwd: string): PinFile | null {
   const p = resolve(cwd, PIN_PATH);
   if (!existsSync(p)) return null;
@@ -67,6 +74,7 @@ function readPin(cwd: string): PinFile | null {
 
 function writePin(cwd: string, pin: PinFile): string {
   const p = resolve(cwd, PIN_PATH);
+  mkdirSync(dirname(p), { recursive: true });
   writeFileSync(p, JSON.stringify(pin, null, 2) + '\n');
   return p;
 }
@@ -85,12 +93,12 @@ export function skills(opts: SkillsOptions): number {
     console.log(c.bold(`hackathon skills list — ${loaded.length} bundled`));
     console.log();
     console.log(
-      `  ${'name'.padEnd(20)} ${'trigger/1536'.padEnd(12)} ${'frontmatter preview'.padEnd(60)}`,
+      `  ${'name'.padEnd(20)} ${'version'.padEnd(8)} ${'trigger/1536'.padEnd(12)} ${'frontmatter preview'.padEnd(60)}`,
     );
     for (const s of loaded) {
       const preview = (s.frontmatter.description ?? '').slice(0, 60);
       console.log(
-        `  ${s.frontmatter.name.padEnd(20)} ${String(s.triggerBudget).padEnd(12)} ${preview}`,
+        `  ${s.frontmatter.name.padEnd(20)} ${(s.frontmatter.version ?? packVersion).padEnd(8)} ${String(s.triggerBudget).padEnd(12)} ${preview}`,
       );
     }
     return 0;
@@ -115,18 +123,18 @@ export function skills(opts: SkillsOptions): number {
           ?.join('\n') ?? '';
       return {
         name: s.frontmatter.name,
-        version: packVersion,
+        version: skillVersion(s.frontmatter, packVersion),
         checksum: checksumOf(JSON.stringify(s.frontmatter) + s.body, refs),
       };
     });
     const pin: PinFile = {
-      version: '1.0',
+      version: '1.1',
       generated_at: new Date().toISOString(),
       pack_version: packVersion,
       skills: entries,
     };
     const p = writePin(cwd, pin);
-    log.ok(`pinned ${entries.length} skills @ pack v${packVersion}`);
+    log.ok(`pinned ${entries.length} skills at their Format v2 versions (pack v${packVersion})`);
     log.dim(`wrote ${p}`);
     return 0;
   }
@@ -147,7 +155,7 @@ export function skills(opts: SkillsOptions): number {
         return [
           s.frontmatter.name,
           {
-            version: packVersion,
+            version: skillVersion(s.frontmatter, packVersion),
             checksum: checksumOf(JSON.stringify(s.frontmatter) + s.body, refs),
           },
         ];
@@ -161,6 +169,9 @@ export function skills(opts: SkillsOptions): number {
         changes++;
       } else if (now.checksum !== entry.checksum) {
         console.log(`  ${c.yellow('~')} ${entry.name}  ${entry.checksum} -> ${now.checksum}`);
+        if (now.version !== entry.version) {
+          console.log(`  ${c.yellow('^')} ${entry.name}  v${entry.version} -> v${now.version}`);
+        }
         changes++;
       }
     }

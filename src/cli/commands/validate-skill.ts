@@ -202,6 +202,46 @@ function checkSkill(skillDir: string, cwd: string): Finding[] {
     });
   }
 
+  // v1.2 manifest fields — WARN-only: bundled skills may omit these, but
+  // third-party skills should ship a complete manifest so consumers can
+  // attribute the author, find the source, and check the license.
+  for (const [label, value] of [
+    ['license', fm.license],
+    ['author', fm.author],
+    ['homepage', fm.homepage],
+    ['repository', fm.repository],
+  ] as const) {
+    if (!value || value.trim() === '') {
+      out.push({
+        severity: 'warn',
+        message: `frontmatter missing optional manifest field: ${label} (recommended for third-party skills)`,
+      });
+    }
+  }
+  if (fm.homepage && !/^https?:\/\//i.test(fm.homepage)) {
+    out.push({
+      severity: 'warn',
+      message: `frontmatter homepage "${fm.homepage}" does not look like a URL`,
+    });
+  }
+  if (fm.repository && !/^(https?:\/\/|git@|[\w.-]+\/[\w.-]+)$/.test(fm.repository)) {
+    out.push({
+      severity: 'warn',
+      message: `frontmatter repository "${fm.repository}" does not look like a URL or owner/repo`,
+    });
+  }
+  if (fm.compatibility && fm.compatibility.length > 500) {
+    out.push({
+      severity: 'warn',
+      message: `frontmatter compatibility exceeds 500 chars (${fm.compatibility.length})`,
+    });
+  } else if (fm.compatibility) {
+    out.push({
+      severity: 'info',
+      message: `compatibility: ${fm.compatibility}`,
+    });
+  }
+
   const stateRefs = Array.from(parsed.body.matchAll(/state\/([a-z_-]+)\.json/g)).map((m) => m[1]);
   const schemaDir = resolve(cwd, 'src', 'state', 'schemas');
   for (const ref of stateRefs) {

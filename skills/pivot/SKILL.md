@@ -11,7 +11,7 @@ version: 1.0
 category: scoping
 tags: ['mid-build-redirect', 'cut-rewrite', 'preserves-keep']
 dependencies: ['scope-knife', 'decision-log']
-side_effects: ['plan']
+side_effects: []
 triggers: ['pivot', 'change direction', 'rebuild', 'mid-build redirect', 'start over']
 ---
 

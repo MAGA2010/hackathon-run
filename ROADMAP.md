@@ -43,10 +43,21 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [x] **All 14 skills carry Format v2 metadata** — v0.9.0
 - [x] **`.nvmrc` pinned to Node 20.9.0** — fixes CI `npm run test:coverage` step (v0.9.0)
 - [x] **132/132 unit tests passing** after v0.9.0 (was 121/121)
+- [x] **`hackathon skills graph`** — Mermaid / DOT / ASCII graph of skill dependencies + side effects (v1.0.0)
+- [x] **Auto-derived state diagram** in `docs/skills/index.md` from Format v2 metadata (v1.0.0)
+- [x] **Dependency cycle detection** in `skills graph` (v1.0.0)
+- [x] **140/140 unit tests passing** after v1.0.0 (was 132/132)
+- [x] **v1.0.0: public API is stable** — Format v2 is the contract; no breaking changes planned until v2.0.0
+- [x] **hackathon run <skill> --chain** — follows Format v2 dependencies in topological order (v1.1.0)
+- [x] **Per-skill version pin** — skills pin records each skill's own Format v2 version + a ^ diff line (v1.1.0)
+- [x] **Embedding matcher backend** — HACKATHON_EMBED_BACKEND HTTP ranking with token/synonym fallback (v1.1.0)
+- [x] **skill_chain MCP tool** — 14 MCP tools total (v1.1.0)
+- [x] **152/152 unit tests passing** after v1.1.0 (was 140/140)
+- [x] **Optional third-party manifest fields** — `license` / `author` / `homepage` / `repository` / `compatibility` (WARN-only, surfaced in `skills search` + `find_skills`) (v1.2.0)
+- [x] **158/158 unit tests passing** after v1.2.0 (was 152/152)
 
-## Now (0.9.x)
+## Now (1.2.x)
 
-- [ ] **Embedding-based backend** — optional pluggable semantic backend behind `HACKATHON_EMBED_BACKEND` for teams that want real vector similarity; the zero-dep synonym fallback remains the default.
 - [ ] **Re-enable GitHub Pages deployment** — `docs.yml` build step is green; the deploy step needs Pages enabled in repo settings (Source: GitHub Actions).
 
 ## Later (0.7+)
@@ -55,10 +66,6 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [ ] **VS Code extension** that surfaces the `hackathon status` lifecycle in the status bar.
 - [ ] **Discord / Slack webhook** that posts `ship-pack` results to a team channel.
 - [ ] **Typed LLM judge protocol** — document a stricter request/response schema for `HACKATHON_JUDGE_BACKEND` providers and add an example adapter.
-- [ ] **`hackathon run --chain`** — follow `dependencies` from Format v2 metadata to invoke multiple skills in order. (v1.1.0)
-- [ ] **Per-skill version pin** — `.hackathon/skills.json` records individual skill versions instead of only the pack version. (v1.1.0)
-- [ ] **Auto-derive the state-machine diagram** in `docs/skills/index.md` from Format v2 `side_effects` + `dependencies`. (v1.0.0)
-- [ ] **Optional `homepage` / `repository` / `author` / `license` fields** so third-party skills can ship a complete manifest. (v1.2.0)
 
 ## Won't do (out of scope)
 

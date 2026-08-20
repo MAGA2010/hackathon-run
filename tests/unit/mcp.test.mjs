@@ -46,11 +46,11 @@ describe('MCP server', () => {
     assert.equal(res[0].result.serverInfo.name, 'hackathon-surgeon');
   });
 
-  it('responds to tools/list with 12 tools', async () => {
+  it('responds to tools/list with 14 tools', async () => {
     const res = await call({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
     assert.equal(res.length, 1);
     const tools = res[0].result.tools;
-    assert.equal(tools.length, 13);
+    assert.equal(tools.length, 14);
     const names = tools.map((t) => t.name);
     assert.ok(names.includes('list_skills'));
     assert.ok(names.includes('get_skill'));
@@ -60,6 +60,7 @@ describe('MCP server', () => {
     assert.ok(names.includes('report'));
     assert.ok(names.includes('skills_pin'));
     assert.ok(names.includes('skills_diff'));
+    assert.ok(names.includes('skill_chain'));
   });
 
   it('list_skills returns the 14 bundled skills', async () => {

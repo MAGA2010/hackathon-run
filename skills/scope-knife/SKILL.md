@@ -10,7 +10,7 @@ when_to_use: |
 version: 1.0
 category: scoping
 tags: ['keep-cut-defer', 'mvp', 'demo-path']
-dependencies: ['idea-clarify', 'team-roster', 'time-box']
+dependencies: []
 side_effects: ['plan']
 triggers:
   [

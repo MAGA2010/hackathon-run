@@ -5,7 +5,7 @@
 A decision-making and execution system for hackathon teams operating under time pressure. Fourteen skills, one workflow: **clarify, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro, decide-log.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
-[![Version](https://img.shields.io/badge/version-0.9.0-blue)](https://github.com/MAGA2010/hackathon-run/releases)
+[![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/MAGA2010/hackathon-run/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2)](https://discord.gg/hackathon-surgeon)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
@@ -85,9 +85,16 @@ hackathon run fast-verify # verifies the demo path
 hackathon run demo-coach # drafts the pitch
 hackathon run judge-sim # self-reviews before submitting
 hackathon run ship-pack # packages and checks for leaks
+
+# Chained run: follows Format v2 dependencies automatically
+hackathon run demo-rehearsal --chain # scope-knife -> fast-verify -> demo-coach -> demo-rehearsal
 ```
 
 Each command is interactive. State is saved to .hackathon/state/ and is never required by the next step.
+
+Pin the team's skill versions for CI reproducibility with hackathon skills pin --all, and opt into a semantic matcher by setting HACKATHON_EMBED_BACKEND to an HTTP ranking endpoint.
+
+Third-party skills can ship a full manifest (`license`, `author`, `homepage`, `repository`, `compatibility`) that `hackathon skills search --json` and the `find_skills` MCP tool surface.
 
 ---
 

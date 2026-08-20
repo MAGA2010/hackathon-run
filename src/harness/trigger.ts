@@ -143,6 +143,8 @@ export interface MatchCandidate {
 }
 
 export interface MatchResult {
+  /** How the match was produced: token overlap, synonym rescue, or an embedding backend. */
+  source?: 'token' | 'synonym' | 'embedding';
   skill: SkillManifest | null;
   score: number;
   candidates: MatchCandidate[];
@@ -224,11 +226,17 @@ export function matchSkill(utterance: string, skills: SkillManifest[]): MatchRes
       if (fallbackTop && fallbackTop.score > 0) {
         fallbackTop.reasons = [...fallbackTop.reasons, 'synonym expansion'];
         const skill = byName.get(fallbackTop.name) ?? null;
-        return { skill, score: fallbackTop.score, candidates: fallbackCandidates, fallback: true };
+        return {
+          skill,
+          score: fallbackTop.score,
+          candidates: fallbackCandidates,
+          fallback: true,
+          source: 'synonym',
+        };
       }
     }
     return { skill: null, score: 0, candidates };
   }
   const skill = byName.get(top.name) ?? null;
-  return { skill, score: top.score, candidates };
+  return { skill, score: top.score, candidates, source: 'token' };
 }

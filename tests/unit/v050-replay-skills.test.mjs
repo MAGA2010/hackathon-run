@@ -79,7 +79,7 @@ describe('hackathon skills catalog', () => {
     const pinPath = join(ROOT, '.hackathon/skills.json');
     assert.ok(existsSync(pinPath));
     const pin = JSON.parse(readFileSync(pinPath, 'utf8'));
-    assert.equal(pin.version, '1.0');
+    assert.equal(pin.version, '1.1');
     assert.ok(Array.isArray(pin.skills));
     assert.ok(pin.skills.length >= 13);
     for (const e of pin.skills) {
@@ -101,6 +101,6 @@ describe('hackathon skills catalog', () => {
     const r = run(['skills', 'show']);
     assert.equal(r.status, 0, r.stderr);
     const pin = JSON.parse(r.stdout);
-    assert.equal(pin.version, '1.0');
+    assert.equal(pin.version, '1.1');
   });
 });

@@ -30,11 +30,12 @@ import { newSkill } from './commands/new-skill.js';
 import { validateSkill } from './commands/validate-skill.js';
 import { validate } from './commands/validate.js';
 import { loadAllSkills } from '../harness/loader.js';
-import { runSkill } from './commands/run.js';
+import { runSkill, runChain } from './commands/run.js';
 import { replay } from './commands/replay.js';
 import { report } from './commands/report.js';
 import { skills } from './commands/skills.js';
 import { search as skillsSearch } from './commands/skills-search.js';
+import { graph as skillsGraph } from './commands/skills-graph.js';
 import { matchSkill } from '../harness/trigger.js';
 import { startMcpServer } from '../mcp/server.js';
 
@@ -151,6 +152,7 @@ program
     parseInt,
   )
   .option('--apply', 'actually write the pre-filled state file to .hackathon/state/')
+  .option('--chain', 'run the skill dependencies first, in topological order')
   .option('--no-banner', 'skip the "# Skill:" + trigger budget header')
   .option('-C, --cwd <path>', 'repo root (where skills/ and .hackathon/ live)', process.cwd())
   .action(
@@ -161,19 +163,30 @@ program
         teamSize?: number;
         timeRemaining?: number;
         apply?: boolean;
+        chain?: boolean;
         banner?: boolean;
         cwd?: string;
       },
     ) => {
-      const code = runSkill({
-        skillName,
-        demoGoal: opts.demoGoal,
-        teamSize: opts.teamSize,
-        timeRemaining: opts.timeRemaining,
-        apply: opts.apply,
-        noBanner: opts.banner === false,
-        cwd: opts.cwd,
-      });
+      const code = opts.chain
+        ? runChain({
+            skillName,
+            demoGoal: opts.demoGoal,
+            teamSize: opts.teamSize,
+            timeRemaining: opts.timeRemaining,
+            apply: opts.apply,
+            noBanner: opts.banner === false,
+            cwd: opts.cwd,
+          })
+        : runSkill({
+            skillName,
+            demoGoal: opts.demoGoal,
+            teamSize: opts.teamSize,
+            timeRemaining: opts.timeRemaining,
+            apply: opts.apply,
+            noBanner: opts.banner === false,
+            cwd: opts.cwd,
+          });
       process.exit(code);
     },
   );
@@ -225,6 +238,18 @@ skillsCmd
   .description('Print the current .hackathon/skills.json pin')
   .option('-C, --cwd <path>', 'repo root', process.cwd())
   .action((opts: { cwd?: string }) => process.exit(skills({ subcommand: 'show', cwd: opts.cwd })));
+
+skillsCmd
+  .command('graph')
+  .description('Emit a Mermaid / DOT / ASCII graph of skill dependencies + side effects')
+  .option('--format <fmt>', 'mermaid | dot | ascii', 'mermaid')
+  .option('--type <type>', 'all | deps | effects', 'all')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts: { format?: string; type?: string; cwd?: string }) => {
+    const f = (opts.format ?? 'mermaid') as 'mermaid' | 'dot' | 'ascii';
+    const t = (opts.type ?? 'all') as 'all' | 'deps' | 'effects';
+    process.exit(skillsGraph({ format: f, type: t, cwd: opts.cwd }));
+  });
 
 skillsCmd
   .command('search')

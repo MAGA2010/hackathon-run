@@ -14,6 +14,8 @@ significant architectural choice, its context, and its consequences.
 | [0007](0007-v060-report-decision-log.md)   | v0.6 report + decision-log skill + MCP closure + validation hardening                        | Accepted |
 | [0008](0008-v070-v080-matcher-backends.md) | v0.7-v0.8 semantic fallback + pluggable backends + validation no-op fix                      | Accepted |
 | [0009](0009-skill-format-v2.md)            | Skill Format v2 — first-class metadata for discovery                                         | Accepted |
+| [0010](0010-v110-chain-pin-embed.md)       | v1.1 chain execution + per-skill pin + pluggable embedding backend                           | Accepted |
+| [0011](0011-v120-skill-manifest.md)        | v1.2 third-party skill manifest (author, license, homepage, repository, compatibility)       | Accepted |
 
 ## Adding a new ADR
 

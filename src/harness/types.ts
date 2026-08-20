@@ -42,6 +42,16 @@ export interface SkillFrontmatter {
   side_effects?: string[];
   /** Optional: explicit trigger phrases the matcher also scores. */
   triggers?: string[];
+  /** Optional: license name or reference to a bundled license file (Agent Skills spec). */
+  license?: string;
+  /** Optional: max 500-char environment/requirements note (Agent Skills spec). */
+  compatibility?: string;
+  /** Optional: skill author or owning org (third-party manifest). */
+  author?: string;
+  /** Optional: project homepage URL (third-party manifest). */
+  homepage?: string;
+  /** Optional: source repository URL or owner/repo (third-party manifest). */
+  repository?: string;
 }
 
 /** Lifecycle categories a skill can belong to (Format v2). */

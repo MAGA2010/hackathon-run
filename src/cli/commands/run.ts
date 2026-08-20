@@ -5,6 +5,8 @@
  *  - Default: print the SKILL.md body (same as v0.3.0).
  *  - With --apply and any input flag, pre-fill the skill's target
  *    state file with the provided args (validated by JSON Schema).
+ *  - With --chain, follow Format v2 `dependencies` and print (or apply)
+ *    every upstream skill in dependency order before the target skill.
  *  - Unknown flags are rejected (was: silently accepted).
  *
  * Recognised flags (all optional, ignored for guidance-only skills):
@@ -13,10 +15,12 @@
  *   --time-remaining <n>     pre-fill plan.time_remaining_minutes or
  *                            time-box.time_remaining_minutes
  *   --apply                  actually write the pre-filled state file
- *   --no-banner              skip the # Skill: + trigger budget header
+ *   --chain                  run dependencies first (topological order)
+ *   --no-banner              skip the "# Skill: " + trigger budget header
  *
  * Usage:
  *   hackathon run scope-knife --demo-goal "sign up + save note" --apply
+ *   hackathon run demo-rehearsal --chain
  *   hackathon run time-box --time-remaining 240 --team-size 4 --apply
  */
 
@@ -31,6 +35,7 @@ export interface RunOptions {
   teamSize?: number;
   timeRemaining?: number;
   apply?: boolean;
+  chain?: boolean;
   noBanner?: boolean;
   cwd?: string;
 }
@@ -256,6 +261,7 @@ function buildSkeleton(stateFile: string, opts: RunOptions): unknown {
   }
   return { version: '1.0', generated_at: now };
 }
+
 export function runSkill(opts: RunOptions): number {
   const cwd = opts.cwd ?? process.cwd();
   const skills = loadAllSkills(cwd);
@@ -301,4 +307,79 @@ export function runSkill(opts: RunOptions): number {
     return 1;
   }
   return 0;
+}
+
+export interface ChainPlan {
+  order: string[];
+  cycle: string[] | null;
+}
+
+/** Resolve the target skill plus its transitive dependencies in dependency order. */
+export function resolveChainOrder(
+  skills: ReturnType<typeof loadAllSkills>,
+  target: string,
+): ChainPlan {
+  const byName = new Map(skills.map((s) => [s.frontmatter.name, s]));
+  if (!byName.has(target)) return { order: [], cycle: null };
+
+  const order: string[] = [];
+  const visited = new Set<string>();
+  const inStack = new Set<string>();
+  const stack: string[] = [];
+
+  const visit = (name: string): string[] | null => {
+    if (visited.has(name)) return null;
+    if (inStack.has(name)) {
+      const idx = stack.indexOf(name);
+      return [...stack.slice(idx), name];
+    }
+    inStack.add(name);
+    stack.push(name);
+    const skill = byName.get(name);
+    for (const dep of skill?.frontmatter.dependencies ?? []) {
+      if (!byName.has(dep)) continue; // unknown dependency: skip, don't fail
+      const cycle = visit(dep);
+      if (cycle) return cycle;
+    }
+    stack.pop();
+    inStack.delete(name);
+    visited.add(name);
+    order.push(name);
+    return null;
+  };
+
+  const cycle = visit(target);
+  if (cycle) return { order: [], cycle };
+  return { order, cycle: null };
+}
+
+export function runChain(opts: RunOptions): number {
+  const cwd = opts.cwd ?? process.cwd();
+  const skills = loadAllSkills(cwd);
+
+  if (!skills.find((s) => s.frontmatter.name === opts.skillName)) {
+    log.err(`skill not found: ${opts.skillName}`);
+    log.err(`run ${c.cyan('hackathon list')} to see bundled skills`);
+    return 2;
+  }
+
+  const plan = resolveChainOrder(skills, opts.skillName);
+  if (plan.cycle) {
+    log.err(`dependency cycle detected: ${plan.cycle.join(' -> ')}`);
+    log.dim(`fix the Format v2 "dependencies" frontmatter before chaining.`);
+    return 1;
+  }
+
+  const target = opts.skillName;
+  const upstream = plan.order.filter((name) => name !== target);
+  console.log(c.bold(`chain: ${[...upstream, target].join(' -> ')}`));
+  console.log();
+
+  let code = 0;
+  for (const name of plan.order) {
+    const stepCode = runSkill({ ...opts, skillName: name, noBanner: true });
+    if (stepCode !== 0) code = stepCode;
+    console.log();
+  }
+  return code;
 }

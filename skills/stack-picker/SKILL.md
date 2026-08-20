@@ -9,7 +9,7 @@ version: 1.0
 category: scoping
 tags: ["tech-stack", "bootstrap", "30-min"]
 dependencies: ["idea-clarify", "scope-knife"]
-side_effects: ["plan"]
+side_effects: ["stack"]
 triggers: ["what stack should we use", "tech stack", "how do we bootstrap", "pick the framework", "recommended stack"]
 ---
 

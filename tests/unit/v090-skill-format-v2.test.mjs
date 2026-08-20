@@ -140,8 +140,8 @@ describe("skills search", () => {
       console.log = orig;
     }
     const dataLines = captured.filter((l) => /(idea-clarify|pivot|stack-picker|team-roster|time-box|fast-verify|demo-coach|demo-rehearsal|judge-sim|ship-pack|recovery-runbook|decision-log|retro|scope-knife)\s+1\.0/.test(l));
-    // 7 skills depend on scope-knife (per the metadata)
-    assert.equal(dataLines.length, 7);
+    // After v1.0.0 dep-graph cleanup, 4 skills depend on scope-knife.
+    assert.equal(dataLines.length, 4);
   });
 
   it("--json output is valid JSON", () => {

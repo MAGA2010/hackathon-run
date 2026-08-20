@@ -10,7 +10,7 @@ when_to_use: |
 version: 1.0
 category: scoping
 tags: ['empty-repo', 'vague-brief', 'pre-scope']
-dependencies: ['scope-knife']
+dependencies: []
 triggers:
   ['we have no idea', 'what are we building', 'empty repo', 'vague brief', 'scope is unclear']
 ---

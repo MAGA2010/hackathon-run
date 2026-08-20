@@ -8,7 +8,7 @@ Trigger when the user says "who is doing what", "assign roles", "who is free", "
 version: 1.0
 category: scoping
 tags: ["roles", "assignments", "bottleneck"]
-dependencies: ["scope-knife"]
+dependencies: []
 side_effects: ["roster"]
 triggers: ["who does what", "team assignments", "role assignments", "who is blocked", "bottleneck"]
 ---

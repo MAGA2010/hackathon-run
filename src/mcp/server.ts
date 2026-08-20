@@ -26,10 +26,12 @@ import { dirname, join } from 'node:path';
 import { readFileSync, existsSync, mkdirSync, writeFileSync, readdirSync, statSync } from 'node:fs';
 import { loadAllSkills } from '../harness/loader.js';
 import { matchSkill } from '../harness/trigger.js';
+import { matchSkillWithBackend } from '../harness/embed.js';
 import { status } from '../cli/commands/status.js';
 import { validateSkill } from '../cli/commands/validate-skill.js';
 import { replay } from '../cli/commands/replay.js';
 import { report } from '../cli/commands/report.js';
+import { runChain } from '../cli/commands/run.js';
 import { skills as skillsCommand } from '../cli/commands/skills.js';
 
 // Resolve the package version once at startup. Falls back to '0.0.0' if package.json
@@ -273,6 +275,20 @@ const TOOLS: ToolDef[] = [
       additionalProperties: false,
     },
   },
+  {
+    name: 'skill_chain',
+    description:
+      'Return the dependency-ordered list of skills that should run before a target skill, following Format v2 "dependencies". ' +
+      'Use this when the agent needs to chain multiple skills (e.g. idea-clarify -> stack-picker) without invoking each one manually.',
+    inputSchema: {
+      type: 'object',
+      required: ['target'],
+      properties: {
+        target: { type: 'string', description: 'kebab-case target skill name' },
+      },
+      additionalProperties: false,
+    },
+  },
 ];
 
 function captureJsonCommand(fn: () => number): unknown {
@@ -296,7 +312,7 @@ function captureJsonCommand(fn: () => number): unknown {
   }
 }
 
-function toolCall(name: string, args: Record<string, unknown>): unknown {
+async function toolCall(name: string, args: Record<string, unknown>): Promise<unknown> {
   const cwd = process.cwd();
   const skills = loadAllSkills(cwd);
   switch (name) {
@@ -332,9 +348,11 @@ function toolCall(name: string, args: Record<string, unknown>): unknown {
     case 'match_skill': {
       const utterance = String(args.utterance ?? '');
       const debug = Boolean(args.debug);
-      const result = matchSkill(utterance, skills);
+      const outcome = await matchSkillWithBackend(utterance, skills);
+      const result = outcome.result;
       return {
         utterance,
+        source: outcome.source,
         best: result.skill ? { name: result.skill.frontmatter.name, score: result.score } : null,
         candidates: result.candidates.slice(0, debug ? skills.length : 5),
       };
@@ -478,15 +496,25 @@ function toolCall(name: string, args: Record<string, unknown>): unknown {
           dependencies: s.frontmatter.dependencies ?? [],
           side_effects: s.frontmatter.side_effects ?? [],
           trigger_phrases: s.frontmatter.triggers ?? [],
+          author: s.frontmatter.author ?? null,
+          license: s.frontmatter.license ?? null,
+          homepage: s.frontmatter.homepage ?? null,
+          repository: s.frontmatter.repository ?? null,
+          compatibility: s.frontmatter.compatibility ?? null,
         })),
       };
+    }
+    case 'skill_chain': {
+      const target = String(args.target ?? '');
+      if (!target) throw new Error('target is required');
+      return captureJsonCommand(() => runChain({ skillName: target, noBanner: true, cwd }));
     }
     default:
       throw new Error('unknown tool: ' + name);
   }
 }
 
-function handleRequest(req: JsonRpcRequest): JsonRpcResponse | null {
+async function handleRequest(req: JsonRpcRequest): Promise<JsonRpcResponse | null> {
   try {
     switch (req.method) {
       case 'initialize':
@@ -508,7 +536,7 @@ function handleRequest(req: JsonRpcRequest): JsonRpcResponse | null {
         const params = req.params ?? {};
         const toolName = String(params.name ?? '');
         const args = (params.arguments ?? {}) as Record<string, unknown>;
-        const result = toolCall(toolName, args);
+        const result = await toolCall(toolName, args);
         return {
           jsonrpc: '2.0',
           id: req.id,
@@ -596,6 +624,11 @@ function applySkillAdvice(
 
 export function startMcpServer() {
   let buffer = '';
+  let pending = 0;
+  let ended = false;
+  const maybeExit = () => {
+    if (ended && pending === 0) process.exit(0);
+  };
   process.stdin.setEncoding('utf-8');
   process.stdin.on('data', (chunk) => {
     buffer += chunk;
@@ -611,13 +644,25 @@ export function startMcpServer() {
         process.stderr.write('[mcp] bad json: ' + (e as Error).message + '\n');
         continue;
       }
-      const resp = handleRequest(req);
-      if (resp && req.id !== undefined && req.id !== null) {
-        process.stdout.write(JSON.stringify(resp) + '\n');
-      }
+      pending++;
+      Promise.resolve(handleRequest(req))
+        .then((resp) => {
+          pending--;
+          if (resp && req.id !== undefined && req.id !== null) {
+            process.stdout.write(JSON.stringify(resp) + '\n');
+          }
+        })
+        .catch((e) => {
+          pending--;
+          process.stderr.write('[mcp] handler error: ' + (e as Error).message + '\n');
+        })
+        .finally(maybeExit);
     }
   });
-  process.stdin.on('end', () => process.exit(0));
+  process.stdin.on('end', () => {
+    ended = true;
+    maybeExit();
+  });
 }
 
 // Auto-start when invoked directly: `node dist/mcp/server.js` (or via the MCP test harness).

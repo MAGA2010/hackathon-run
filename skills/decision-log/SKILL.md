@@ -8,7 +8,7 @@ Trigger when the user says "log the decision", "record the cut", "why did we cut
 version: 1.0
 category: lifecycle
 tags: ["append-only", "audit-trail", "keep-cut-defer-pivot"]
-dependencies: ["scope-knife", "retro"]
+dependencies: ["scope-knife"]
 side_effects: ["decision-log"]
 triggers: ["log a decision", "record what we decided", "decision history", "keep cut defer", "append-only"]
 ---

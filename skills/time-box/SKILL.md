@@ -79,6 +79,14 @@ The skill ships scripts/compute.py which implements the stage-budget table above
     --current-stage build \
     --out-dir .hackathon`
 
+New in v1.2.1.5:
+
+- --elapsed N drives **burn-rate** (consumed / current-stage-budget). The script emits urn_rate in the state JSON and prints it on stdout.
+- Three escalating alarms per stage at **50% / 80% / 100%** of the stage budget, labeled soft / irm / hard. The schedule table now lists every alarm timestamp.
+- When the current stage is **slipping**, compute.py emits a **recovery budget**: how many minutes to steal from erify, demo, and ship buffer proportionally to recover the deadline.
+- **Minimum-viable demo (MVD) check** against --demo-target-minutes (default 180 = 3 min). The state JSON gets minimum_viable_demo_feasible.
+- --demo-at HH:MM accepts a wall-clock demo time and converts it to ime-remaining.
+
 ## Output contract
 
 Files written:

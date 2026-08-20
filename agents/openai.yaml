@@ -1,0 +1,46 @@
+# OpenAI Codex / Agent Skills integration manifest.
+# Declares the Hackathon Run pack as a Codex-compatible skill bundle.
+# Spec: https://agentskills.io/specification and OpenAI Agents SDK guides.
+interface:
+  display_name: Hackathon Run
+  short_description: >-
+    A decision-making and execution skill pack for hackathon teams operating
+    under time pressure. 14 skills that walk a team through clarify, scope,
+    time-box, build, verify, demo, judge, ship, recover, pivot, retro.
+  brand_color: "#FF3B30"  # urgency red, matches BRAND.md
+
+policy:
+  allow_implicit_invocation: true   # the MCP server match_skill tool drives routing
+
+dependencies:
+  tools:
+    - type: mcp
+      transport: stdio
+      command: node
+      args: ["dist/mcp/server.js"]
+      manifest: ./mcp-manifest.json
+
+manifest_version: 1.2.1.4
+
+skills_root: ./skills
+
+# Skill bundle summary: 14 bundled skills, 10 with Python helpers.
+# Per-skill Format v2 metadata (version, category, tags, dependencies,
+# side_effects, triggers) is read by hackathon skills search and the
+# find_skills MCP tool. v1.2 third-party manifest fields (license,
+# author, homepage, repository, compatibility) are surfaced via
+# hackathon skills search --json.
+metadata:
+  format: v2
+  supported_frontmatter_extras:
+    - version
+    - category
+    - tags
+    - dependencies
+    - side_effects
+    - triggers
+    - license
+    - author
+    - homepage
+    - repository
+    - compatibility

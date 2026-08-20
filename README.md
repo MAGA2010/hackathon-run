@@ -7,7 +7,6 @@ A decision-making and execution system for hackathon teams operating under time 
 [![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
 [![Version](https://img.shields.io/badge/version-1.2.0-blue)](https://github.com/MAGA2010/hackathon-run/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Discord](https://img.shields.io/badge/Discord-Join-5865F2)](https://discord.gg/hackathon-surgeon)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
 
 <p align="center">
@@ -72,9 +71,13 @@ Each skill is **independently invokable**. You can run any of them at any time w
 
 ```bash
 
-# One-time install
+# From source (package not published to npm yet)
 
-npm install -g @maga2010/hackathon-run
+git clone https://github.com/MAGA2010/hackathon-run
+cd hackathon-run
+npm install
+npm run build
+npm link
 
 # Inside any hackathon project
 
@@ -90,7 +93,7 @@ hackathon run ship-pack # packages and checks for leaks
 hackathon run demo-rehearsal --chain # scope-knife -> fast-verify -> demo-coach -> demo-rehearsal
 ```
 
-Each command is interactive. State is saved to .hackathon/state/ and is never required by the next step.
+State is saved to .hackathon/state/ and is never required by the next step.
 
 Pin the team's skill versions for CI reproducibility with hackathon skills pin --all, and opt into a semantic matcher by setting HACKATHON_EMBED_BACKEND to an HTTP ranking endpoint.
 
@@ -131,9 +134,7 @@ The [skill template](docs/contributing/skill-template.md) is the source of truth
 
 ## Community
 
-- **Discord:** [Join the Discord](https://discord.gg/hackathon-surgeon)
 - **Discussions:** [GitHub Discussions](https://github.com/MAGA2010/hackathon-run/discussions)
-- **Twitter:** [Follow on X](https://twitter.com/HackathonSurgeon)
 
 ---
 

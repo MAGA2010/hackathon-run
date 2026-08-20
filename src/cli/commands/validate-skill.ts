@@ -224,7 +224,13 @@ function checkSkill(skillDir: string, cwd: string): Finding[] {
       message: `frontmatter homepage "${fm.homepage}" does not look like a URL`,
     });
   }
-  if (fm.repository && !/^(https?:\/\/|git@|[\w.-]+\/[\w.-]+)$/.test(fm.repository)) {
+  if (
+    fm.repository &&
+    !/^https?:\/\//i.test(fm.repository) &&
+    !/^git@/i.test(fm.repository) &&
+    !/^ssh:\/\//i.test(fm.repository) &&
+    !/^[\w.-]+\/[\w.-]+$/.test(fm.repository)
+  ) {
     out.push({
       severity: 'warn',
       message: `frontmatter repository "${fm.repository}" does not look like a URL or owner/repo`,

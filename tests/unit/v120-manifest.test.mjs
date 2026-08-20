@@ -154,6 +154,61 @@ describe('v1.2 manifest validation', () => {
       rmSync(dir, { recursive: true, force: true });
     }
   });
+
+  it('accepts full URL and SCP-style repository values', async () => {
+    const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'hs-v120-url-'));
+    try {
+      const { validateSkill } = await import('../../dist/cli/commands/validate-skill.js');
+      const good = [
+        'https://github.com/org/repo',
+        'git@github.com:org/repo',
+        'ssh://git@github.com/org/repo',
+        'org/repo',
+      ];
+      for (const repository of good) {
+        writeFileSync(
+          join(dir, 'SKILL.md'),
+          [
+            '---',
+            'name: url-skill',
+            'description: Forces a thing.',
+            'license: MIT',
+            'author: acme',
+            'homepage: https://example.com',
+            `repository: ${repository}`,
+            '---',
+            '# url-skill',
+            '',
+            '## Input contract',
+            'x',
+            '## Execution',
+            'x',
+            '## Output contract',
+            'x',
+            '## Acceptance criteria',
+            'x',
+            '## Failure modes',
+            'x',
+          ].join('\n'),
+        );
+        const captured = [];
+        const orig = console.log;
+        console.log = (...a) => captured.push(a.join(' '));
+        try {
+          validateSkill({ target: dir, cwd: REPO });
+        } finally {
+          console.log = orig;
+        }
+        const joined = captured.join('\n');
+        assert.doesNotMatch(joined, /does not look like a URL or owner\/repo/);
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('skills search --json manifest surface', () => {

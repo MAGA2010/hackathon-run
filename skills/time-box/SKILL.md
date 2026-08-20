@@ -69,6 +69,16 @@ For each remaining stage, emit one checkpoint:
 If `current_stage = build` and `stage_progress < (elapsed / stage_budget)`,
 flag `slipping: true` and recommend a CUT pass via scope-knife.
 
+## Helper
+
+The skill ships scripts/compute.py which implements the stage-budget table above and writes both .hackathon/state/time-box.json and .hackathon/artifacts/time-box-schedule.md. Run it with:
+
+`python3 skills/time-box/scripts/compute.py \
+    --time-remaining 240 \
+    --team-size 4 \
+    --current-stage build \
+    --out-dir .hackathon`
+
 ## Output contract
 
 Files written:

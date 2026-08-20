@@ -69,6 +69,16 @@ For the recommended stack, emit a step-by-step 30-minute bootstrap:
 2. One minimal "hello world" file path + content
 3. The single command that proves it works (browser URL, CLI exit, curl)
 
+## Helper
+
+The skill ships scripts/pick.py which implements the scoring algorithm above end-to-end and writes both .hackathon/state/stack.json and .hackathon/artifacts/stack-bootstrap.md. Run it with:
+
+`python3 skills/stack-picker/scripts/pick.py \
+    --team-skills python,javascript \
+    --time-remaining 240 \
+    --demo-format web \
+    --out-dir .hackathon`
+
 ## Output contract
 
 Files written:

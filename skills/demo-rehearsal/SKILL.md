@@ -68,6 +68,15 @@ Output one bullet per `broken` step with:
 - What to keep (1 sentence)
 - The new budget (seconds)
 
+## Helper
+
+The skill ships scripts/rehearse.py which drives the timed rehearsal: it reads plan.json, prompts the operator between segments, scores each one against the budget, classifies it as on-time/drift/broken, and writes .hackathon/state/rehearsal.json plus .hackathon/artifacts/rehearsal-log.md. Run it with:
+
+`python3 skills/demo-rehearsal/scripts/rehearse.py \
+    --cwd .hackathon \
+    --target-total-seconds 180 \
+    --dry-run   # use --dry-run for non-interactive smoke testing`
+
 ## Output contract
 
 - `.hackathon/state/rehearsal.json` (NEW schema, matches `rehearsal.schema.json`)

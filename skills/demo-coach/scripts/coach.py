@@ -10,6 +10,8 @@ Usage:
 """
 from __future__ import annotations
 
+VERSION = "1.0"  # contract pin: hackathon validate-skill checks this
+
 import argparse
 import json
 import sys

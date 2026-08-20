@@ -37,6 +37,7 @@ python3 skills/scope-knife/scripts/classify.py \
 ```bash
 hackathon --version
 hackathon list
+hackathon doctor
 ```
 
-You should see six skills listed with their trigger phrase budgets.
+You should see fourteen skills listed with their trigger phrase budgets.

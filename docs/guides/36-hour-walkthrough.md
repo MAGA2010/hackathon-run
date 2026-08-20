@@ -17,7 +17,7 @@ first note" beats "a notes app with auth and profiles".
 
 - Read `.hackathon/state/plan.json`.
 - Open a fresh git repo. First commit is `hackathon init` + `plan.json`.
-- Add CI that runs `npm run test:all` and `hackathon validate`.
+- Add CI that runs `npm test` and `hackathon validate`.
 
 ## T+6h — First checkpoint
 
@@ -32,8 +32,8 @@ is not.
 ## T+18h — Polish
 
 ```bash
-hackathon run demo-coach --duration 60
-hackathon rehearse <demo.json>      # timed run-through
+hackathon run demo-coach
+hackathon run demo-rehearsal    # timed run-through
 ```
 
 Rehearse in front of a teammate. Time it. Cut anything over budget.
@@ -59,7 +59,7 @@ git archive --format=tar.gz -o submit.tar.gz HEAD
 ## T+35h — Demo rehearsal
 
 ```bash
-hackathon run recovery-runbook --severity P1
+hackathon run recovery-runbook
 ```
 
 Generate the fallback script. Memorize the 30-second recovery.

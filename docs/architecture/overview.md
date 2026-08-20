@@ -66,8 +66,22 @@ When a user says "what should we cut", the agent should reach for
 4. Break ties by trigger budget (more focused wins).
 5. Final tie-break by alphabetical order (stable, predictable).
 
-For semantic matching, see the
-[Agent Skills open standard](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills).
+For semantic matching, set `HACKATHON_EMBED_BACKEND` to an HTTP ranking
+endpoint; any transport or schema failure falls back to the local matcher.
+The pack follows the [Agent Skills open standard](https://agentskills.io/specification).
+
+## CLI surface
+
+The `hackathon` CLI wraps the pack with both human and machine-readable
+commands:
+
+- `hackathon list`, `hackathon skills search`, `hackathon skills graph`
+- `hackathon run <skill> [--chain] [--apply]`
+- `hackathon match "<utterance>"`
+- `hackathon init`, `hackathon status`, `hackathon flow`
+- `hackathon doctor`, `hackathon validate`, `hackathon validate-skill`
+- `hackathon replay`, `hackathon report`, `hackathon skills pin`
+- `hackathon mcp` — Model Context Protocol server (`tools/list`, `find_skills`, ...)
 
 ## What's in the repo
 
@@ -76,10 +90,12 @@ For semantic matching, see the
 | `skills/`            | Each skill folder with `SKILL.md` + scripts              |
 | `src/harness/`       | TypeScript harness (loader, frontmatter, trigger, state) |
 | `src/cli/`           | The `hackathon` CLI                                      |
+| `src/mcp/`           | Model Context Protocol server                            |
 | `src/state/schemas/` | Published JSON Schemas for state files                   |
 | `tests/acceptance/`  | One shell test per skill                                 |
 | `tests/integration/` | End-to-end 36h-flow tests                                |
-| `examples/`          | Three real-style projects with `.hackathon/` artifacts   |
+| `tests/unit/`        | Node test files for harness + CLI + MCP                  |
+| `examples/`          | Six real-style projects with `.hackathon/` artifacts     |
 | `docs/`              | MkDocs site source                                       |
 | `.github/workflows/` | CI, release, docs                                        |
 

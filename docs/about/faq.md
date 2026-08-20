@@ -9,7 +9,7 @@ open standard — Codex, Claude Code, Cursor, our CLI.
 A: Yes. Each skill has standalone scripts (`scripts/*.py`) you can call
 directly. The CLI wraps them.
 
-**Q: Do I have to use all six skills?**
+**Q: Do I have to use all fourteen skills?**
 A: No. Run any one. The skill design is **independently invokable**.
 
 **Q: Where does state live?**

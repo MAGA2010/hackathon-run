@@ -76,7 +76,13 @@ def classify(features: list[dict], demo_goal: str,
     # Compute WSJF for every feature up front so the rationale includes it.
     for f in features:
         f["wsjf_score"] = wsjf_score(f)
-        f["cost_of_delay"] = f["user_business_value"] + f["time_criticality"] + f["risk_reduction"] if enable_wsjf else None
+        f["cost_of_delay"] = (
+            f.get("user_business_value", 5)
+            + f.get("time_criticality", 5)
+            + f.get("risk_reduction", 5)
+            if enable_wsjf
+            else None
+        )
 
     # Bucket: implemented-vs-not.
     keep_pool, defer_pool = [], []
@@ -131,6 +137,17 @@ def classify(features: list[dict], demo_goal: str,
             f"(threshold {target_cut_rate:.0%}); demoted {victim['name']!r}."
         )
 
+    # Hard rule: never leave every feature on KEEP.
+    if n > 0 and keep_count == n:
+        victim = min(classified, key=lambda f: f["wsjf_score"])
+        victim["classification"] = "DEFER"
+        victim["rationale"] = "Scope-knife refuses to keep every feature."
+        keep_count -= 1
+        defer_count += 1
+        warnings.append(
+            f"All-KEEP refused: demoted {victim['name']!r} to DEFER."
+        )
+
     # Final sort: KEEPs by WSJF desc, then DEFERs, then CUTs.
     classified.sort(key=lambda f: (
         {"KEEP": 0, "DEFER": 1, "CUT": 2}[f["classification"]],
@@ -146,6 +163,98 @@ def classify(features: list[dict], demo_goal: str,
         warnings.append(f"WSJF avg of KEEPs: {wsjf_avg_keep}")
 
     return classified, warnings
+
+
+def build_demo_path(demo_goal: str) -> list[dict]:
+    """Return the canonical four-step judge-facing demo path."""
+    return [
+        {
+            "step": 1,
+            "action": "Open the app URL.",
+            "expected_outcome": "Landing page renders.",
+        },
+        {
+            "step": 2,
+            "action": f"Trigger the core action for: {demo_goal}",
+            "expected_outcome": "The core action completes.",
+        },
+        {
+            "step": 3,
+            "action": "Show the resulting state.",
+            "expected_outcome": "Judges see the result.",
+        },
+        {
+            "step": 4,
+            "action": "State the value delivered.",
+            "expected_outcome": "Judges understand the value.",
+        },
+    ]
+
+
+def build_next_tasks(classified: list[dict]) -> list[dict]:
+    """Derive a prioritized task list from the classification."""
+    tasks: list[dict] = []
+    for f in classified:
+        name = f["name"]
+        estimate = f.get("time_estimate_minutes", 30)
+        if f["classification"] == "KEEP":
+            tasks.append({
+                "priority": "P0",
+                "task": f"Finish {name} on the demo path.",
+                "estimate_minutes": estimate,
+            })
+        elif f["classification"] == "DEFER":
+            tasks.append({
+                "priority": "P1",
+                "task": f"Polish {name} after the demo.",
+                "estimate_minutes": estimate,
+            })
+        else:
+            tasks.append({
+                "priority": "P2",
+                "task": f"Skip {name} unless time remains.",
+                "estimate_minutes": estimate,
+            })
+    return tasks
+
+
+def serialize_feature(f: dict) -> dict:
+    """Drop internal WSJF fields so plan.json matches plan.schema.json."""
+    out = {
+        "name": f["name"],
+        "status": f.get("status", "unimplemented"),
+        "classification": f["classification"],
+        "rationale": f.get("rationale", "No rationale recorded."),
+    }
+    if "time_estimate_minutes" in f:
+        out["time_estimate_minutes"] = f["time_estimate_minutes"]
+    return out
+
+
+
+
+def build_markdown(plan: dict) -> str:
+    """Render the plan as a human-readable markdown card."""
+    lines = [
+        '# Scope Knife Output',
+        '',
+        f"Demo goal: {plan['demo_goal']}",
+        f"Time remaining: {plan['time_remaining_minutes']} minutes",
+        '',
+        '## Demo path',
+    ]
+    for step in plan['demo_path']:
+        lines.append(f"{step['step']}. {step['action']} -> {step['expected_outcome']}")
+    lines.extend(['', '## Features', '| Feature | Status | Decision | Rationale |', '| --- | --- | --- | --- |'])
+    for f in plan['features']:
+        lines.append(f"| {f['name']} | {f['status']} | {f['classification']} | {f.get('rationale', '')} |")
+    lines.extend(['', '## Next tasks'])
+    for task in plan['next_tasks']:
+        lines.append(f"- [{task['priority']}] {task['task']} (~{task['estimate_minutes']} min)")
+    lines.append('')
+    return "\n".join(lines)
+
+
 if __name__ == '__main__':
     ap = argparse.ArgumentParser(description='Classify features into KEEP / CUT / DEFER.')
     ap.add_argument('--inventory', required=True)
@@ -154,7 +263,7 @@ if __name__ == '__main__':
     ap.add_argument('--out-dir', default='.hackathon')
     ap.add_argument('--enable-wsjf', action='store_true', help='WSJF tie-breaking among off-demo-path features')
     args = ap.parse_args()
-    feats = json.loads(open(args.inventory, encoding='utf-8').read())
+    feats = json.loads(open(args.inventory, encoding='utf-8').read())['features']
     classified, warns = classify(feats, args.demo_goal, args.time_remaining, enable_wsjf=args.enable_wsjf)
     out = Path(args.out_dir)
     (out / 'state').mkdir(parents=True, exist_ok=True)
@@ -163,12 +272,13 @@ if __name__ == '__main__':
         'generated_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
         'demo_goal': args.demo_goal,
         'time_remaining_minutes': args.time_remaining,
-        'wsjf_enabled': args.enable_wsjf,
-        'features': classified,
-        'warnings': warns,
+        'features': [serialize_feature(f) for f in classified],
+        'demo_path': build_demo_path(args.demo_goal),
+        'next_tasks': build_next_tasks(classified),
     }
-    (out / 'state' / 'plan.json').write_text(json.dumps(plan, indent=2) + '
-', encoding='utf-8')
+    (out / 'state' / 'plan.json').write_text(json.dumps(plan, indent=2) + '\n', encoding='utf-8')
+    (out / 'artifacts').mkdir(parents=True, exist_ok=True)
+    (out / 'artifacts' / 'scope-knife-output.md').write_text(build_markdown(plan) + '\n', encoding='utf-8')
     keep = sum(1 for f in classified if f['classification'] == 'KEEP')
     cut = sum(1 for f in classified if f['classification'] == 'CUT')
     defer = sum(1 for f in classified if f['classification'] == 'DEFER')

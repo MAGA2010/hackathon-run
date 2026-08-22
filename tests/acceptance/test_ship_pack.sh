@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test_ship_pack.sh
-# All paths are POSIX. Python on Windows accepts forward slashes, so we don't
-# need cygpath -w. This keeps the script portable between Git Bash on Windows
+# Script argv paths are auto-converted by MSYS. Inline Python -c strings are not, so
+# use cygpath -m for paths embedded in inline Python. This keeps the script portable
 # and bash on Linux CI.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -14,6 +14,7 @@ section() { echo; echo "## $1"; }
 
 BASH_TMP="$(mktemp -d)"
 trap "rm -rf $BASH_TMP" EXIT
+win() { cygpath -m "$1"; }
 
 # Repo A: clean repo with README
 REPO_A="$BASH_TMP/clean"
@@ -49,9 +50,10 @@ echo "API_KEY=\"sk-deadbeef0123456789abcdef\"" > "$REPO_B/src/config.ts"
 section "Acceptance: clean repo yields clean=true"
 "$PY" "$ROOT/skills/ship-pack/scripts/audit.py" --repo-root "$REPO_A" --out-dir "$REPO_A/.hackathon" >/dev/null
 JSON_A="$REPO_A/.hackathon/state/ship.json"
+JSON_A_WIN="$(win "$JSON_A")"
 python3 -c "
 import json
-d = json.load(open(r'$JSON_A'))
+d = json.load(open(r'$JSON_A_WIN'))
 assert d['secret_scan']['clean'] is True
 "
 pass "clean repo -> clean=true"
@@ -62,9 +64,10 @@ if "$PY" "$ROOT/skills/ship-pack/scripts/audit.py" --repo-root "$REPO_B" --out-d
   fail "leaky repo should exit non-zero"
 fi
 JSON_B="$REPO_B/.hackathon/state/ship.json"
+JSON_B_WIN="$(win "$JSON_B")"
 python3 -c "
 import json
-d = json.load(open(r'$JSON_B'))
+d = json.load(open(r'$JSON_B_WIN'))
 assert d['secret_scan']['clean'] is False
 assert len(d['secret_scan']['findings']) >= 1
 "
@@ -73,7 +76,7 @@ pass "leaky repo -> clean=false, exit != 0"
 section "Acceptance: README checks mark sections present"
 python3 -c "
 import json
-d = json.load(open(r'$JSON_A'))
+d = json.load(open(r'$JSON_A_WIN'))
 present = set(d['readme']['present'])
 assert 'name' in present
 assert 'install' in present
@@ -87,7 +90,7 @@ pass "all README sections detected"
 section "Acceptance: checklist has passed and failed entries"
 python3 -c "
 import json
-d = json.load(open(r'$JSON_A'))
+d = json.load(open(r'$JSON_A_WIN'))
 assert 'passed' in d['checklist'] and 'failed' in d['checklist']
 assert 'readme' in d['checklist']['passed']
 "
@@ -96,7 +99,7 @@ pass "checklist split into passed/failed"
 section "Acceptance: packaging command excludes secrets"
 python3 -c "
 import json
-d = json.load(open(r'$JSON_A'))
+d = json.load(open(r'$JSON_A_WIN'))
 cmd = d['packaging_command']
 for token in ('.env', 'node_modules', 'dist', '.git', '--exclude'):
     assert token in cmd, f'missing {token}'
@@ -110,7 +113,7 @@ HACKATHON_SHIP_WEBHOOK="http://127.0.0.1:1" \
 test -f "$JSON_A" || fail "ship.json missing after webhook failure"
 python3 -c "
 import json
-d = json.load(open(r'$JSON_A'))
+d = json.load(open(r'$JSON_A_WIN'))
 assert d['secret_scan']['clean'] is True
 "
 pass "unreachable webhook does not block the audit"

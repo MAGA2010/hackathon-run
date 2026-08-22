@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-08-22
+
 ### Changed
 
 - npm scope: package renamed from `@maga2010/hackathon-run` to `@hackathon-run/hackathon-run` (publish under the `hackathon-run` npm organization instead of the personal `maga2010` account). GitHub repo URL unchanged. Update your install commands accordingly.
@@ -17,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `v1217-prize-strategy.test.mjs`: regex now accepts both single and double quoted YAML lists in frontmatter.
 - `v1213-skills-lint.test.mjs`, `mcp.test.mjs`: skill count updated from 14 to 15 (prize-strategy landed in v1.2.1.7).
+- `scope-knife` `classify.py`: emit `demo_path`, `next_tasks`, and `artifacts/scope-knife-output.md`; enforce the all-KEEP refusal; write a schema-valid `plan.json`.
+- Acceptance tests for `demo-coach`, `judge-sim`, `recovery-runbook`, and `ship-pack`: convert inline Python paths with `cygpath -m` so they pass under Git Bash on Windows.
 
 ### Documentation
 

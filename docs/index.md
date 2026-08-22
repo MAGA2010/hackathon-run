@@ -3,7 +3,7 @@
 > **Ship the demo, not the dream.**
 
 A decision-making and execution system for hackathon teams operating under
-time pressure. Fourteen skills, one workflow: **clarify, scope, time-box,
+time pressure. Fifteen skills, one workflow: **clarify, scope, time-box,
 build, verify, demo, judge, ship, recover, pivot, retro, decide-log.**
 
 ![Hero](assets/images/hero.svg)

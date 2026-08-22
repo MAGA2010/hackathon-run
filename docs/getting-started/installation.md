@@ -1,9 +1,8 @@
 # Installation
 
-> **Status:** `Option A` (npm global install) requires `@hackathon-run/hackathon-run` to be published on the npm registry.
-> Until then, use `Option B` (run from source) or run `npx @hackathon-run/hackathon-run init` directly in any project — no install required.
+> **Install:** `npm install -g @hackathon-run/hackathon-run`, or run `npx @hackathon-run/hackathon-run init` in any project without a global install.
 
-## Option A — npm global install (recommended, post-publish)
+## Option A — npm global install (recommended)
 
 ```bash
 npm install -g @hackathon-run/hackathon-run

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test_recovery_runbook.sh
-# All paths are POSIX. Python on Windows accepts forward slashes, so we don't
-# need cygpath -w. This keeps the script portable between Git Bash on Windows
+# Script argv paths are auto-converted by MSYS. Inline Python -c strings are not, so
+# use cygpath -m for paths embedded in inline Python. This keeps the script portable
 # and bash on Linux CI.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -14,6 +14,7 @@ section() { echo; echo "## $1"; }
 
 BASH_TMP="$(mktemp -d)"
 trap "rm -rf $BASH_TMP" EXIT
+win() { cygpath -m "$1"; }
 
 OUT="$BASH_TMP/out"
 
@@ -29,9 +30,10 @@ pass "fallback for every severity"
 section "Acceptance: 30-second script fits within 30s + 5s slack"
 for sev in P0 P1 P2 P3; do
   md="$OUT/$sev/artifacts/recovery-runbook.md"
+  md_win="$(win "$md")"
   python3 -c "
 import re, sys
-text = open(r'$md').read()
+text = open(r'$md_win').read()
 m = re.search(r'Total: (\d+)s', text)
 total = int(m.group(1))
 sev = '$sev'
@@ -59,9 +61,10 @@ pass "no-live-debugging rule honored"
 
 section "Acceptance: recovery.json is valid JSON"
 REC="$OUT/P0/state/recovery.json"
+REC_WIN="$(win "$REC")"
 python3 -c "
 import json
-d = json.load(open(r'$REC'))
+d = json.load(open(r'$REC_WIN'))
 assert d['severity'] == 'P0'
 assert 'fallback' in d
 assert 'script' in d

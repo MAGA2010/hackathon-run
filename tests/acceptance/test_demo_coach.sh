@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # test_demo_coach.sh
-# All paths are POSIX. Python on Windows accepts forward slashes, so we don't
-# need cygpath -w. This keeps the script portable between Git Bash on Windows
+# Script argv paths are auto-converted by MSYS. Inline Python -c strings are not, so
+# use cygpath -m for paths embedded in inline Python. This keeps the script portable
 # and bash on Linux CI.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
@@ -14,6 +14,7 @@ section() { echo; echo "## $1"; }
 
 BASH_TMP="$(mktemp -d)"
 trap "rm -rf $BASH_TMP" EXIT
+win() { cygpath -m "$1"; }
 
 run_coach() {
   local dur="$1"
@@ -29,9 +30,10 @@ section "Acceptance: fits within specified duration"
 for d in 30 60 90; do
   out_dir=$(run_coach "$d")
   json_path="$out_dir/state/demo.json"
+  json_win="$(win "$json_path")"
   python3 -c "
 import json
-d = json.load(open(r'$json_path'))
+d = json.load(open(r'$json_win'))
 budget = {30: 30, 60: 60, 90: 90}[$d]
 total = sum(s['max_seconds'] for s in d['steps'])
 assert total <= budget, f'{total} > {budget}'
@@ -42,9 +44,10 @@ pass "all durations fit"
 section "Acceptance: each step has SAY/CLICK/SHOW/NOT"
 out_dir=$(run_coach 60)
 json_path="$out_dir/state/demo.json"
+  json_win="$(win "$json_path")"
 python3 -c "
 import json
-d = json.load(open(r'$json_path'))
+d = json.load(open(r'$json_win'))
 for s in d['steps']:
     for k in ('say','click','show','not'):
         assert k in s and s[k], f'missing {k} in {s["name"]}'
@@ -54,7 +57,7 @@ pass "every step has SAY/CLICK/SHOW/NOT"
 section "Acceptance: emits 6 canonical steps in order"
 python3 -c "
 import json
-d = json.load(open(r'$json_path'))
+d = json.load(open(r'$json_win'))
 names = [s['name'] for s in d['steps']]
 assert names == ['opening','pain','product','core_action','result','close'], names
 "
@@ -63,7 +66,7 @@ pass "6 canonical steps in order"
 section "Acceptance: one-liner is <= 21 words"
 python3 -c "
 import json
-d = json.load(open(r'$json_path'))
+d = json.load(open(r'$json_win'))
 n = len(d['one_liner'].split())
 assert n <= 21, f'one-liner too long: {n} words'
 "
@@ -72,7 +75,7 @@ pass "one-liner length bounded"
 section "Acceptance: risks array present on every step"
 python3 -c "
 import json
-d = json.load(open(r'$json_path'))
+d = json.load(open(r'$json_win'))
 for s in d['steps']:
     assert isinstance(s['risks'], list)
 "

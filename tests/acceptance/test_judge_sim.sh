@@ -14,7 +14,11 @@ section() { echo; echo "## $1"; }
 
 BASH_TMP="$(mktemp -d)"
 trap "rm -rf $BASH_TMP" EXIT
-win() { cygpath -m "$1"; }
+if command -v cygpath >/dev/null 2>&1; then
+  win() { cygpath -m "$1"; }
+else
+  win() { printf '%s' "$1"; }
+fi
 
 REPO="$BASH_TMP/repo"
 mkdir -p "$REPO"

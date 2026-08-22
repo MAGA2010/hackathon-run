@@ -24,18 +24,18 @@ die()  { printf "  ERROR: %s\n" "$1" >&2; exit 1; }
 LEVEL="patch"
 EXPLICIT=""
 DRY_RUN=0
-for arg in "$@"; do
-    case "$arg" in
-        --major) LEVEL="major" ;;
-        --minor) LEVEL="minor" ;;
-        --patch) LEVEL="patch" ;;
-        --version) shift; EXPLICIT="${1:-}"; [ -n "$EXPLICIT" ] || die "--version requires a value" ;;
-        --dry-run) DRY_RUN=1 ;;
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --major) LEVEL="major"; shift ;;
+        --minor) LEVEL="minor"; shift ;;
+        --patch) LEVEL="patch"; shift ;;
+        --version) EXPLICIT="${2:-}"; [ -n "$EXPLICIT" ] || die "--version requires a value"; shift 2 ;;
+        --dry-run) DRY_RUN=1; shift ;;
         --help|-h)
             sed -n '2,18p' "$0"
             exit 0
             ;;
-        *) printf "unknown arg: %s\n" "$arg" >&2; exit 2 ;;
+        *) printf "unknown arg: %s\n" "$1" >&2; exit 2 ;;
     esac
 done
 

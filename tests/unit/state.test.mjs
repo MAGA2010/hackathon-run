@@ -82,6 +82,17 @@ describe('defaultSchemaPath', () => {
     const p = defaultSchemaPath(repoRoot, 'weird.filename.json');
     assert.ok(p.endsWith(normalize('src/state/schemas/weird.filename.schema.json')));
   });
+
+  it('falls back to the bundled package schemas outside the source tree', () => {
+    const outside = mkdtempSync(join(tmpdir(), 'hs-state-outside-'));
+    try {
+      const p = defaultSchemaPath(outside, 'plan.json');
+      assert.ok(existsSync(p), 'expected the bundled plan.schema.json to exist');
+      assert.ok(p.endsWith(normalize('src/state/schemas/plan.schema.json')));
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
 });
 
 describe('readState / writeState', () => {
@@ -97,6 +108,17 @@ describe('readState / writeState', () => {
     assert.ok(back);
     assert.equal(back.demo_goal, 'demo goal here');
     assert.equal(back.features.length, 2);
+  });
+
+  it('writes state into a project that does not have src/state/schemas', () => {
+    const outside = mkdtempSync(join(tmpdir(), 'hs-state-write-outside-'));
+    try {
+      const written = writeState({ repoRoot: outside, file: 'plan.json', data: validPlan() });
+      assert.ok(existsSync(written));
+      assert.ok(JSON.parse(readFileSync(written, 'utf8')).demo_goal === 'demo goal here');
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
   });
 
   it('rejects plan.json missing required fields', () => {

@@ -21,8 +21,8 @@
  *   1  at least one ERROR-level finding across the catalog
  *   2  I/O or usage error (e.g. missing skills/ directory)
  */
-import { existsSync, readFileSync } from 'node:fs';
-import { basename, join, resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 
 import { findSkillDirs } from '../../harness/loader.js';
 import { checkSkill, type Finding } from './validate-skill.js';
@@ -57,8 +57,8 @@ export interface SkillsLintReport {
 
 export function lintAllSkills(opts: SkillsLintOptions): SkillsLintReport {
   const cwd = resolve(opts.cwd ?? process.cwd());
-  const skillsRoot = join(cwd, 'skills');
   const skillDirs = findSkillDirs(cwd);
+  const skillsRoot = skillDirs.length > 0 ? dirname(skillDirs[0]) : join(cwd, 'skills');
   const wantedCategory = opts.category?.trim();
 
   const results: SkillLintResult[] = [];
@@ -119,9 +119,9 @@ function pad(s: string, n: number): string {
 
 export function skillsLint(opts: SkillsLintOptions): number {
   const cwd = resolve(opts.cwd ?? process.cwd());
-  const skillsRoot = join(cwd, 'skills');
+  const skillDirs = findSkillDirs(cwd);
 
-  if (!existsSync(skillsRoot)) {
+  if (skillDirs.length === 0) {
     process.stderr.write(`hackathon skills lint: no skills/ directory under ${cwd}\n`);
     return 2;
   }

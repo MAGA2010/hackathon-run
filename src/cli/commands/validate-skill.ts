@@ -31,6 +31,7 @@ import {
 } from '../../harness/frontmatter.js';
 import { SKILL_CATEGORIES, isSkillCategory } from '../../harness/types.js';
 import { findSkillDirs } from '../../harness/loader.js';
+import { defaultSchemaPath } from '../../harness/state.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
 
@@ -249,9 +250,8 @@ export function checkSkill(skillDir: string, cwd: string): Finding[] {
   }
 
   const stateRefs = Array.from(parsed.body.matchAll(/state\/([a-z_-]+)\.json/g)).map((m) => m[1]);
-  const schemaDir = resolve(cwd, 'src', 'state', 'schemas');
   for (const ref of stateRefs) {
-    const schemaPath = join(schemaDir, `${ref}.schema.json`);
+    const schemaPath = defaultSchemaPath(cwd, `${ref}.json`);
     if (!existsSync(schemaPath)) {
       out.push({
         severity: 'error',
@@ -262,7 +262,7 @@ export function checkSkill(skillDir: string, cwd: string): Finding[] {
   // Also accept side_effects declarations as state-file references.
   if (fm.side_effects && fm.side_effects.length > 0) {
     for (const ref of fm.side_effects) {
-      const schemaPath = join(schemaDir, `${ref}.schema.json`);
+      const schemaPath = defaultSchemaPath(cwd, `${ref}.json`);
       if (!existsSync(schemaPath)) {
         out.push({
           severity: 'warn',

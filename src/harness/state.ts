@@ -8,8 +8,9 @@
  *   - schema invalid -> throw with diff
  *   - file unreadable -> throw
  */
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, resolve, basename, extname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
@@ -18,6 +19,20 @@ const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
 
 const validatorCache = new Map<string, ReturnType<typeof ajv.compile>>();
+
+function findPackageRoot(): string | null {
+  let dir = dirname(fileURLToPath(import.meta.url));
+  for (let i = 0; i < 8; i++) {
+    if (existsSync(join(dir, 'package.json'))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+const PACKAGE_ROOT = findPackageRoot();
+const PACKAGE_SCHEMAS = PACKAGE_ROOT ? join(PACKAGE_ROOT, 'src', 'state', 'schemas') : null;
 
 function validatorFor(schemaPath: string) {
   if (validatorCache.has(schemaPath)) {
@@ -35,7 +50,14 @@ function validatorFor(schemaPath: string) {
  */
 export function defaultSchemaPath(repoRoot: string, file: string): string {
   const stem = basename(file, extname(file));
-  return resolve(repoRoot, 'src/state/schemas', `${stem}.schema.json`);
+  const schemaName = `${stem}.schema.json`;
+  const local = resolve(repoRoot, 'src/state/schemas', schemaName);
+  if (existsSync(local)) return local;
+  if (PACKAGE_SCHEMAS) {
+    const bundled = join(PACKAGE_SCHEMAS, schemaName);
+    if (existsSync(bundled)) return bundled;
+  }
+  return local;
 }
 
 export interface StateWriteOptions {

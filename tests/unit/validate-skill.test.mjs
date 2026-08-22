@@ -124,6 +124,21 @@ describe('validate-skill', () => {
     rmSync(dir, { recursive: true, force: true });
   });
 
+  it('passes when schemas resolve from the bundled package root', () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'hs-vs-outside-'));
+    const dir = makeSkillDir(GOOD_BODY);
+    try {
+      captured = '';
+      const code = validateSkill({ target: dir, cwd, json: true });
+      const out = JSON.parse(captured);
+      assert.equal(out.errors, 0, JSON.stringify(out.findings));
+      assert.equal(code, 0);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+      rmSync(cwd, { recursive: true, force: true });
+    }
+  });
+
   it('warns when scripts/<folder>.py lacks a VERSION pin', () => {
     const dir = makeSkillDir(GOOD_BODY, {
       withScript: true,

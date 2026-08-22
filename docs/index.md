@@ -31,24 +31,25 @@ hackathon skills search --tag mvp
 hackathon run demo-rehearsal --chain
 ```
 
-## The fourteen skills
+## The fifteen skills
 
-| Skill                                          | When                                  | Output                                   |
-| ---------------------------------------------- | ------------------------------------- | ---------------------------------------- |
-| [idea-clarify](skills/idea-clarify.md)         | One-paragraph brief, no demo goal yet | Concrete demo goal                       |
-| [scope-knife](skills/scope-knife.md)           | Too many ideas, no MVP consensus      | KEEP/CUT/DEFER + demo path               |
-| [time-box](skills/time-box.md)                 | "How much time for each stage?"       | Stage schedule + checkpoints             |
-| [stack-picker](skills/stack-picker.md)         | No tech-stack preference yet          | Recommendation + bootstrap walkthrough   |
-| [team-roster](skills/team-roster.md)           | Build phase, roles unclear            | Roles + bottleneck + rescuer             |
-| [fast-verify](skills/fast-verify.md)           | "Will this demo work?"                | Step-by-step verification                |
-| [demo-coach](skills/demo-coach.md)             | 30/60/90-second pitch                 | Flow script + risk flags                 |
-| [demo-rehearsal](skills/demo-rehearsal.md)     | Final 2 hours, timed mock run         | Per-segment score + fix list             |
-| [judge-sim](skills/judge-sim.md)               | Pre-submission self-review            | 7-dimension score + fix priorities       |
-| [ship-pack](skills/ship-pack.md)               | Submitting now                        | README check, secret scan, packaging     |
-| [recovery-runbook](skills/recovery-runbook.md) | Live demo fails                       | P0-P3 fallback + 30-second script        |
-| [pivot](skills/pivot.md)                       | Mid-build direction change            | Re-runs scope-knife with new constraints |
-| [retro](skills/retro.md)                       | After submission                      | 4 ratios + keep/stop/try-next list       |
-| [decision-log](skills/decision-log.md)         | Every cut needs a recorded why        | Append-only rationale record             |
+| Skill                                          | When                                            | Output                                   |
+| ---------------------------------------------- | ----------------------------------------------- | ---------------------------------------- |
+| [idea-clarify](skills/idea-clarify.md)         | One-paragraph brief, no demo goal yet           | Concrete demo goal                       |
+| [scope-knife](skills/scope-knife.md)           | Too many ideas, no MVP consensus                | KEEP/CUT/DEFER + demo path               |
+| [time-box](skills/time-box.md)                 | "How much time for each stage?"                 | Stage schedule + checkpoints             |
+| [stack-picker](skills/stack-picker.md)         | No tech-stack preference yet                    | Recommendation + bootstrap walkthrough   |
+| [team-roster](skills/team-roster.md)           | Build phase, roles unclear                      | Roles + bottleneck + rescuer             |
+| [fast-verify](skills/fast-verify.md)           | "Will this demo work?"                          | Step-by-step verification                |
+| [demo-coach](skills/demo-coach.md)             | 30/60/90-second pitch                           | Flow script + risk flags                 |
+| [demo-rehearsal](skills/demo-rehearsal.md)     | Final 2 hours, timed mock run                   | Per-segment score + fix list             |
+| [judge-sim](skills/judge-sim.md)               | Pre-submission self-review                      | 7-dimension score + fix priorities       |
+| [ship-pack](skills/ship-pack.md)               | Submitting now                                  | README check, secret scan, packaging     |
+| [recovery-runbook](skills/recovery-runbook.md) | Live demo fails                                 | P0-P3 fallback + 30-second script        |
+| [pivot](skills/pivot.md)                       | Mid-build direction change                      | Re-runs scope-knife with new constraints |
+| [retro](skills/retro.md)                       | After submission                                | 4 ratios + keep/stop/try-next list       |
+| [prize-strategy](skills/prize-strategy.md)     | After scope-knife, picking which prize to chase | Target prize + positioning notes         |
+| [decision-log](skills/decision-log.md)         | Every cut needs a recorded why                  | Append-only rationale record             |
 
 ## Discovery and automation
 

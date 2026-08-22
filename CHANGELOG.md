@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `v1217-prize-strategy.test.mjs`: regex now accepts both single and double quoted YAML lists in frontmatter.
 - `v1213-skills-lint.test.mjs`, `mcp.test.mjs`: skill count updated from 14 to 15 (prize-strategy landed in v1.2.1.7).
 
+### Documentation
+
+- Stale "14 skills / fourteen skills" references updated to 15 in `agents/openai.yaml`, `docs/index.md` (section header + new prize-strategy row in the skills table), `docs/getting-started/quickstart.md`, `docs/about/faq.md`. CHANGELOG and ROADMAP entries describing historical version states are intentionally left intact.
+
+### Packaging
+
+- `agents/openai.yaml` (Codex / OpenAI Agents SDK integration manifest) is now shipped in the npm package; added `agents/` to `package.json` `files`. Without this, the published package could not deliver on the README's claim of Codex compatibility.
+
 ## [1.2.1.8] - 2026-08-22
 
 Final of five big iterations synthesized from online research on Agent Skills spec, time-budgeting methodology, WSJF scoring, and prize-strategy heuristics.

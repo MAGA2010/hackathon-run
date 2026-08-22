@@ -11,6 +11,7 @@
   "files": [
     "dist/",
     "skills/",
+    "agents/",
     "src/state/schemas/",
     "README.md",
     "LICENSE",

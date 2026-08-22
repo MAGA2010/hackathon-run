@@ -5,7 +5,7 @@ interface:
   display_name: Hackathon Run
   short_description: >-
     A decision-making and execution skill pack for hackathon teams operating
-    under time pressure. 14 skills that walk a team through clarify, scope,
+    under time pressure. 15 skills that walk a team through clarify, scope,
     time-box, build, verify, demo, judge, ship, recover, pivot, retro.
   brand_color: "#FF3B30"  # urgency red, matches BRAND.md
 
@@ -24,7 +24,7 @@ manifest_version: 1.2.1.4
 
 skills_root: ./skills
 
-# Skill bundle summary: 14 bundled skills, 10 with Python helpers.
+# Skill bundle summary: 15 bundled skills, 11 with Python helpers.
 # Per-skill Format v2 metadata (version, category, tags, dependencies,
 # side_effects, triggers) is read by hackathon skills search and the
 # find_skills MCP tool. v1.2 third-party manifest fields (license,

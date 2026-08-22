@@ -21,7 +21,7 @@ hackathon --version
 hackathon list
 ```
 
-You should see fourteen skills listed with their trigger budgets. Use
+You should see fifteen skills listed with their trigger budgets. Use
 `hackathon skills search` to filter them by category, tag, dependency, or
 side effect.
 

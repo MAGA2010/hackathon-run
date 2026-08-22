@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.3] - 2026-08-22
+
+### Fixed
+
+- `init` now locates the npm package root with `fileURLToPath`, so `npx @hackathon-run/hackathon-run init` copies the bundled skills on Windows instead of printing "package root not found".
+- `init` now uses a portable recursive copy instead of `fs.cpSync`, avoiding `EIO`/`Access is denied` when the target path contains non-ASCII characters (for example a Windows username like `华为`).
 ## [1.2.2] - 2026-08-22
 
 ### Changed

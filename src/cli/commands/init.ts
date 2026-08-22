@@ -16,15 +16,23 @@
  *   - --dry-run prints the plan and exits 0 without writing.
  */
 
-import { existsSync, mkdirSync, cpSync, writeFileSync, readFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  readdirSync,
+  copyFileSync,
+} from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
 
 import { log } from '../lib/logger.js';
 
 function findPackageRoot(): string | null {
   // Walk up from this file until we find package.json.
-  let dir = dirname(new URL(import.meta.url).pathname);
+  let dir = dirname(fileURLToPath(import.meta.url));
   for (let i = 0; i < 8; i++) {
     if (existsSync(join(dir, 'package.json'))) return dir;
     const parent = dirname(dir);
@@ -34,6 +42,15 @@ function findPackageRoot(): string | null {
   return null;
 }
 
+function copyDirSync(src: string, dst: string): void {
+  mkdirSync(dst, { recursive: true });
+  for (const entry of readdirSync(src, { withFileTypes: true })) {
+    const s = join(src, entry.name);
+    const d = join(dst, entry.name);
+    if (entry.isDirectory()) copyDirSync(s, d);
+    else copyFileSync(s, d);
+  }
+}
 const PACKAGE_ROOT = findPackageRoot();
 
 const STATE_FILES = ['plan.json', 'verify.json', 'demo.json', 'review.json', 'ship.json'];
@@ -99,7 +116,7 @@ export async function init(opts: InitOptions): Promise<number> {
   const skillsSrc = PACKAGE_ROOT ? join(PACKAGE_ROOT, 'skills') : null;
   const skillsDst = join(target, 'skills');
   if (skillsSrc && existsSync(skillsSrc)) {
-    cpSync(skillsSrc, skillsDst, { recursive: true });
+    copyDirSync(skillsSrc, skillsDst);
     log.ok(`copied bundled skills to ${skillsDst}`);
   } else {
     log.warn(

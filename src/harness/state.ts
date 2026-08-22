@@ -10,26 +10,15 @@
  */
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { dirname, join, resolve, basename, extname } from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+import { findPackageRoot } from './package-root.js';
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
 
 const validatorCache = new Map<string, ReturnType<typeof ajv.compile>>();
-
-function findPackageRoot(): string | null {
-  let dir = dirname(fileURLToPath(import.meta.url));
-  for (let i = 0; i < 8; i++) {
-    if (existsSync(join(dir, 'package.json'))) return dir;
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return null;
-}
 
 const PACKAGE_ROOT = findPackageRoot();
 const PACKAGE_SCHEMAS = PACKAGE_ROOT ? join(PACKAGE_ROOT, 'src', 'state', 'schemas') : null;

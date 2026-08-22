@@ -3,7 +3,7 @@
  *
  * Creates:
  *   .hackathon/skills/   (bundled skills copied from this repo)
- *   .hackathon/state/    (empty JSON files matching schemas)
+ *   .hackathon/state/    (5 canonical flow files seeded; optional skills create the rest)
  *   .hackathon/artifacts/ (empty)
  *
  * Refuses to overwrite an existing .hackathon/ unless --force.
@@ -24,23 +24,11 @@ import {
   readdirSync,
   copyFileSync,
 } from 'node:fs';
-import { resolve, join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve, join } from 'node:path';
 import { createInterface } from 'node:readline';
 
 import { log } from '../lib/logger.js';
-
-function findPackageRoot(): string | null {
-  // Walk up from this file until we find package.json.
-  let dir = dirname(fileURLToPath(import.meta.url));
-  for (let i = 0; i < 8; i++) {
-    if (existsSync(join(dir, 'package.json'))) return dir;
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return null;
-}
+import { findPackageRoot } from '../../harness/package-root.js';
 
 function copyDirSync(src: string, dst: string): void {
   mkdirSync(dst, { recursive: true });

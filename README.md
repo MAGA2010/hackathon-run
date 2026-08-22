@@ -5,7 +5,7 @@
 A decision-making and execution system for hackathon teams operating under time pressure. Fifteen skills, one workflow: **clarify, prize-target, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro, decide-log.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
-[![Version](https://img.shields.io/badge/version-1.2.2-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.2.3-blue)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
 [![npm version](https://img.shields.io/npm/v/@hackathon-run/hackathon-run.svg)](https://www.npmjs.com/package/@hackathon-run/hackathon-run)

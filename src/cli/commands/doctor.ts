@@ -242,8 +242,9 @@ export function doctor(opts: { cwd: string; json?: boolean }): number {
     checks.push({
       name: 'skills',
       severity: 'warn',
-      message: 'no skills found under skills/',
-      detail: 'Run from the hackathon-run package root or inside a project that has skills/.',
+      message: 'no skills found under skills/ or .hackathon/skills/',
+      detail:
+        'Run from the hackathon-run package root or inside a project that has skills/ or .hackathon/skills/.',
     });
   }
 

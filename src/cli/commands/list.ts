@@ -24,7 +24,7 @@ function hasScripts(skillDir: string): boolean {
 export function list(repoRoot: string): number {
   const skills = loadAllSkills(repoRoot);
   if (skills.length === 0) {
-    console.log('no skills found under skills/');
+    console.log('no skills found under skills/ or .hackathon/skills/');
     return 0;
   }
   console.log(c.bold(row(['name', 'trigger/1536', 'scripts', 'description'], WIDTHS)));

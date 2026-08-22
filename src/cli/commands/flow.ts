@@ -6,8 +6,8 @@
  * `hackathon flow` is a planning aid that:
  *
  *   - reads the current state and decides which stage is next
- *   - prints the exact python3 command to run for each stage
- *   - can optionally --execute each step (requires python3 on PATH)
+ *   - prints the exact python command to run for each stage
+ *   - can optionally --execute each step (requires python on PATH)
  *   - stops on first failure or missing prereq
  *
  * Stages (canonical 36-hour pipeline):
@@ -19,11 +19,19 @@
  */
 
 import { existsSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
+import { findSkillDirs } from '../../harness/loader.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
+
+interface StageStep {
+  /** script filename under <skill>/scripts/ */
+  script: string;
+  /** argv for the script; `{repoRoot}` is replaced with the resolved cwd */
+  args: string[];
+}
 
 interface StageSpec {
   /** order in the pipeline */
@@ -34,12 +42,12 @@ interface StageSpec {
   produces: string;
   /** one-line description shown in the plan */
   summary: string;
-  /** python command line(s) to run for this stage (use {repoRoot} placeholder) */
-  commands: string[];
-  /** what to ask the agent for if --execute can't auto-resolve */
-  requiredArgs?: string[];
   /** stage that must be complete before this one runs */
   requires?: string;
+  /** what to ask the agent for if --execute can't auto-resolve */
+  requiredArgs?: string[];
+  /** python script + argv to run for this stage */
+  steps: StageStep[];
 }
 
 const STAGES: StageSpec[] = [
@@ -48,11 +56,23 @@ const STAGES: StageSpec[] = [
     skill: 'scope-knife',
     produces: 'plan.json',
     summary: 'classify every feature KEEP/CUT/DEFER + lock the demo path',
-    commands: [
-      'python3 skills/scope-knife/scripts/scan_repo.py {repoRoot}',
-      'python3 skills/scope-knife/scripts/classify.py --inventory /tmp/inv.json --demo-goal "<one-sentence goal>" --time-remaining 240 --out-dir {repoRoot}/.hackathon',
-    ],
     requiredArgs: ['demo_goal', 'time_remaining_minutes'],
+    steps: [
+      { script: 'scan_repo.py', args: ['{repoRoot}'] },
+      {
+        script: 'classify.py',
+        args: [
+          '--inventory',
+          '/tmp/inv.json',
+          '--demo-goal',
+          '<one-sentence goal>',
+          '--time-remaining',
+          '240',
+          '--out-dir',
+          '{repoRoot}/.hackathon',
+        ],
+      },
+    ],
   },
   {
     order: 2,
@@ -60,10 +80,13 @@ const STAGES: StageSpec[] = [
     produces: 'verify.json',
     summary: 'run each demo_path step end-to-end, capture pass/fail',
     requires: 'plan.json',
-    commands: [
-      'python3 skills/fast-verify/scripts/verify_step.py --plan {repoRoot}/.hackathon/state/plan.json --step 1',
-    ],
     requiredArgs: [],
+    steps: [
+      {
+        script: 'verify_step.py',
+        args: ['--plan', '{repoRoot}/.hackathon/state/plan.json', '--step', '1'],
+      },
+    ],
   },
   {
     order: 3,
@@ -71,10 +94,13 @@ const STAGES: StageSpec[] = [
     produces: 'demo.json',
     summary: 'generate a 60-second pitch script with 6 canonical steps',
     requires: 'verify.json',
-    commands: [
-      'python3 skills/demo-coach/scripts/coach.py --duration 60 --demo-goal "<see plan.json>"',
-    ],
     requiredArgs: ['duration_seconds'],
+    steps: [
+      {
+        script: 'coach.py',
+        args: ['--duration', '60', '--demo-goal', '<see plan.json>'],
+      },
+    ],
   },
   {
     order: 4,
@@ -82,10 +108,13 @@ const STAGES: StageSpec[] = [
     produces: 'review.json',
     summary: 'simulate a judge panel + score across 7 dimensions',
     requires: 'demo.json',
-    commands: [
-      'python3 skills/judge-sim/scripts/score.py --demo {repoRoot}/.hackathon/state/demo.json',
-    ],
     requiredArgs: [],
+    steps: [
+      {
+        script: 'score.py',
+        args: ['--demo', '{repoRoot}/.hackathon/state/demo.json'],
+      },
+    ],
   },
   {
     order: 5,
@@ -93,8 +122,13 @@ const STAGES: StageSpec[] = [
     produces: 'ship.json',
     summary: 'secret scan + README checklist + reproducible packaging command',
     requires: 'review.json',
-    commands: ['python3 skills/ship-pack/scripts/audit.py --repo-root {repoRoot}'],
     requiredArgs: [],
+    steps: [
+      {
+        script: 'audit.py',
+        args: ['--repo-root', '{repoRoot}'],
+      },
+    ],
   },
 ];
 
@@ -112,31 +146,55 @@ export interface FlowPlan {
     summary: string;
     done: boolean;
     commands: string[];
+    steps: Array<{ script: string; args: string[] }>;
     requiredArgs?: string[];
     requires?: string;
   }>;
   nextCommand: string | null;
 }
 
-function pythonAvailable(): boolean {
-  const r = spawnSync('python3', ['--version'], { stdio: 'ignore' });
-  return r.status === 0;
+function findPython(): string | null {
+  for (const candidate of ['python3', 'python']) {
+    const r = spawnSync(candidate, ['--version'], { stdio: 'ignore' });
+    if (r.status === 0) return candidate;
+  }
+  return null;
+}
+
+function quoteArg(arg: string): string {
+  if (/^[\w./:+-]+$/.test(arg)) return arg;
+  return `"${arg.replace(/(["\\])/g, '\\$1')}"`;
+}
+
+function skillScript(cwd: string, skill: string, script: string): string {
+  const dir = findSkillDirs(cwd).find((d) => basename(d) === skill);
+  if (dir) return join(dir, 'scripts', script);
+  return join(cwd, 'skills', skill, 'scripts', script);
 }
 
 export function buildPlan(opts: { cwd: string }): FlowPlan {
   const cwd = resolve(opts.cwd);
   const stateDir = join(cwd, '.hackathon', 'state');
   const initialized = existsSync(stateDir);
+  const python = findPython();
   const enriched = STAGES.map((s) => {
-    const path = join(stateDir, s.produces);
-    const done = existsSync(path);
+    const done = existsSync(join(stateDir, s.produces));
+    const steps = s.steps.map((step) => ({
+      script: skillScript(cwd, s.skill, step.script),
+      args: step.args.map((arg) => arg.replace(/\{repoRoot\}/g, cwd)),
+    }));
+    const commands = steps.map(
+      (step) =>
+        `${python ?? 'python3'} ${quoteArg(step.script)} ${step.args.map(quoteArg).join(' ')}`,
+    );
     return {
       order: s.order,
       skill: s.skill,
       produces: s.produces,
       summary: s.summary,
       done,
-      commands: s.commands.map((cmd) => cmd.replace(/\{repoRoot\}/g, cwd)),
+      commands,
+      steps,
       requiredArgs: s.requiredArgs,
       requires: s.requires,
     };
@@ -147,7 +205,7 @@ export function buildPlan(opts: { cwd: string }): FlowPlan {
   return {
     cwd,
     initialized,
-    pythonAvailable: pythonAvailable(),
+    pythonAvailable: python !== null,
     cursor,
     stages: enriched,
     nextCommand: nextStage?.commands[0] ?? null,
@@ -162,7 +220,7 @@ export function flow(opts: { cwd: string; json?: boolean; execute?: boolean }): 
   }
   console.log(c.bold('\u{1F3AF}  hackathon flow \u2014 ' + plan.cwd));
   console.log(c.dim('state dir: ' + join(plan.cwd, '.hackathon', 'state')));
-  console.log(c.dim('python3: ' + (plan.pythonAvailable ? 'available' : 'NOT FOUND on PATH')));
+  console.log(c.dim('python: ' + (plan.pythonAvailable ? 'available' : 'NOT FOUND on PATH')));
   console.log();
   if (!plan.initialized) {
     log.warn('.hackathon/state/ not found in ' + plan.cwd);
@@ -197,19 +255,22 @@ export function flow(opts: { cwd: string; json?: boolean; execute?: boolean }): 
     console.log(c.dim('Run: ') + plan.nextCommand);
   }
   if (opts.execute) {
-    if (!plan.pythonAvailable) {
-      log.err('python3 not available; cannot --execute. Run the commands above manually.');
+    const python = findPython();
+    if (!python) {
+      log.err('python not available; cannot --execute. Run the commands above manually.');
       return 2;
     }
     log.info('--execute: invoking the python scripts for each remaining stage');
     for (let i = plan.cursor; i < plan.stages.length; i++) {
       const stage = plan.stages[i];
       if (!stage) continue;
-      for (const cmd of stage.commands) {
-        log.info('$ ' + cmd);
-        // We deliberately do not shell-split: each command string is trusted
-        // (built from STAGES above, no user input). Pass to sh -c.
-        const r = spawnSync('sh', ['-c', cmd], { stdio: 'inherit' });
+      for (const step of stage.steps) {
+        const display = `${python} ${quoteArg(step.script)} ${step.args.map(quoteArg).join(' ')}`;
+        log.info('$ ' + display);
+        const r = spawnSync(python, [step.script, ...step.args], {
+          stdio: 'inherit',
+          cwd: plan.cwd,
+        });
         if (r.status !== 0) {
           log.err('stage ' + stage.skill + ' failed (exit ' + r.status + ')');
           return r.status ?? 1;

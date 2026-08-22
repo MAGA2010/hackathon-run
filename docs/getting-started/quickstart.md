@@ -14,6 +14,11 @@ hackathon init
 This creates `.hackathon/{skills,state,artifacts}/` and copies the bundled
 skills into `.hackathon/skills/`.
 
+`init` seeds the five canonical flow state files (`plan.json`, `verify.json`,
+`demo.json`, `review.json`, `ship.json`). The optional skills create their own
+state files on demand, so you will see the full set only after running those
+skills.
+
 Verify the install:
 
 ```bash

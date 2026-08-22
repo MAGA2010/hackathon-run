@@ -19,7 +19,7 @@
  * Exit codes:
  *   0  all skills pass (warnings allowed)
  *   1  at least one ERROR-level finding across the catalog
- *   2  I/O or usage error (e.g. missing skills/ directory)
+ *   2  I/O or usage error (e.g. missing skill directories)
  */
 import { readFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
@@ -122,7 +122,9 @@ export function skillsLint(opts: SkillsLintOptions): number {
   const skillDirs = findSkillDirs(cwd);
 
   if (skillDirs.length === 0) {
-    process.stderr.write(`hackathon skills lint: no skills/ directory under ${cwd}\n`);
+    process.stderr.write(
+      `hackathon skills lint: no skills/ or .hackathon/skills/ directory under ${cwd}\n`,
+    );
     return 2;
   }
 

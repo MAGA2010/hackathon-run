@@ -28,6 +28,7 @@
     "test:acceptance": "npm run build --silent && node scripts/run-sh.mjs tests/run-acceptance.sh",
     "test:integration": "npm run build --silent && node scripts/run-sh.mjs tests/run-integration.sh",
     "test:unit": "npm run build --silent && node --test tests/unit/*.test.mjs",
+    "test:all": "npm run test:unit --silent && npm run test:acceptance --silent && npm run test:integration --silent",
     "test:coverage": "npm run build --silent && node --test --experimental-test-coverage tests/unit/*.test.mjs",
     "validate": "npm run build --silent && node dist/cli/index.js validate",
     "dogfood": "node scripts/run-sh.mjs scripts/dogfood.sh",

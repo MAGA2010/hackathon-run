@@ -14,7 +14,7 @@ guide. Key points:
 nvm use
 npm install
 npm run build              # rebuild dist/
-npm test                   # everything
+npm run test:all           # everything (unit + acceptance + integration)
 ```
 
 ## Adding a new skill — short version
@@ -23,5 +23,5 @@ npm test                   # everything
 2. Add scripts under `skills/<kebab-case-name>/scripts/`.
 3. Add `tests/acceptance/test_<kebab-case-name>.sh` mapping 1:1 to
    acceptance criteria.
-4. Run `npm test` and `hackathon list` to verify.
+4. Run `npm run test:all` and `hackathon list` to verify.
 5. Open a PR.

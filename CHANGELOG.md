@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `hackathon run`, `list`, `skills lint`, and skill matching now discover skills under `.hackathon/skills/` after `hackathon init`, with `skills/` still taking precedence in the source tree.
+- JSON schema resolution now falls back to the bundled package `src/state/schemas/`, so `hackathon run --apply`, `readState`, and `validate-skill` work in projects that do not contain their own schema tree.
+- `hackathon flow` now resolves scripts from the active skill directory and executes them with `python3`/`python` arguments instead of hardcoded `skills/` paths and `sh -c`.
+
 ## [1.2.3] - 2026-08-22
 
 ### Fixed

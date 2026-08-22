@@ -191,7 +191,7 @@ export function checkSkill(skillDir: string, cwd: string): Finding[] {
       if (!known.has(dep)) {
         out.push({
           severity: 'warn',
-          message: `dependency "${dep}" not found in skills/`,
+          message: `dependency "${dep}" not found in skills/ or .hackathon/skills/`,
         });
       }
     }

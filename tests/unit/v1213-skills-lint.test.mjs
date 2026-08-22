@@ -26,14 +26,18 @@ describe('hackathon skills lint', () => {
     const tmp = mkdtempSync(join(tmpdir(), 'hs-skills-lint-'));
     const r = runCli(['skills', 'lint', '-C', tmp]);
     assert.equal(r.status, 2, r.stderr);
-    assert.match(r.stderr + r.stdout, /no skills\/ directory/);
+    assert.match(r.stderr + r.stdout, /no skills\/ or \.hackathon\/skills\/ directory/);
     rmSync(tmp, { recursive: true, force: true });
   });
 
   it('lints every bundled skill in the repo and reports zero errors', () => {
     const report = lintAllSkills({ cwd: REPO });
     assert.equal(report.scanned, 15, 'expected 15 bundled skills');
-    assert.equal(report.failed, 0, `unexpected errors: ${JSON.stringify(report.skills.filter((s) => s.errors > 0))}`);
+    assert.equal(
+      report.failed,
+      0,
+      `unexpected errors: ${JSON.stringify(report.skills.filter((s) => s.errors > 0))}`,
+    );
     assert.ok(report.total_warnings > 0, 'expected at least one warning (third-party manifest)');
     for (const s of report.skills) {
       assert.ok(s.name.length > 0);

@@ -65,6 +65,39 @@ jobs:
         run: npm run validate -- .hackathon/state
         continue-on-error: true
 
+  test-windows:
+    name: Windows tests
+    runs-on: windows-latest
+    env:
+      PYTHON: python
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        shell: bash
+        run: npm ci || npm install
+
+      - name: Build
+        shell: bash
+        run: npm run build
+
+      - name: Unit tests
+        shell: bash
+        run: npm run test:unit
+
+      - name: Acceptance + integration tests
+        shell: bash
+        run: npm test
+
   python-smoke:
     name: Python scripts smoke
     runs-on: ubuntu-latest

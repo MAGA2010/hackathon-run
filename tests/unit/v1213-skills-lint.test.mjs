@@ -32,7 +32,7 @@ describe('hackathon skills lint', () => {
 
   it('lints every bundled skill in the repo and reports zero errors', () => {
     const report = lintAllSkills({ cwd: REPO });
-    assert.equal(report.scanned, 14, 'expected 14 bundled skills');
+    assert.equal(report.scanned, 15, 'expected 15 bundled skills');
     assert.equal(report.failed, 0, `unexpected errors: ${JSON.stringify(report.skills.filter((s) => s.errors > 0))}`);
     assert.ok(report.total_warnings > 0, 'expected at least one warning (third-party manifest)');
     for (const s of report.skills) {
@@ -57,10 +57,10 @@ describe('hackathon skills lint', () => {
     assert.equal(r.status, 0, r.stderr);
     const report = JSON.parse(r.stdout);
     assert.equal(report.cwd, REPO.replace(/[\\\\/]+$/, ''));
-    assert.equal(report.scanned, 14);
+    assert.equal(report.scanned, 15);
     assert.equal(report.total_errors, 0);
     assert.ok(Array.isArray(report.skills));
-    assert.ok(report.skills.length === 14);
+    assert.ok(report.skills.length === 15);
   });
 
   it('exits 1 when a skill has an error', () => {

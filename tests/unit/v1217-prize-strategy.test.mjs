@@ -17,8 +17,8 @@ describe("prize-strategy skill (v1.2.1.7)", () => {
 
   it("targets prize-strategy deps on scope-knife and side_effects: prize", () => {
     const skill = readFileSync(join(ROOT, "skills/prize-strategy/SKILL.md"), "utf8");
-    assert.match(skill, /dependencies:\s*\[\"scope-knife\"\]/);
-    assert.match(skill, /side_effects:\s*\[\"prize\"\]/);
+    assert.match(skill, /dependencies:\s*\[(['"])scope-knife\1\]/);
+    assert.match(skill, /side_effects:\s*\[(['"])prize\1\]/);
   });
 
   it("declares trigger phrases for prize intent matching", () => {

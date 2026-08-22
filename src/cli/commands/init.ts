@@ -7,14 +7,22 @@
  *   .hackathon/artifacts/ (empty)
  *
  * Refuses to overwrite an existing .hackathon/ unless --force.
+ *
+ * UX:
+ *   - Prints a banner with the absolute target path BEFORE any write.
+ *   - In a TTY, prompts for confirmation unless --yes is passed.
+ *   - In a non-TTY (CI, piped output), refuses to run without --yes
+ *     to avoid silent side effects.
+ *   - --dry-run prints the plan and exits 0 without writing.
  */
 
 import { existsSync, mkdirSync, cpSync, writeFileSync, readFileSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
+import { createInterface } from 'node:readline';
 
 import { log } from '../lib/logger.js';
 
-function findPackageRoot(): string {
+function findPackageRoot(): string | null {
   // Walk up from this file until we find package.json.
   let dir = dirname(new URL(import.meta.url).pathname);
   for (let i = 0; i < 8; i++) {
@@ -23,7 +31,7 @@ function findPackageRoot(): string {
     if (parent === dir) break;
     dir = parent;
   }
-  return process.cwd();
+  return null;
 }
 
 const PACKAGE_ROOT = findPackageRoot();
@@ -33,26 +41,71 @@ const STATE_FILES = ['plan.json', 'verify.json', 'demo.json', 'review.json', 'sh
 export interface InitOptions {
   cwd: string;
   force?: boolean;
+  yes?: boolean;
+  dryRun?: boolean;
 }
 
-export function init(opts: InitOptions): number {
+async function confirm(message: string): Promise<boolean> {
+  if (!process.stdin.isTTY) return false;
+  return new Promise((resolvePrompt) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    rl.question(`${message} [y/N] `, (answer) => {
+      rl.close();
+      resolvePrompt(/^y(es)?$/i.test(answer.trim()));
+    });
+  });
+}
+
+export async function init(opts: InitOptions): Promise<number> {
   const target = resolve(opts.cwd, '.hackathon');
-  if (existsSync(target) && !opts.force) {
-    log.err(`.hackathon/ already exists at ${target}. Use --force to overwrite.`);
-    return 1;
+
+  // Banner first — show what we will do before any side effect.
+  log.bold('hackathon init');
+  log.dim(`  target:  ${target}`);
+  log.dim(
+    `  source:  ${PACKAGE_ROOT ? join(PACKAGE_ROOT, 'skills') : '(package root not found — skills will be skipped)'}`,
+  );
+  log.dim(`  state:   ${STATE_FILES.length} JSON files in .hackathon/state/`);
+
+  if (existsSync(target)) {
+    if (!opts.force) {
+      log.err(`.hackathon/ already exists at ${target}. Use --force to overwrite.`);
+      return 1;
+    }
+    log.warn(`existing .hackathon/ at ${target} will be overwritten`);
+  }
+
+  if (opts.dryRun) {
+    log.ok('dry-run: no files written');
+    return 0;
+  }
+
+  // Gate side effects behind an explicit confirmation when we have a chance to ask.
+  if (process.stdin.isTTY && !opts.yes) {
+    const ok = await confirm('Proceed?');
+    if (!ok) {
+      log.warn('aborted by user');
+      return 0;
+    }
+  } else if (!opts.yes) {
+    log.err('non-interactive mode requires --yes (or use --dry-run to preview)');
+    return 2;
   }
 
   mkdirSync(join(target, 'state'), { recursive: true });
   mkdirSync(join(target, 'artifacts'), { recursive: true });
 
   // Copy bundled skills if available.
-  const skillsSrc = join(PACKAGE_ROOT, 'skills');
+  const skillsSrc = PACKAGE_ROOT ? join(PACKAGE_ROOT, 'skills') : null;
   const skillsDst = join(target, 'skills');
-  if (existsSync(skillsSrc)) {
+  if (skillsSrc && existsSync(skillsSrc)) {
     cpSync(skillsSrc, skillsDst, { recursive: true });
     log.ok(`copied bundled skills to ${skillsDst}`);
   } else {
-    log.warn(`bundled skills not found at ${skillsSrc}; skipping copy`);
+    log.warn(
+      'bundled skills source not found; skipping copy. ' +
+        'Run from inside the npm package, or set HACKATHON_RUN_HOME.',
+    );
   }
 
   // Seed empty state files (each is valid JSON matching its schema).

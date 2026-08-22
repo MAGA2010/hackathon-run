@@ -63,7 +63,7 @@ describe('MCP server', () => {
     assert.ok(names.includes('skill_chain'));
   });
 
-  it('list_skills returns the 14 bundled skills', async () => {
+  it('list_skills returns the 15 bundled skills', async () => {
     const res = await call({
       jsonrpc: '2.0',
       id: 3,
@@ -86,7 +86,7 @@ describe('MCP server', () => {
     assert.ok(names.includes('demo-rehearsal'));
     assert.ok(names.includes('team-roster'));
     assert.ok(names.includes('decision-log'));
-    assert.equal(names.length, 14);
+    assert.equal(names.length, 15);
   });
 
   it('get_skill returns the body of a known skill', async () => {

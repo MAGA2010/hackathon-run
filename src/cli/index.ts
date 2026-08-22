@@ -88,7 +88,17 @@ program
   .command('init')
   .description('Bootstrap .hackathon/ in the current repo')
   .option('-f, --force', 'overwrite an existing .hackathon/')
-  .action((opts) => process.exit(init({ cwd: process.cwd(), force: opts.force })));
+  .option('-y, --yes', 'skip the confirmation prompt (needed in non-TTY)')
+  .option('--dry-run', 'print the plan and exit without writing')
+  .action(async (opts) => {
+    const code = await init({
+      cwd: process.cwd(),
+      force: opts.force,
+      yes: opts.yes,
+      dryRun: opts.dryRun,
+    });
+    process.exit(code);
+  });
 
 program
   .command('list')

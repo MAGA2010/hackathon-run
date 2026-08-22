@@ -77,7 +77,7 @@ Maintainers only. Tag-driven, automated by `.github/workflows/release.yml`:
 - Push a `vX.Y.Z` tag
 - CI runs full test matrix
 - CHANGELOG entry generated from commits since last tag
-- npm package published to `@maga2010/hackathon-run`
+- npm package published to `@hackathon-run/hackathon-run`
 - GitHub Release created
 
 ## What we will (probably) reject

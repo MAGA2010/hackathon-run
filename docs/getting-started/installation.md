@@ -1,12 +1,12 @@
 # Installation
 
-> **Status:** `Option A` (npm global install) requires `@maga2010/hackathon-run` to be published on the npm registry.
-> Until then, use `Option B` (run from source) or run `npx @maga2010/hackathon-run init` directly in any project — no install required.
+> **Status:** `Option A` (npm global install) requires `@hackathon-run/hackathon-run` to be published on the npm registry.
+> Until then, use `Option B` (run from source) or run `npx @hackathon-run/hackathon-run init` directly in any project — no install required.
 
 ## Option A — npm global install (recommended, post-publish)
 
 ```bash
-npm install -g @maga2010/hackathon-run
+npm install -g @hackathon-run/hackathon-run
 ```
 
 Requires Node.js 20+ (LTS).
@@ -46,4 +46,4 @@ hackathon doctor
 You should see fifteen skills listed with their trigger phrase budgets.
 
 > Note: after install, the CLI command is `hackathon` (not `hackathon-run`).
-> The package name is `@maga2010/hackathon-run`; the binary is `hackathon`.
+> The package name is `@hackathon-run/hackathon-run`; the binary is `hackathon`.

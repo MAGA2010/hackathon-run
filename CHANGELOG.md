@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- npm scope: package renamed from `@maga2010/hackathon-run` to `@hackathon-run/hackathon-run` (publish under the `hackathon-run` npm organization instead of the personal `maga2010` account). GitHub repo URL unchanged. Update your install commands accordingly.
+- `init` UX: prints a banner with the absolute target path before any write; prompts for confirmation in a TTY (`[y/N]`); requires `--yes` in non-TTY mode; supports `--dry-run` to preview without writing. `findPackageRoot()` no longer silently falls back to `process.cwd()` on failure.
+- `scripts/release.sh`: bash arg parsing rewrite (`shift` inside `for ... in "$@"` is unreliable on bash 5.x).
+
+### Fixed
+
+- `v1217-prize-strategy.test.mjs`: regex now accepts both single and double quoted YAML lists in frontmatter.
+- `v1213-skills-lint.test.mjs`, `mcp.test.mjs`: skill count updated from 14 to 15 (prize-strategy landed in v1.2.1.7).
+
 ## [1.2.1.8] - 2026-08-22
 
 Final of five big iterations synthesized from online research on Agent Skills spec, time-budgeting methodology, WSJF scoring, and prize-strategy heuristics.

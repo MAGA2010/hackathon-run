@@ -4,7 +4,7 @@
 
 ## Name
 
-**Hackathon Run** (npm: @maga2010/hackathon-run, repo: hackathon-run)
+**Hackathon Run** (npm: @hackathon-run/hackathon-run, repo: hackathon-run)
 
 ## Tagline
 

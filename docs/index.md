@@ -23,7 +23,7 @@ right cut, at the right time, every time**.
 ## Quick start
 
 ```bash
-npm install -g @maga2010/hackathon-run
+npm install -g @hackathon-run/hackathon-run
 cd my-hackathon-project
 hackathon init
 hackathon run scope-knife

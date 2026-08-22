@@ -8,8 +8,8 @@ A decision-making and execution system for hackathon teams operating under time 
 [![Version](https://img.shields.io/badge/version-1.2.1.8-blue)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
-[![npm version](https://img.shields.io/npm/v/@maga2010/hackathon-run.svg)](https://www.npmjs.com/package/@maga2010/hackathon-run)
-[![npm downloads](https://img.shields.io/npm/dm/@maga2010/hackathon-run.svg)](https://www.npmjs.com/package/@maga2010/hackathon-run)
+[![npm version](https://img.shields.io/npm/v/@hackathon-run/hackathon-run.svg)](https://www.npmjs.com/package/@hackathon-run/hackathon-run)
+[![npm downloads](https://img.shields.io/npm/dm/@hackathon-run/hackathon-run.svg)](https://www.npmjs.com/package/@hackathon-run/hackathon-run)
 [![GitHub release](https://img.shields.io/github/v/release/MAGA2010/hackathon-run.svg)](https://github.com/MAGA2010/hackathon-run/releases/latest)
 
 <p align="center">
@@ -77,11 +77,11 @@ Each skill is **independently invokable**. You can run any of them at any time w
 
 # Option A -- one-shot via npx (no install needed)
 
-npx @maga2010/hackathon-run init
+npx @hackathon-run/hackathon-run init
 
 # Option B -- install globally, then use hackathon as the CLI command
 
-npm install -g @maga2010/hackathon-run
+npm install -g @hackathon-run/hackathon-run
 hackathon init
 
 # Option C -- from source
@@ -108,7 +108,7 @@ hackathon run demo-rehearsal --chain # scope-knife -> fast-verify -> demo-coach 
 
 State is saved to .hackathon/state/ and is never required by the next step.
 
-After install, the CLI command is hackathon (not hackathon-run). The package is @maga2010/hackathon-run; the binary is hackathon.
+After install, the CLI command is hackathon (not hackathon-run). The package is @hackathon-run/hackathon-run; the binary is hackathon.
 
 For CI, run hackathon skills lint to validate every bundled skill in one shot. Pin the team's skill versions for reproducibility with hackathon skills pin --all. Opt into a semantic matcher by setting HACKATHON_EMBED_BACKEND to an HTTP ranking endpoint.
 

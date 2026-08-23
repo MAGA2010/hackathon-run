@@ -49,7 +49,8 @@ function parseInline(value: string): unknown {
 }
 
 export function parseFrontmatter(raw: string): ParseResult {
-  const m = raw.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  const normalized = raw.replace(/\r\n?/g, '\n');
+  const m = normalized.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!m) {
     throw new Error('missing YAML frontmatter; SKILL.md must start with ---');
   }

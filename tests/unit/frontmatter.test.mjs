@@ -38,6 +38,20 @@ describe('parseFrontmatter', () => {
     assert.throws(() => parseFrontmatter('no frontmatter here'), /missing YAML frontmatter/);
   });
 
+  it('accepts CRLF frontmatter from a Windows checkout', () => {
+    const md = [
+      '---\r',
+      'name: windows-skill\r',
+      'description: Parses CRLF skill files.\r',
+      '---\r',
+      'body',
+    ].join('\n');
+    const r = parseFrontmatter(md);
+    assert.equal(r.frontmatter.name, 'windows-skill');
+    assert.equal(r.frontmatter.description, 'Parses CRLF skill files.');
+    assert.equal(r.body, 'body');
+  });
+
   it('rejects missing required field name', () => {
     const md = '---\ndescription: only description\n---\nbody';
     assert.throws(() => parseFrontmatter(md), /required field: name/);

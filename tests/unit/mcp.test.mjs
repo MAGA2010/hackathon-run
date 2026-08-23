@@ -16,6 +16,7 @@ function call(request) {
     const child = spawn(process.execPath, [SERVER], { cwd: ROOT });
     const responses = [];
     let buf = '';
+    let stderr = '';
     const timer = setTimeout(() => {
       try {
         child.kill();
@@ -31,13 +32,23 @@ function call(request) {
         if (line) responses.push(JSON.parse(line));
       }
     });
-    child.stderr.on('data', () => {});
+    child.stderr.on('data', (chunk) => {
+      stderr += chunk;
+    });
     child.on('error', (error) => {
       clearTimeout(timer);
       reject(error);
     });
-    child.on('close', () => {
+    child.on('close', (code, signal) => {
       clearTimeout(timer);
+      if (responses.length === 0) {
+        reject(
+          new Error(
+            `MCP server exited without a response (code=${code}, signal=${signal}): ${stderr.trim()}`,
+          ),
+        );
+        return;
+      }
       resolve(responses);
     });
     child.stdin.end(JSON.stringify(request) + '\n');

@@ -237,6 +237,7 @@ describe('find_skills MCP manifest surface', () => {
       const child = spawn(process.execPath, [server], { cwd: REPO });
       const responses = [];
       let buf = '';
+      let stderr = '';
       const timer = setTimeout(() => {
         try {
           child.kill();
@@ -252,13 +253,23 @@ describe('find_skills MCP manifest surface', () => {
           if (line) responses.push(JSON.parse(line));
         }
       });
-      child.stderr.on('data', () => {});
+      child.stderr.on('data', (chunk) => {
+        stderr += chunk;
+      });
       child.on('error', (error) => {
         clearTimeout(timer);
         reject(error);
       });
-      child.on('close', () => {
+      child.on('close', (code, signal) => {
         clearTimeout(timer);
+        if (responses.length === 0) {
+          reject(
+            new Error(
+              `MCP server exited without a response (code=${code}, signal=${signal}): ${stderr.trim()}`,
+            ),
+          );
+          return;
+        }
         resolve(responses);
       });
       child.stdin.end(

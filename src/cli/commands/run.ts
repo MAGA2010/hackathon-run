@@ -51,7 +51,7 @@ function targetStateFile(body: string): string | null {
   return matches[matches.length - 1][1] + '.json';
 }
 
-function buildSkeleton(stateFile: string, opts: RunOptions): unknown {
+export function buildSkeleton(stateFile: string, opts: RunOptions): unknown {
   const now = new Date().toISOString();
   const tr = opts.timeRemaining ?? 0;
   const team = opts.teamSize ?? 1;

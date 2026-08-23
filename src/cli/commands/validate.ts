@@ -13,12 +13,12 @@ import { join, resolve } from 'node:path';
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+import { defaultSchemaPath } from '../../harness/state.js';
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
 
 export function validate(dir: string): number {
-  const schemasRoot = resolve('src/state/schemas');
   const target = resolve(dir);
 
   if (!existsSync(target)) {
@@ -40,7 +40,7 @@ export function validate(dir: string): number {
     if (!stat.isFile()) continue;
 
     const base = name.replace(/\.json$/i, '');
-    const schemaPath = join(schemasRoot, `${base}.schema.json`);
+    const schemaPath = defaultSchemaPath(process.cwd(), `${base}.json`);
     if (!existsSync(schemaPath)) {
       console.error(`X ${file}: no schema at ${schemaPath}`);
       errors++;

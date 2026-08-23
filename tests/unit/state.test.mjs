@@ -18,6 +18,7 @@ import { tmpdir } from 'node:os';
 import { join, normalize } from 'node:path';
 
 import { writeState, readState, defaultSchemaPath } from '../../dist/harness/state.js';
+import { validate as validateStateDir } from '../../dist/cli/commands/validate.js';
 
 let tmp;
 before(() => {
@@ -116,6 +117,25 @@ describe('readState / writeState', () => {
       const written = writeState({ repoRoot: outside, file: 'plan.json', data: validPlan() });
       assert.ok(existsSync(written));
       assert.ok(JSON.parse(readFileSync(written, 'utf8')).demo_goal === 'demo goal here');
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+
+  it('validate command falls back to bundled schemas outside the source tree', () => {
+    const outside = mkdtempSync(join(tmpdir(), 'hs-validate-outside-'));
+    try {
+      writeState({ repoRoot: outside, file: 'plan.json', data: validPlan() });
+      const origLog = console.log;
+      const origErr = console.error;
+      console.log = () => {};
+      console.error = () => {};
+      try {
+        assert.equal(validateStateDir(join(outside, '.hackathon', 'state')), 0);
+      } finally {
+        console.log = origLog;
+        console.error = origErr;
+      }
     } finally {
       rmSync(outside, { recursive: true, force: true });
     }

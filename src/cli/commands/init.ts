@@ -16,19 +16,13 @@
  *   - --dry-run prints the plan and exits 0 without writing.
  */
 
-import {
-  existsSync,
-  mkdirSync,
-  writeFileSync,
-  readFileSync,
-  readdirSync,
-  copyFileSync,
-} from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync, readdirSync, copyFileSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 import { createInterface } from 'node:readline';
 
 import { log } from '../lib/logger.js';
 import { findPackageRoot } from '../../harness/package-root.js';
+import { buildSkeleton } from './run.js';
 
 function copyDirSync(src: string, dst: string): void {
   mkdirSync(dst, { recursive: true });
@@ -115,24 +109,7 @@ export async function init(opts: InitOptions): Promise<number> {
 
   // Seed empty state files (each is valid JSON matching its schema).
   for (const f of STATE_FILES) {
-    const stub =
-      f === 'plan.json'
-        ? {
-            version: '1.0',
-            generated_at: new Date().toISOString(),
-            demo_goal: '',
-            time_remaining_minutes: 0,
-            features: [],
-            demo_path: [],
-            next_tasks: [],
-          }
-        : f === 'verify.json'
-          ? { version: '1.0', steps: [], status: 'pending' }
-          : f === 'demo.json'
-            ? { version: '1.0', duration_seconds: 60, steps: [] }
-            : f === 'review.json'
-              ? { version: '1.0', dimensions: [], overall: 0 }
-              : { version: '1.0', checks: [], status: 'pending' };
+    const stub = buildSkeleton(f, { skillName: f });
     writeFileSync(join(target, 'state', f), JSON.stringify(stub, null, 2));
   }
   log.ok(`seeded ${STATE_FILES.length} state files`);

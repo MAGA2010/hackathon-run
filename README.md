@@ -75,68 +75,145 @@ Each skill is **independently invokable**. You can run any of them at any time w
 
 Hackathon Run works best when an agent treats it as a **harness**, not as a
 menu of one-shot prompts. Three roles keep work moving without letting the
-same agent both build and approve its own output:
+same agent both build and approve its own output.
+
+The runtime follows the production agent-loop pattern used by ChatGPT and the
+OpenAI Agents SDK: context is assembled from sessions, every input and output
+passes a guardrail, tools return observable results, the loop is bounded by
+budget, and every meaningful step is traced.
+
+### Production agent loop
+
+```mermaid
+flowchart LR
+  User(["User / trigger"]) --> InGuard{"Input guardrail\npolicy + budget + schema"}
+  InGuard -->|"reject"| Block(["Blocked\nrefuse + explain"])
+  InGuard -->|"accept"| Context["Context assembly\nsession + plan + skill"]
+  Context --> Loop{"Agent loop\nmax_turns + budget"}
+  Loop -->|"next turn"| Reason["Reason\nchoose action"]
+  Reason --> Tools["Tool invocation\nskills / scripts / MCP / shell"]
+  Tools --> Observe["Observe\nstdout / files / tests / evidence"]
+  Observe -->|"loop"| Loop
+  Loop -->|"final"| OutGuard{"Output guardrail\nJSON Schema + evidence"}
+  OutGuard -->|"reject"| Loop
+  OutGuard -->|"accept"| Output(["Final output\nstate + evidence"])
+  Context -. "read / write" .-> Session[("Session\nhandoff + memory")]
+  Loop -. "trace" .-> Trace[("Trace\nevents / spans")]
+```
+
+### Hackathon Run runtime
+
+The same loop is implemented concretely by the harness. Each arrow below is a
+real command, state artifact, or feedback handoff:
 
 ```mermaid
 flowchart TD
-  subgraph Runtime["Harness Runtime"]
-    Init["hackathon init"]
-    Session[("session.json")]
-    Resume["hackathon resume"]
-    Status["hackathon status"]
-    Trace[("events.jsonl")]
-    TraceCLI["hackathon trace"]
+  subgraph Entry["1. Planner / Entry & Planning"]
+    direction TB
+    Brief(["User brief"]) --> Init["hackathon init"]
+    Init --> Scope["hackathon run scope-knife --apply"]
+    Scope --> Plan[("plan.json\nP0/P1/P2 + default-FAIL")]
+    Scope --> Session[("session.json\nhandoff")]
+    Plan -->|"KEEP features start passes=false"| Resume
   end
 
-  subgraph Planner["Planner"]
-    Brief["User brief"] --> Scope["scope-knife"]
-    Scope --> Plan[("plan.json")]
-    Plan -->|"default-FAIL\npasses=false"| Resume
+  subgraph Orchestration["2. Orchestration / Handoff"]
+    direction TB
+    Resume["hackathon resume"] --> Route{"Next unpassed\nP0/P1/P2 KEEP feature?"}
+    Route -->|"yes"| Contract["hackathon sprint new --feature X"]
+    Contract --> Approve["hackathon sprint approve"]
+    Approve --> Sprint[("sprint.json\ncriteria + budget")]
+    Sprint --> Build
+    Route -->|"no"| Pipeline["Delivery pipeline\nfast-verify -> demo-coach -> judge-sim -> ship-pack"]
   end
 
-  subgraph Generator["Generator"]
-    Session --> Resume
-    Resume --> Pick["Pick next unpassed KEEP feature"]
-    Pick --> NewSprint["hackathon sprint new --feature X"]
-    NewSprint --> Sprint[("sprint.json")]
-    Sprint --> Approve["hackathon sprint approve"]
-    Approve --> Build["Build one feature"]
-    Build --> Commit["Self-verify + git commit"]
+  subgraph Generator["3. Generator (generator.md)"]
+    direction TB
+    Build["Read contract + session\nbuild one feature"] --> Self["Self-verify\nlint / tests / smoke"]
+    Self --> Commit["Commit + update session"]
   end
 
-  subgraph Evaluator["Evaluator"]
+  subgraph Evaluator["4. Evaluator (evaluator.md)"]
+    direction TB
     Commit --> Review["hackathon sprint review"]
-    Review --> Eval[("eval.json")]
-    Eval --> Run["Run tests / browser / commands"]
-    Run --> Verdict{"All criteria pass?"}
-    Verdict -->|"No: feedback"| Feedback["session.json\nnext task + blockers"]
-    Feedback --> Pick
-    Verdict -->|"Yes: evidence"| Accept["hackathon sprint accept"]
+    Review --> Eval[("eval.json\ncriteria default false")]
+    Eval --> Run["Run app / tests / browser / commands"]
+    Run --> Evidence["Collect machine-checkable evidence"]
+    Evidence --> Verdict{"Every criterion\npasses?"}
+    Verdict -->|"no"| Feedback["Write feedback\nto session.json"]
+    Feedback --> Resume
+    Verdict -->|"yes"| Accept["hackathon sprint accept"]
     Accept --> Plan
   end
 
-  subgraph Delivery["Delivery Pipeline"]
-    Accept --> Verify["fast-verify"]
-    Verify --> Demo["demo-coach"]
-    Demo --> Judge["judge-sim"]
-    Judge --> Ship["ship-pack"]
-    Ship --> Ready["Ready to submit"]
+  subgraph Safety["5. Guardrails & Observability"]
+    direction TB
+    Budget{"Budget gate\nminutes / max-iterations"} -->|"exhausted"| Blocked["sprint blocked\nverdict = blocked"]
+    Schema{"JSON Schema\n+ default-FAIL"} -->|"invalid"| Blocked
+    Blocked --> Session
+    Trace[("events.jsonl\nappend-only")] --> Observe["hackathon trace / replay / report"]
+    Build -. "trace" .-> Trace
+    Review -. "trace" .-> Trace
+    Accept -. "trace" .-> Trace
+    Pipeline -. "trace" .-> Trace
   end
 
-  subgraph Observability["Observability"]
-    Trace --> TraceCLI
-    Trace --> Replay["hackathon replay"]
-    Trace --> Report["hackathon report"]
-  end
-
-  Commit -. "trace" .-> Trace
-  Review -. "trace" .-> Trace
-  Accept -. "trace" .-> Trace
-  Ship -. "trace" .-> Trace
-  Sprint -. "budget: --minutes --max-iterations" .-> Budget["Budget gate"]
-  Budget -->|"exhausted"| Blocked["sprint blocked"]
-  Blocked --> Pick
+  Pipeline --> Ship["Ready to submit"]
 ```
+
+### Command timeline
+
+The same loop at command level, including the failed-iteration feedback path:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant P as Planner
+  participant O as Orchestrator (CLI)
+  participant G as Generator
+  participant E as Evaluator
+  participant S as State Store
+  participant T as Trace
+
+  P->>O: hackathon run scope-knife --apply
+  O->>S: write plan.json (P0/P1/P2, default-FAIL)
+  O->>S: write session.json (handoff)
+  P->>G: handoff session.json
+  G->>O: hackathon sprint new + approve
+  O->>S: write sprint.json (criteria + budget)
+  G->>S: commit code + update session.json
+  G->>E: hackathon sprint review
+  E->>S: write eval.json (criteria default false)
+  E->>E: run app / tests / browser / commands
+
+  alt all criteria pass
+    E->>O: hackathon sprint accept
+    O->>S: flip plan.json passes=true + evidence
+  else criteria fail
+    E->>S: write feedback to session.json
+    E-->>G: feedback for the next iteration
+    G->>G: rebuild against the same contract
+  end
+
+  G-->>T: append event to events.jsonl
+  E-->>T: append verdict to events.jsonl
+  O-->>T: append state transition to events.jsonl
+```
+
+### Production primitives mapped to Hackathon Run
+
+| OpenAI / ChatGPT agent primitive | Hackathon Run implementation                                                   |
+| -------------------------------- | ------------------------------------------------------------------------------ |
+| Agent loop                       | `sprint new -> build -> review -> accept`                                      |
+| Context assembly                 | `session.json` + `plan.json` + active `SKILL.md` before the first turn         |
+| Sessions                         | `session.json` handoff + `hackathon resume`                                    |
+| Handoffs                         | Planner -> Generator -> Evaluator -> Delivery                                  |
+| Guardrails                       | JSON Schema validation, default-FAIL, trigger budget                           |
+| Budget / max turns               | `sprint budget --minutes --max-iterations`; exhausted budget becomes `blocked` |
+| Tools                            | bundled skills, scripts, MCP tools                                             |
+| Tracing                          | append-only `events.jsonl` + `hackathon trace`                                 |
+| Failure policy                   | failing eval writes feedback to `session.json`; the next loop starts there     |
+| Final output                     | validated state files + `report`                                               |
 
 ### Runtime command map
 

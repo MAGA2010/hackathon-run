@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   both JSON and human output.
 - Trace writing only happens inside an initialized `.hackathon/` and can be
   disabled with `HACKATHON_TRACE=0`.
+- README documents the ChatGPT / OpenAI production agent-loop pattern and maps
+  it to the harness runtime, commands, and state artifacts.
 
 ### Fixed
 

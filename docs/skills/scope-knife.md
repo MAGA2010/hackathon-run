@@ -17,7 +17,7 @@ Run this skill **first** if scope is ambiguous, the team has more than 10 featur
 
 ## Outputs
 
-- `.hackathon/state/plan.json` — A plan.json matching plan.schema.json (KEEP/CUT/DEFER, demo_path, next_tasks).
+- `.hackathon/state/plan.json` — A plan.json matching plan.schema.json (KEEP/CUT/DEFER, default-FAIL `passes`, demo_path, next_tasks).
 - `.hackathon/artifacts/scope-knife-output.md` — Human-readable rationale + pressure calculation.
 
 ## Example
@@ -29,10 +29,10 @@ Input
 
 Output (plan.json highlights)
   features:
-    - name: Auth        classification: KEEP   status: implemented
-    - name: Notes CRUD  classification: KEEP   status: half-implemented
-    - name: Search      classification: CUT    status: unimplemented
-    - name: Dark mode   classification: DEFER  status: unimplemented
+    - name: Auth        classification: KEEP   status: implemented  passes: false
+    - name: Notes CRUD  classification: KEEP   status: half-implemented  passes: false
+    - name: Search      classification: CUT    status: unimplemented  passes: false
+    - name: Dark mode   classification: DEFER  status: unimplemented  passes: false
   demo_path:  [Open app, Click Sign Up, Save a note, See it appear]
   next_tasks: [Finish Notes CRUD (P0, 90m), Polish Auth (P1, 30m)]
 ```
@@ -54,6 +54,7 @@ Output (plan.json highlights)
 - [ ] Refuses to mark every feature as KEEP.
 - [ ] CUT rate meets the pressure threshold for the remaining time.
 - [ ] plan.json validates against plan.schema.json.
+- [ ] Every KEEP feature starts `passes: false` with at least one acceptance criterion.
 
 ## Failure modes
 

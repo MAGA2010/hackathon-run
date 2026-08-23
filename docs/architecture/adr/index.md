@@ -16,6 +16,7 @@ significant architectural choice, its context, and its consequences.
 | [0009](0009-skill-format-v2.md)            | Skill Format v2 — first-class metadata for discovery                                         | Accepted |
 | [0010](0010-v110-chain-pin-embed.md)       | v1.1 chain execution + per-skill pin + pluggable embedding backend                           | Accepted |
 | [0011](0011-v120-skill-manifest.md)        | v1.2 third-party skill manifest (author, license, homepage, repository, compatibility)       | Accepted |
+| [0012](0012-v130-harness-primitives.md)    | v1.3 harness primitives: default-FAIL, session, sprint, trace, role prompts                  | Accepted |
 
 ## Adding a new ADR
 

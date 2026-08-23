@@ -7,8 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Harness primitives (P0/P1/P2)** — `plan.json` features now carry
+  `passes`, `acceptance_criteria`, `evidence`, `sprint`, and `owner`;
+  `scope-knife` writes every feature as default-FAIL.
+- **`hackathon resume`** — prints a compact handoff brief from
+  `.hackathon/state/session.json` so a fresh agent can continue work without
+  the previous conversation.
+- **`hackathon sprint`** — contract lifecycle commands:
+  `new`, `approve`, `review`, `status`, `budget`.
+- **`hackathon trace`** — reads the append-only `.hackathon/traces/events.jsonl`
+  harness event log.
+- **MCP tools** — `resume`, `sprint_new`, `sprint_review`, and `trace` are
+  now available over JSON-RPC for Codex / Claude / MCP clients.
+- **Planner / Generator / Evaluator role prompts** in `agents/`, plus role and
+  harness metadata in `agents/openai.yaml`.
+- **`scripts/harness-ab.mjs`** — compares solo-agent vs harness runs by wall
+  time, exit code, and output size; wired as `npm run ab:harness`.
+
+### Changed
+
+- `plan.schema.json` accepts the default-FAIL contract fields; existing plans
+  without them remain valid for backward compatibility.
+- `hackathon init` seeds `session.json`, `SESSION.md`, and `.hackathon/traces/`.
+- `hackathon run`, `hackathon flow --execute`, and `hackathon report` now
+  record or surface harness trace events.
+- `hackathon flow` exposes `traceCount` in its JSON plan.
+
 ### Fixed
 
+- Acceptance scripts now use `$PY` for inline Python assertions, so
+  `PYTHON=/path/to/python` works on Windows and other PATH setups.
 - `hackathon run`, `list`, `skills lint`, and skill matching now discover skills under `.hackathon/skills/` after `hackathon init`, with `skills/` still taking precedence in the source tree.
 - JSON schema resolution now falls back to the bundled package `src/state/schemas/`, so `hackathon run --apply`, `readState`, and `validate-skill` work in projects that do not contain their own schema tree.
 - `hackathon flow` now resolves scripts from the active skill directory and executes them with `python3`/`python` arguments instead of hardcoded `skills/` paths and `sh -c`.

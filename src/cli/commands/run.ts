@@ -26,6 +26,7 @@
 
 import { loadAllSkills } from '../../harness/loader.js';
 import { writeState } from '../../harness/state.js';
+import { appendTrace } from '../../harness/trace.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
 
@@ -271,6 +272,13 @@ export function runSkill(opts: RunOptions): number {
     log.err(`run ${c.cyan('hackathon list')} to see bundled skills`);
     return 2;
   }
+  appendTrace(cwd, {
+    type: 'skill.invoke',
+    actor: 'cli',
+    skill: opts.skillName,
+    status: 'ok',
+    summary: `Invoked skill ${opts.skillName}`,
+  });
   if (!opts.noBanner) {
     console.log(`# Skill: ${skill.frontmatter.name}`);
     console.log(`# Trigger budget: ${skill.triggerBudget}/1536`);
@@ -303,6 +311,13 @@ export function runSkill(opts: RunOptions): number {
       );
     }
   } catch (e) {
+    appendTrace(cwd, {
+      type: 'skill.error',
+      actor: 'cli',
+      skill: opts.skillName,
+      status: 'error',
+      summary: `Skill ${opts.skillName} failed to apply state: ${(e as Error).message}`,
+    });
     log.err(`failed to write ${target}: ${(e as Error).message}`);
     return 1;
   }

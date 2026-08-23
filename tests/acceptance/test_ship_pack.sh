@@ -55,7 +55,7 @@ section "Acceptance: clean repo yields clean=true"
 "$PY" "$ROOT/skills/ship-pack/scripts/audit.py" --repo-root "$REPO_A" --out-dir "$REPO_A/.hackathon" >/dev/null
 JSON_A="$REPO_A/.hackathon/state/ship.json"
 JSON_A_WIN="$(win "$JSON_A")"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$JSON_A_WIN'))
 assert d['secret_scan']['clean'] is True
@@ -69,7 +69,7 @@ if "$PY" "$ROOT/skills/ship-pack/scripts/audit.py" --repo-root "$REPO_B" --out-d
 fi
 JSON_B="$REPO_B/.hackathon/state/ship.json"
 JSON_B_WIN="$(win "$JSON_B")"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$JSON_B_WIN'))
 assert d['secret_scan']['clean'] is False
@@ -78,7 +78,7 @@ assert len(d['secret_scan']['findings']) >= 1
 pass "leaky repo -> clean=false, exit != 0"
 
 section "Acceptance: README checks mark sections present"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$JSON_A_WIN'))
 present = set(d['readme']['present'])
@@ -92,7 +92,7 @@ assert 'stack' in present
 pass "all README sections detected"
 
 section "Acceptance: checklist has passed and failed entries"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$JSON_A_WIN'))
 assert 'passed' in d['checklist'] and 'failed' in d['checklist']
@@ -101,7 +101,7 @@ assert 'readme' in d['checklist']['passed']
 pass "checklist split into passed/failed"
 
 section "Acceptance: packaging command excludes secrets"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$JSON_A_WIN'))
 cmd = d['packaging_command']
@@ -115,7 +115,7 @@ section "Acceptance: webhook failure is non-fatal"
 HACKATHON_SHIP_WEBHOOK="http://127.0.0.1:1" \
     "$PY" "$ROOT/skills/ship-pack/scripts/audit.py" --repo-root "$REPO_A" --out-dir "$REPO_A/.hackathon" >/dev/null 2>/dev/null
 test -f "$JSON_A" || fail "ship.json missing after webhook failure"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$JSON_A_WIN'))
 assert d['secret_scan']['clean'] is True

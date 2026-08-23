@@ -46,16 +46,20 @@ describe('MCP server', () => {
     assert.equal(res[0].result.serverInfo.name, 'hackathon-run');
   });
 
-  it('responds to tools/list with 14 tools', async () => {
+  it('responds to tools/list with 18 tools', async () => {
     const res = await call({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
     assert.equal(res.length, 1);
     const tools = res[0].result.tools;
-    assert.equal(tools.length, 14);
+    assert.equal(tools.length, 18);
     const names = tools.map((t) => t.name);
     assert.ok(names.includes('list_skills'));
     assert.ok(names.includes('get_skill'));
     assert.ok(names.includes('match_skill'));
     assert.ok(names.includes('status'));
+    assert.ok(names.includes('resume'));
+    assert.ok(names.includes('sprint_new'));
+    assert.ok(names.includes('sprint_review'));
+    assert.ok(names.includes('trace'));
     assert.ok(names.includes('replay'));
     assert.ok(names.includes('report'));
     assert.ok(names.includes('skills_pin'));
@@ -251,6 +255,50 @@ describe('MCP server', () => {
       assert.ok(existsSync(payload.wrote));
       const written = JSON.parse(readFileSync(payload.wrote, 'utf8'));
       assert.equal(written.demo_goal, 'test');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('resume returns a handoff payload over MCP', async () => {
+    const { mkdtempSync, mkdirSync, rmSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'hs-mcp-resume-'));
+    try {
+      mkdirSync(join(dir, '.hackathon', 'state'), { recursive: true });
+      const res = await call({
+        jsonrpc: '2.0',
+        id: 14,
+        method: 'tools/call',
+        params: { name: 'resume', arguments: { cwd: dir } },
+      });
+      const payload = JSON.parse(res[0].result.content[0].text);
+      assert.equal(payload.exitCode, 0);
+      assert.ok(payload.session);
+      assert.equal(payload.session.current_stage, 'planning');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('trace returns an event log payload over MCP', async () => {
+    const { mkdtempSync, mkdirSync, rmSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'hs-mcp-trace-'));
+    try {
+      mkdirSync(join(dir, '.hackathon', 'state'), { recursive: true });
+      const res = await call({
+        jsonrpc: '2.0',
+        id: 15,
+        method: 'tools/call',
+        params: { name: 'trace', arguments: { cwd: dir } },
+      });
+      const payload = JSON.parse(res[0].result.content[0].text);
+      assert.equal(payload.exitCode, 0);
+      assert.equal(payload.total, 0);
+      assert.deepEqual(payload.events, []);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

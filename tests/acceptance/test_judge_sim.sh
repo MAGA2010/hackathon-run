@@ -30,7 +30,7 @@ OUT="$BASH_TMP/repo/.hackathon"
 "$PY" "$ROOT/skills/judge-sim/scripts/score.py" --repo-root "$REPO" --out-dir "$OUT" >/dev/null
 REVIEW="$OUT/state/review.json"
 REVIEW_WIN="$(win "$REVIEW")"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$REVIEW_WIN'))
 assert len(d['dimensions']) == 7, len(d['dimensions'])
@@ -40,7 +40,7 @@ for x in d['dimensions']:
 pass "7 dimensions scored 0-5"
 
 section "Acceptance: deduction_reason present per dimension"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$REVIEW_WIN'))
 for x in d['dimensions']:
@@ -49,7 +49,7 @@ for x in d['dimensions']:
 pass "deduction_reason non-empty"
 
 section "Acceptance: improvement suggestions per dimension"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$REVIEW_WIN'))
 for x in d['dimensions']:
@@ -58,7 +58,7 @@ for x in d['dimensions']:
 pass "improvements array non-empty"
 
 section "Acceptance: fix priorities bucketed"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$REVIEW_WIN'))
 fp = d['fix_priorities']
@@ -73,7 +73,7 @@ VERIFY="$OUT/state/verify.json"
 mkdir -p "$OUT/state"
 echo '{"version":"1.0","started_at":"2025-01-01T00:00:00Z","status":"fail","steps":[]}' > "$VERIFY"
 "$PY" "$ROOT/skills/judge-sim/scripts/score.py" --repo-root "$REPO" --out-dir "$OUT" >/dev/null
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$REVIEW_WIN'))
 assert d['verify_was_failing'] is True
@@ -83,7 +83,7 @@ for x in d['dimensions']:
 pass "all dimensions capped at 3 with failing verify"
 
 section "Acceptance: outputs single overall score"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$REVIEW_WIN'))
 overall = d['overall']
@@ -95,7 +95,7 @@ pass "overall is mean of dimensions"
 section "Acceptance: LLM judge backend falls back when unreachable"
 HACKATHON_JUDGE_BACKEND="http://127.0.0.1:1" \
     "$PY" "$ROOT/skills/judge-sim/scripts/score.py" --repo-root "$REPO" --out-dir "$OUT" >/dev/null 2>/dev/null
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$REVIEW_WIN'))
 assert d['judge_source'] == 'heuristic-fallback', d['judge_source']

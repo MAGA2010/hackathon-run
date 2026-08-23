@@ -42,6 +42,11 @@ const validPlan = () => ({
       classification: 'KEEP',
       rationale: 'core',
       time_estimate_minutes: 30,
+      passes: false,
+      acceptance_criteria: ['f1 works end-to-end on the demo path'],
+      evidence: [],
+      sprint: 'sprint-1',
+      owner: 'builder',
     },
     {
       name: 'f2',

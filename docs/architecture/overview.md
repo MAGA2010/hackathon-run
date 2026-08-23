@@ -55,6 +55,19 @@ read it but never require it. This is **cooperative, not blocking** —
 Every state file is validated against a published JSON Schema in
 `src/state/schemas/`.
 
+## Harness state
+
+The harness layer adds three state artifacts:
+
+- `session.json` — the compact handoff brief a fresh agent reads to resume work.
+- `sprint.json` — the agreed definition of done for the current feature.
+- `eval.json` — the evaluator's evidence-backed verdict and feedback.
+
+`plan.json` is the default-FAIL contract: every KEEP feature starts with
+`passes: false`, and only evidence-backed evaluation can flip it. All
+harness actions are appended to `.hackathon/traces/events.jsonl` for replay,
+report, and retrospective analysis.
+
 ## The trigger matcher
 
 When a user says "what should we cut", the agent should reach for
@@ -79,25 +92,28 @@ commands:
 - `hackathon run <skill> [--chain] [--apply]`
 - `hackathon match "<utterance>"`
 - `hackathon init`, `hackathon status`, `hackathon flow`
+- `hackathon resume` — print the handoff brief for a fresh agent
+- `hackathon sprint new|approve|review|status|budget` — contract lifecycle
+- `hackathon trace` — inspect the append-only harness event log
 - `hackathon doctor`, `hackathon validate`, `hackathon validate-skill`
 - `hackathon replay`, `hackathon report`, `hackathon skills pin`
 - `hackathon mcp` — Model Context Protocol server (`tools/list`, `find_skills`, ...)
 
 ## What's in the repo
 
-| Path                 | Purpose                                                  |
-| -------------------- | -------------------------------------------------------- |
-| `skills/`            | Each skill folder with `SKILL.md` + scripts              |
-| `src/harness/`       | TypeScript harness (loader, frontmatter, trigger, state) |
-| `src/cli/`           | The `hackathon` CLI                                      |
-| `src/mcp/`           | Model Context Protocol server                            |
-| `src/state/schemas/` | Published JSON Schemas for state files                   |
-| `tests/acceptance/`  | One shell test per skill                                 |
-| `tests/integration/` | End-to-end 36h-flow tests                                |
-| `tests/unit/`        | Node test files for harness + CLI + MCP                  |
-| `examples/`          | Six real-style projects with `.hackathon/` artifacts     |
-| `docs/`              | MkDocs site source                                       |
-| `.github/workflows/` | CI, release, docs                                        |
+| Path                 | Purpose                                                                          |
+| -------------------- | -------------------------------------------------------------------------------- |
+| `skills/`            | Each skill folder with `SKILL.md` + scripts                                      |
+| `src/harness/`       | TypeScript harness (loader, frontmatter, trigger, state, session, sprint, trace) |
+| `src/cli/`           | The `hackathon` CLI                                                              |
+| `src/mcp/`           | Model Context Protocol server                                                    |
+| `src/state/schemas/` | Published JSON Schemas for state files                                           |
+| `tests/acceptance/`  | One shell test per skill                                                         |
+| `tests/integration/` | End-to-end 36h-flow tests                                                        |
+| `tests/unit/`        | Node test files for harness + CLI + MCP                                          |
+| `examples/`          | Six real-style projects with `.hackathon/` artifacts                             |
+| `docs/`              | MkDocs site source                                                               |
+| `.github/workflows/` | CI, release, docs                                                                |
 
 ## See also
 

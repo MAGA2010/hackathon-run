@@ -33,6 +33,9 @@ import { loadAllSkills } from '../harness/loader.js';
 import { runSkill, runChain } from './commands/run.js';
 import { replay } from './commands/replay.js';
 import { report } from './commands/report.js';
+import { resume } from './commands/resume.js';
+import { sprint } from './commands/sprint.js';
+import { trace } from './commands/trace.js';
 import { skills } from './commands/skills.js';
 import { search as skillsSearch } from './commands/skills-search.js';
 import { graph as skillsGraph } from './commands/skills-graph.js';
@@ -133,6 +136,90 @@ program
   .option('--json', 'machine-readable JSON output')
   .option('-C, --cwd <path>', 'use a different working directory', process.cwd())
   .action((opts) => process.exit(status({ cwd: opts.cwd, json: Boolean(opts.json) })));
+
+program
+  .command('resume')
+  .description('Print the handoff brief a fresh agent needs to continue work')
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts) => process.exit(resume({ cwd: opts.cwd, json: Boolean(opts.json) })));
+
+const sprintCmd = program
+  .command('sprint')
+  .description('Manage the active sprint contract (new / approve / review / status / budget)');
+
+sprintCmd
+  .command('new')
+  .description('Create a default-FAIL sprint contract from plan.json')
+  .option('--name <name>', 'sprint name')
+  .option('--goal <goal>', 'sprint goal')
+  .option('--feature <name>', 'feature name from plan.json')
+  .option('--minutes <n>', 'time budget in minutes', parseInt)
+  .option('--max-iterations <n>', 'generator/evaluator iteration cap', parseInt)
+  .option('-f, --force', 'overwrite an existing active sprint')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts) =>
+    process.exit(
+      sprint({
+        subcommand: 'new',
+        name: opts.name,
+        goal: opts.goal,
+        feature: opts.feature,
+        minutes: opts.minutes,
+        maxIterations: opts.maxIterations,
+        force: opts.force,
+        cwd: opts.cwd,
+      }),
+    ),
+  );
+
+sprintCmd
+  .command('approve')
+  .description('Approve the sprint contract before the generator starts')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts) => process.exit(sprint({ subcommand: 'approve', cwd: opts.cwd })));
+
+sprintCmd
+  .command('review')
+  .description('Emit the evaluator handoff and eval.json skeleton')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts) => process.exit(sprint({ subcommand: 'review', cwd: opts.cwd })));
+
+sprintCmd
+  .command('status')
+  .description('Show the active sprint contract')
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts) =>
+    process.exit(sprint({ subcommand: 'status', cwd: opts.cwd, json: Boolean(opts.json) })),
+  );
+
+sprintCmd
+  .command('budget')
+  .description('Set time and iteration gates on the active sprint')
+  .option('--minutes <n>', 'time budget in minutes', parseInt)
+  .option('--max-iterations <n>', 'iteration cap', parseInt)
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts) =>
+    process.exit(
+      sprint({
+        subcommand: 'budget',
+        minutes: opts.minutes,
+        maxIterations: opts.maxIterations,
+        cwd: opts.cwd,
+      }),
+    ),
+  );
+
+program
+  .command('trace')
+  .description('Inspect the append-only harness event log')
+  .option('--json', 'machine-readable JSON output')
+  .option('--last <n>', 'only show the last N events', parseInt)
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts) =>
+    process.exit(trace({ cwd: opts.cwd, json: Boolean(opts.json), last: opts.last })),
+  );
 
 program
   .command('validate-skill <dir>')

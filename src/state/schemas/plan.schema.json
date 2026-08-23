@@ -55,6 +55,46 @@
           "time_estimate_minutes": {
             "type": "integer",
             "minimum": 0
+          },
+          "passes": {
+            "type": "boolean",
+            "default": false,
+            "description": "Default-FAIL contract: false until an evaluator flips it with evidence."
+          },
+          "acceptance_criteria": {
+            "type": "array",
+            "description": "Verifiable criteria that must all pass before this feature is done.",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "evidence": {
+            "type": "array",
+            "description": "Machine-checkable evidence collected by fast-verify or the evaluator.",
+            "items": {
+              "type": "object",
+              "required": ["kind", "value"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "enum": ["command", "url", "test", "browser", "manual", "log"],
+                  "description": "How the evidence was produced."
+                },
+                "value": { "type": "string", "minLength": 1 },
+                "at": { "type": "string", "format": "date-time" }
+              }
+            }
+          },
+          "sprint": {
+            "type": ["string", "null"],
+            "description": "Sprint contract that owns this feature, or null before one is created."
+          },
+          "owner": {
+            "type": "string",
+            "description": "Agent or person accountable for the feature."
+          },
+          "last_verified_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the evaluator last produced evidence for this feature."
           }
         }
       }
@@ -101,28 +141,38 @@
           "status": "implemented",
           "classification": "KEEP",
           "rationale": "Core demo path.",
-          "time_estimate_minutes": 30
+          "time_estimate_minutes": 30,
+          "passes": false,
+          "acceptance_criteria": ["A user can sign up and the app renders the dashboard."],
+          "evidence": []
         },
         {
           "name": "Notes CRUD",
           "status": "half-implemented",
           "classification": "KEEP",
           "rationale": "Core demo path.",
-          "time_estimate_minutes": 90
+          "time_estimate_minutes": 90,
+          "passes": false,
+          "acceptance_criteria": ["A user can create, read, update, and delete a note."],
+          "evidence": []
         },
         {
           "name": "Search",
           "status": "unimplemented",
           "classification": "CUT",
           "rationale": "Off demo path.",
-          "time_estimate_minutes": 120
+          "time_estimate_minutes": 120,
+          "passes": false,
+          "acceptance_criteria": []
         },
         {
           "name": "Dark mode",
           "status": "unimplemented",
           "classification": "DEFER",
           "rationale": "Polish, not critical.",
-          "time_estimate_minutes": 60
+          "time_estimate_minutes": 60,
+          "passes": false,
+          "acceptance_criteria": []
         }
       ],
       "demo_path": [

@@ -5,6 +5,12 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 
 ## Shipped
 
+- [x] **Harness primitives v1.3** — default-FAIL plan contract, session handoff, sprint contracts, evaluator handoff, append-only trace, budget gates, and a harness A/B measurement script
+- [x] **`hackathon resume`** — fresh-agent handoff brief from `.hackathon/state/session.json`
+- [x] **`hackathon sprint`** — `new / approve / review / status / budget` contract lifecycle
+- [x] **`hackathon trace`** — inspect `.hackathon/traces/events.jsonl`
+- [x] **MCP tools** — `resume`, `sprint_new`, `sprint_review`, `trace` over JSON-RPC
+- [x] **Planner / Generator / Evaluator role prompts** under `agents/`
 - [x] Skill matcher v2 (bigram + phrase + action-verb scoring)
 - [x] `hackathon status` / `doctor` / `flow` CLI commands
 - [x] Unit-test suite via Node's built-in `node:test` runner
@@ -59,6 +65,11 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 ## Now (1.2.x)
 
 - [ ] **Re-enable GitHub Pages deployment** — `docs.yml` build step is green; the deploy step needs Pages enabled in repo settings (Source: GitHub Actions).
+
+## Later (1.3.x)
+
+- [ ] Wire sprint review into `fast-verify` so evaluator evidence can automatically update `plan.features[].passes` after a hard pass.
+- [ ] Add a typed LLM judge protocol for `HACKATHON_JUDGE_BACKEND` and use it for evaluator scoring.
 
 ## Later (0.7+)
 

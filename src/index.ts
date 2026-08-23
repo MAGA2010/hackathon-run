@@ -11,3 +11,20 @@ export { loadAllSkills, loadSkill, findSkillDirs } from './harness/loader.js';
 export { parseFrontmatter, enforceTriggerBudget, TRIGGER_BUDGET } from './harness/frontmatter.js';
 export { matchSkill } from './harness/trigger.js';
 export { readState, writeState } from './harness/state.js';
+export {
+  defaultSession,
+  readSession,
+  writeSession,
+  updateSession,
+  sessionPath,
+} from './harness/session.js';
+export {
+  defaultSprint,
+  readSprint,
+  writeSprint,
+  updateSprint,
+  sprintFromPlan,
+  nextUnpassedFeature,
+  enforceSprintBudget,
+} from './harness/sprint.js';
+export { appendTrace, readTraces, traceStats, traceFile } from './harness/trace.js';

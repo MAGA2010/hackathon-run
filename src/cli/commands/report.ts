@@ -16,6 +16,7 @@ import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join, resolve, basename, extname } from 'node:path';
 
 import { collectTimeline } from './replay.js';
+import { readTraces } from '../../harness/trace.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
 
@@ -47,6 +48,7 @@ function renderMarkdown(
   stateDir: string,
   files: string[],
   data: Map<string, Record<string, any>>,
+  traceEvents: ReturnType<typeof readTraces>,
 ): string {
   const lines: string[] = [];
   const plan = data.get('plan.json');
@@ -96,6 +98,20 @@ function renderMarkdown(
 
   lines.push('## Timeline');
   lines.push('');
+
+  if (traceEvents.length > 0) {
+    const byType = traceEvents.reduce<Record<string, number>>((acc, e) => {
+      acc[e.type] = (acc[e.type] ?? 0) + 1;
+      return acc;
+    }, {});
+    lines.push('## Harness trace');
+    lines.push('');
+    lines.push(`- **Events:** ${traceEvents.length}`);
+    for (const [type, count] of Object.entries(byType)) {
+      lines.push(`- \`${type}\`: ${count}`);
+    }
+    lines.push('');
+  }
   lines.push('| T+ | File | Highlight |');
   lines.push('| --- | --- | --- |');
   const sorted = [...data.entries()].sort((a, b) => {
@@ -307,6 +323,7 @@ export function report(opts: ReportOptions): number {
     .filter((f) => f.endsWith('.json'))
     .sort();
   const data = new Map<string, Record<string, any>>();
+  const traceEvents = readTraces(cwd);
   for (const f of files) {
     const json = safeJson(join(stateDir, f));
     if (json) data.set(f, json);
@@ -319,12 +336,16 @@ export function report(opts: ReportOptions): number {
       generated_at: new Date().toISOString(),
       verdict: verdictOf(data),
       states: Object.fromEntries(data),
+      trace: {
+        count: traceEvents.length,
+        events: traceEvents.slice(-100),
+      },
     };
     console.log(JSON.stringify(payload, null, 2));
     return 0;
   }
 
-  const markdown = renderMarkdown(cwd, stateDir, files, data);
+  const markdown = renderMarkdown(cwd, stateDir, files, data, traceEvents);
   if (opts.out) {
     const target = resolve(opts.out);
     writeFileSync(target, markdown, 'utf8');

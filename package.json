@@ -32,6 +32,7 @@
     "test:coverage": "npm run build --silent && node scripts/run-unit-tests.mjs --coverage",
     "validate": "npm run build --silent && node dist/cli/index.js validate",
     "dogfood": "node scripts/run-sh.mjs scripts/dogfood.sh",
+    "ab:harness": "node scripts/harness-ab.mjs",
     "release": "node scripts/run-sh.mjs scripts/release.sh",
     "mcp": "node dist/mcp/server.js"
   },

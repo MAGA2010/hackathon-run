@@ -31,6 +31,9 @@ import { status } from '../cli/commands/status.js';
 import { validateSkill } from '../cli/commands/validate-skill.js';
 import { replay } from '../cli/commands/replay.js';
 import { report } from '../cli/commands/report.js';
+import { resume } from '../cli/commands/resume.js';
+import { sprint } from '../cli/commands/sprint.js';
+import { trace } from '../cli/commands/trace.js';
 import { runChain } from '../cli/commands/run.js';
 import { skills as skillsCommand } from '../cli/commands/skills.js';
 
@@ -117,6 +120,56 @@ const TOOLS: ToolDef[] = [
     inputSchema: {
       type: 'object',
       properties: { cwd: { type: 'string', description: 'repo root; defaults to CWD' } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'resume',
+    description:
+      'Read the harness handoff brief from session.json and return the compact state a fresh agent needs to continue.',
+    inputSchema: {
+      type: 'object',
+      properties: { cwd: { type: 'string', description: 'repo root; defaults to CWD' } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'sprint_new',
+    description:
+      'Create a default-FAIL sprint contract from the first unpassed KEEP feature in plan.json.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        feature: { type: 'string', description: 'feature name from plan.json' },
+        name: { type: 'string', description: 'sprint name' },
+        goal: { type: 'string', description: 'sprint goal' },
+        minutes: { type: 'number', description: 'time budget in minutes' },
+        max_iterations: { type: 'number', description: 'iteration cap' },
+        force: { type: 'boolean', description: 'overwrite an existing active sprint' },
+        cwd: { type: 'string', description: 'repo root; defaults to CWD' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'sprint_review',
+    description:
+      'Emit the read-only evaluator handoff for the active sprint and write the eval.json skeleton.',
+    inputSchema: {
+      type: 'object',
+      properties: { cwd: { type: 'string', description: 'repo root; defaults to CWD' } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'trace',
+    description: 'Read the append-only harness event log at .hackathon/traces/events.jsonl.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        cwd: { type: 'string', description: 'repo root; defaults to CWD' },
+        last: { type: 'number', description: 'only return the last N events' },
+      },
       additionalProperties: false,
     },
   },
@@ -371,6 +424,37 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
       } finally {
         console.log = orig;
       }
+    }
+    case 'resume': {
+      return captureJsonCommand(() => resume({ cwd: String(args.cwd ?? cwd), json: true }));
+    }
+    case 'sprint_new': {
+      return captureJsonCommand(() =>
+        sprint({
+          subcommand: 'new',
+          cwd: String(args.cwd ?? cwd),
+          feature: args.feature ? String(args.feature) : undefined,
+          name: args.name ? String(args.name) : undefined,
+          goal: args.goal ? String(args.goal) : undefined,
+          minutes: args.minutes != null ? Number(args.minutes) : undefined,
+          maxIterations: args.max_iterations != null ? Number(args.max_iterations) : undefined,
+          force: Boolean(args.force),
+        }),
+      );
+    }
+    case 'sprint_review': {
+      return captureJsonCommand(() =>
+        sprint({ subcommand: 'review', cwd: String(args.cwd ?? cwd) }),
+      );
+    }
+    case 'trace': {
+      return captureJsonCommand(() =>
+        trace({
+          cwd: String(args.cwd ?? cwd),
+          json: true,
+          last: args.last != null ? Number(args.last) : undefined,
+        }),
+      );
     }
     case 'validate_skill': {
       const target = String(args.target ?? '');

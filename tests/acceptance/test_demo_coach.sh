@@ -35,7 +35,7 @@ for d in 30 60 90; do
   out_dir=$(run_coach "$d")
   json_path="$out_dir/state/demo.json"
   json_win="$(win "$json_path")"
-  python3 -c "
+  "$PY" -c "
 import json
 d = json.load(open(r'$json_win'))
 budget = {30: 30, 60: 60, 90: 90}[$d]
@@ -49,7 +49,7 @@ section "Acceptance: each step has SAY/CLICK/SHOW/NOT"
 out_dir=$(run_coach 60)
 json_path="$out_dir/state/demo.json"
   json_win="$(win "$json_path")"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$json_win'))
 for s in d['steps']:
@@ -59,7 +59,7 @@ for s in d['steps']:
 pass "every step has SAY/CLICK/SHOW/NOT"
 
 section "Acceptance: emits 6 canonical steps in order"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$json_win'))
 names = [s['name'] for s in d['steps']]
@@ -68,7 +68,7 @@ assert names == ['opening','pain','product','core_action','result','close'], nam
 pass "6 canonical steps in order"
 
 section "Acceptance: one-liner is <= 21 words"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$json_win'))
 n = len(d['one_liner'].split())
@@ -77,7 +77,7 @@ assert n <= 21, f'one-liner too long: {n} words'
 pass "one-liner length bounded"
 
 section "Acceptance: risks array present on every step"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$json_win'))
 for s in d['steps']:

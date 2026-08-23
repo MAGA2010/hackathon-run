@@ -35,7 +35,7 @@ section "Acceptance: 30-second script fits within 30s + 5s slack"
 for sev in P0 P1 P2 P3; do
   md="$OUT/$sev/artifacts/recovery-runbook.md"
   md_win="$(win "$md")"
-  python3 -c "
+  "$PY" -c "
 import re, sys
 text = open(r'$md_win').read()
 m = re.search(r'Total: (\d+)s', text)
@@ -66,7 +66,7 @@ pass "no-live-debugging rule honored"
 section "Acceptance: recovery.json is valid JSON"
 REC="$OUT/P0/state/recovery.json"
 REC_WIN="$(win "$REC")"
-python3 -c "
+"$PY" -c "
 import json
 d = json.load(open(r'$REC_WIN'))
 assert d['severity'] == 'P0'

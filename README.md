@@ -71,6 +71,80 @@ Each skill is **independently invokable**. You can run any of them at any time w
 
 ---
 
+## Agent workflow
+
+Hackathon Run works best when an agent treats it as a **harness**, not as a
+menu of one-shot prompts. Three roles keep work moving without letting the
+same agent both build and approve its own output:
+
+```mermaid
+flowchart LR
+  Brief[User brief] --> Planner[Planner]
+  Planner --> Plan[(plan.json\ndefault-FAIL)]
+  Session[(session.json)] --> Generator[Generator]
+  Plan --> Generator
+  Generator --> Sprint[(sprint.json)]
+  Sprint --> Evaluator[Evaluator]
+  Evaluator --> Eval[(eval.json)]
+  Eval -->|fail + feedback| Generator
+  Eval -->|pass| Verify[fast-verify]
+  Verify --> Demo[demo-coach]
+  Demo --> Judge[judge-sim]
+  Judge --> Ship[ship-pack]
+  Trace[(events.jsonl)] --> Replay[replay / report]
+```
+
+| Role          | Responsibility                                                                                               | Must not do                                                      |
+| ------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| **Planner**   | Expand a short brief into a concrete demo goal, KEEP/CUT/DEFER list, and demo path.                          | Write implementation details or mark features as passing.        |
+| **Generator** | Resume from `session.json`, pick one unpassed KEEP feature, agree a sprint contract, and build it.           | Set `passes: true` or approve its own work.                      |
+| **Evaluator** | Read only. Run the app like a user, collect machine-checkable evidence, and return a hard pass/fail verdict. | Edit code or state, lower a threshold, or pass without evidence. |
+
+The harness runtime turns those roles into durable artifacts:
+
+- `plan.json` is a **default-FAIL contract**. Every KEEP feature starts with
+  `passes: false`; only evidence-backed evaluation can flip it.
+- `session.json` is the **handoff**. A fresh agent reads it to resume work
+  without replaying the previous conversation.
+- `sprint.json` is the **definition of done**. The generator and evaluator
+  agree on criteria before code is written.
+- `eval.json` is the **evaluator verdict**. Failed criteria return actionable
+  feedback to the generator for the next iteration.
+- `events.jsonl` is the **append-only trace**. `hackathon trace`, `replay`,
+  and `report` reconstruct what actually happened.
+
+```bash
+# One complete agent loop
+hackathon init
+hackathon run scope-knife --demo-goal "sign up + save note" --time-remaining 240 --apply
+hackathon resume
+hackathon sprint new --feature Auth
+hackathon sprint approve
+
+# Generator builds Auth against the contract, then:
+hackathon sprint review
+
+# Evaluator fills .hackathon/state/eval.json with evidence and feedback, then:
+hackathon trace
+hackathon flow --execute
+```
+
+Cost and time are first-class gates. Set them when creating a sprint:
+
+```bash
+hackathon sprint budget --minutes 45 --max-iterations 3
+```
+
+Run an A/B measurement before adding more harness machinery:
+
+```bash
+npm run ab:harness -- \
+  --solo-command "hackathon run scope-knife" \
+  --harness-command "hackathon flow --execute"
+```
+
+---
+
 ## 30-second quickstart
 
 ```bash
@@ -101,6 +175,7 @@ hackathon run fast-verify # verifies the demo path
 hackathon run demo-coach # drafts the pitch
 hackathon run judge-sim # self-reviews before submitting
 hackathon run ship-pack # packages and checks for leaks
+hackathon resume # handoff brief for a fresh agent or new session
 
 # Chained run: follows Format v2 dependencies automatically
 hackathon run demo-rehearsal --chain # scope-knife -> fast-verify -> demo-coach -> demo-rehearsal

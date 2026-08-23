@@ -23,6 +23,7 @@ import { createInterface } from 'node:readline';
 import { log } from '../lib/logger.js';
 import { findPackageRoot } from '../../harness/package-root.js';
 import { buildSkeleton } from './run.js';
+import { defaultSession, writeSession } from '../../harness/session.js';
 
 function copyDirSync(src: string, dst: string): void {
   mkdirSync(dst, { recursive: true });
@@ -57,6 +58,7 @@ async function confirm(message: string): Promise<boolean> {
 
 export async function init(opts: InitOptions): Promise<number> {
   const target = resolve(opts.cwd, '.hackathon');
+  const root = resolve(opts.cwd);
 
   // Banner first — show what we will do before any side effect.
   log.bold('hackathon init');
@@ -93,6 +95,7 @@ export async function init(opts: InitOptions): Promise<number> {
 
   mkdirSync(join(target, 'state'), { recursive: true });
   mkdirSync(join(target, 'artifacts'), { recursive: true });
+  mkdirSync(join(target, 'traces'), { recursive: true });
 
   // Copy bundled skills if available.
   const skillsSrc = PACKAGE_ROOT ? join(PACKAGE_ROOT, 'skills') : null;
@@ -114,6 +117,31 @@ export async function init(opts: InitOptions): Promise<number> {
   }
   log.ok(`seeded ${STATE_FILES.length} state files`);
 
+  const session = defaultSession(root);
+  writeSession(root, session);
+  writeFileSync(
+    join(target, 'SESSION.md'),
+    [
+      '# Hackathon Run Session',
+      '',
+      `Generated: ${session.generated_at}`,
+      '',
+      '## Current stage',
+      '',
+      session.current_stage,
+      '',
+      '## Next task',
+      '',
+      session.next_task,
+      '',
+      '## Handoff rule',
+      '',
+      'A fresh agent should read SESSION.md, state/plan.json, and state/session.json before doing anything.',
+      '',
+    ].join('\n'),
+    'utf8',
+  );
+
   // Drop a marker.
   writeFileSync(
     join(target, 'INIT_NOTE.txt'),
@@ -121,6 +149,6 @@ export async function init(opts: InitOptions): Promise<number> {
   );
 
   log.ok(`.hackathon/ initialized at ${target}`);
-  log.dim('Next: hackathon run scope-knife');
+  log.dim('Next: hackathon run scope-knife, then hackathon resume');
   return 0;
 }

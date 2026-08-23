@@ -32,6 +32,18 @@ skills_root: ./skills
 # hackathon skills search --json.
 metadata:
   format: v2
+  roles:
+    - name: planner
+      prompt_file: ./agents/planner.md
+    - name: generator
+      prompt_file: ./agents/generator.md
+    - name: evaluator
+      prompt_file: ./agents/evaluator.md
+  harness:
+    session_file: .hackathon/state/session.json
+    sprint_file: .hackathon/state/sprint.json
+    eval_file: .hackathon/state/eval.json
+    trace_file: .hackathon/traces/events.jsonl
   supported_frontmatter_extras:
     - version
     - category

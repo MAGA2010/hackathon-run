@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maga2010.github.io/hackathon-run/schemas/session.schema.json",
+  "title": "Harness Session",
+  "description": "Handoff state that lets a fresh agent resume work without reading the previous conversation.",
+  "type": "object",
+  "required": [
+    "version",
+    "generated_at",
+    "current_stage",
+    "next_task",
+    "completed",
+    "blockers",
+    "environment"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": "1.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "updated_at": { "type": "string", "format": "date-time" },
+    "current_stage": { "type": "string", "minLength": 1 },
+    "next_task": { "type": "string", "minLength": 1 },
+    "completed": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "init_command": { "type": "string" },
+        "verify_command": { "type": "string" },
+        "known_issues": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "budget_minutes": { "type": "integer", "minimum": 0 },
+    "max_iterations": { "type": "integer", "minimum": 1 }
+  }
+}

@@ -23,6 +23,8 @@ import { basename, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 import { findSkillDirs } from '../../harness/loader.js';
+import { appendTrace, readTraces } from '../../harness/trace.js';
+import { readSession, updateSession } from '../../harness/session.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
 
@@ -136,6 +138,7 @@ export interface FlowPlan {
   cwd: string;
   initialized: boolean;
   pythonAvailable: boolean;
+  traceCount?: number;
   /** index into STAGES: 0 = nothing done, STAGES.length = everything done */
   cursor: number;
   /** per-stage status */
@@ -206,6 +209,7 @@ export function buildPlan(opts: { cwd: string }): FlowPlan {
     cwd,
     initialized,
     pythonAvailable: python !== null,
+    traceCount: readTraces(cwd).length,
     cursor,
     stages: enriched,
     nextCommand: nextStage?.commands[0] ?? null,
@@ -267,15 +271,44 @@ export function flow(opts: { cwd: string; json?: boolean; execute?: boolean }): 
       for (const step of stage.steps) {
         const display = `${python} ${quoteArg(step.script)} ${step.args.map(quoteArg).join(' ')}`;
         log.info('$ ' + display);
+        appendTrace(plan.cwd, {
+          type: 'flow.stage.start',
+          actor: 'cli',
+          skill: stage.skill,
+          status: 'ok',
+          summary: `Stage ${stage.order} ${stage.skill} started`,
+        });
         const r = spawnSync(python, [step.script, ...step.args], {
           stdio: 'inherit',
           cwd: plan.cwd,
         });
         if (r.status !== 0) {
+          appendTrace(plan.cwd, {
+            type: 'flow.stage.fail',
+            actor: 'cli',
+            skill: stage.skill,
+            status: 'error',
+            summary: `Stage ${stage.skill} failed with exit ${r.status}`,
+          });
           log.err('stage ' + stage.skill + ' failed (exit ' + r.status + ')');
           return r.status ?? 1;
         }
       }
+      appendTrace(plan.cwd, {
+        type: 'flow.stage.done',
+        actor: 'cli',
+        skill: stage.skill,
+        status: 'ok',
+        summary: `Stage ${stage.order} ${stage.skill} completed`,
+      });
+      updateSession(plan.cwd, {
+        current_stage: stage.skill,
+        next_task: `Continue after ${stage.skill}; re-run hackathon resume for the next handoff.`,
+        completed: [
+          ...(readSession(plan.cwd)?.completed ?? []),
+          `${stage.skill} -> ${stage.produces}`,
+        ],
+      });
     }
     console.log();
     console.log(c.green('All stages executed. Re-run to see updated state.'));

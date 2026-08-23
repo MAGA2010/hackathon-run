@@ -219,12 +219,20 @@ def build_next_tasks(classified: list[dict]) -> list[dict]:
 
 
 def serialize_feature(f: dict) -> dict:
-    """Drop internal WSJF fields so plan.json matches plan.schema.json."""
+    """Drop internal WSJF fields and emit the default-FAIL contract shape."""
+    is_keep = f.get("classification") == "KEEP"
     out = {
         "name": f["name"],
         "status": f.get("status", "unimplemented"),
         "classification": f["classification"],
         "rationale": f.get("rationale", "No rationale recorded."),
+        "passes": False,
+        "acceptance_criteria": (
+            [f"{f['name']} completes end-to-end on the demo path."] if is_keep else []
+        ),
+        "evidence": [],
+        "sprint": None,
+        "owner": "",
     }
     if "time_estimate_minutes" in f:
         out["time_estimate_minutes"] = f["time_estimate_minutes"]
@@ -248,6 +256,8 @@ def build_markdown(plan: dict) -> str:
     lines.extend(['', '## Features', '| Feature | Status | Decision | Rationale |', '| --- | --- | --- | --- |'])
     for f in plan['features']:
         lines.append(f"| {f['name']} | {f['status']} | {f['classification']} | {f.get('rationale', '')} |")
+    lines.append('')
+    lines.append('Default-FAIL contract: every feature starts passes=false. Only an evaluator flips it with evidence.')
     lines.extend(['', '## Next tasks'])
     for task in plan['next_tasks']:
         lines.append(f"- [{task['priority']}] {task['task']} (~{task['estimate_minutes']} min)")

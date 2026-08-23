@@ -75,6 +75,11 @@ Hard rules:
 
 Linear sequence: `open URL → trigger core action → see result → understand value`.
 
+Every feature is written to `plan.json` with `passes: false`, `acceptance_criteria`,
+and an empty `evidence` array. This is the **default-FAIL contract**: no feature is
+considered done until an evaluator flips `passes` to `true` with machine-checkable
+evidence. Scope-knife itself never marks a feature passing.
+
 ### 5. Task list
 
 Priorities:
@@ -115,6 +120,7 @@ Files written:
 - [ ] Refuses to mark all features as KEEP.
 - [ ] CUT rate at least meets the pressure threshold for `time_remaining_minutes`.
 - [ ] `plan.json` validates against `plan.schema.json`.
+- [ ] Every KEEP feature starts `passes: false` with at least one acceptance criterion.
 
 ## Failure modes
 

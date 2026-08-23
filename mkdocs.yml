@@ -97,6 +97,9 @@ nav:
       - demo-rehearsal: skills/demo-rehearsal.md
       - team-roster: skills/team-roster.md
       - decision-log: skills/decision-log.md
+      - prize-strategy: skills/prize-strategy.md
+      - dependencies: skills/dependencies.md
+      - state-writes: skills/state-writes.md
   - Architecture:
       - Overview: architecture/overview.md
       - State Schemas: architecture/state-schemas.md

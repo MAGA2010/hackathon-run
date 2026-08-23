@@ -107,38 +107,173 @@ flowchart LR
   Loop -. "trace" .-> Trace[("Trace\nevents / spans")]
 ```
 
-### Command-level harness flow
+### Harness runtime architecture
 
-The same loop implemented by real commands and state artifacts:
+The production agent loop is organized into six layers: interface, context,
+agent loop, hands, durable state, and operator control. Every layer writes to
+or reads from the durable state store so a fresh context window can resume
+without the previous conversation.
 
 ```mermaid
 flowchart TB
-  U([User brief]) --> I["hackathon init\n.hackathon/ + PROGRESS.md"]
-  I --> S["hackathon run scope-knife --apply\nplan.json: P0/P1/P2, default-FAIL"]
-  S --> R["hackathon resume\nsession.json + PROGRESS.md + git log"]
-  R --> C["hackathon sprint new + approve\nsprint.json: criteria + budget + rubric"]
-  C --> B["Generator\nbuild one feature"]
-  B --> CH["hackathon checkpoint\nappend PROGRESS.md"]
-  CH --> RV["hackathon sprint review\neval.json: criteria default false"]
-  RV --> EV{"Evaluator\nrubric + evidence"}
-  EV -->|"pass"| AC["hackathon sprint accept\nplan.json passes=true"]
-  EV -->|"fail + strategy"| FB["session.json\nfeedback + next_action"]
-  FB --> R
-  AC --> Q{"More unpassed\nKEEP features?"}
-  Q -->|"yes"| R
-  Q -->|"no"| D["hackathon flow --execute\nfast-verify -> demo-coach -> judge-sim -> ship-pack"]
-  RV -. "trace" .-> TR[("events.jsonl")]
-  B -. "git commit" .-> GIT[("git log")]
+  classDef state fill:#fff7ed,stroke:#ea580c,color:#7c2d12;
+  classDef gate fill:#eff6ff,stroke:#2563eb,color:#1e3a8a;
+  classDef trace fill:#f0fdf4,stroke:#16a34a,color:#14532d;
+
+  subgraph Interface["Interface Layer"]
+    User(["User / trigger"]) --> InGuard{"Input guardrail\npolicy / budget / schema"}
+    InGuard -->|"reject"| Reject(["Blocked\nrefuse + explain"])
+    InGuard -->|"accept"| ContextAssembly["Context Assembly\nplan + session + skill + progress"]
+  end
+
+  subgraph Context["Context Layer"]
+    Session[("session.json\nhandoff")]
+    Progress[("PROGRESS.md\nagent log")]
+    Git[("git log\ncommit history")]
+    ContextAssembly -. "reads" .-> Session
+    ContextAssembly -. "reads" .-> Progress
+    ContextAssembly -. "reads" .-> Git
+  end
+
+  subgraph Loop["Agent Loop Layer"]
+    ContextAssembly --> LoopGate{"Loop\nbudget / max_iterations"}
+    LoopGate -->|"turn"| Reason["Reason\nchoose action"]
+    Reason --> ToolGate["Tool invocation"]
+    ToolGate --> Observe["Observe\nstdout / files / tests / evidence"]
+    Observe -->|"iterate"| LoopGate
+    LoopGate -->|"final"| OutGuard{"Output guardrail\nJSON Schema / evidence"}
+    OutGuard -->|"reject"| LoopGate
+  end
+
+  subgraph Hands["Hands Layer"]
+    Skills["skills / scripts"]
+    MCP["MCP tools"]
+    Browser["browser automation"]
+    Shell["shell / sandbox"]
+    ToolGate --> Skills
+    ToolGate --> MCP
+    ToolGate --> Browser
+    ToolGate --> Shell
+  end
+
+  subgraph State["Durable State Layer"]
+    Plan[("plan.json\nP0/P1/P2 + default-FAIL")]
+    Sprint[("sprint.json\ncriteria + budget + rubric")]
+    Eval[("eval.json\nscores + strategy")]
+    Trace[("events.jsonl\nappend-only")]
+    OutGuard -->|"accept"| Plan
+    LoopGate -. "write" .-> Sprint
+    LoopGate -. "write" .-> Eval
+    LoopGate -. "trace" .-> Trace
+  end
+
+  subgraph Operator["Operator Layer"]
+    Stop[("AGENT_STOP\nkill switch")]
+    Steer[("STEER.md\none-shot redirect")]
+    Stop -. "halts" .-> LoopGate
+    Steer -. "surfaced once" .-> ContextAssembly
+  end
+
+  class Session,Progress,Git,Plan,Sprint,Eval,Trace state;
+  class InGuard,OutGuard,LoopGate,Stop gate;
+```
+
+### Hackathon Run implementation
+
+The same architecture implemented with real commands, role prompts, and state
+artifacts:
+
+```mermaid
+flowchart TB
+  classDef contract fill:#fff7ed,stroke:#ea580c,color:#1f2937;
+  classDef gate fill:#eff6ff,stroke:#2563eb,color:#1f2937;
+  classDef trace fill:#f0fdf4,stroke:#16a34a,color:#1f2937;
+  classDef failure fill:#fef2f2,stroke:#dc2626,color:#1f2937;
+
+  subgraph First["0. Initializer / First Session"]
+    direction TB
+    Brief(["User brief"]) --> InitCmd["hackathon init"]
+    InitCmd --> ScopeCmd["hackathon run scope-knife --apply"]
+    ScopeCmd --> Plan[("plan.json\nP0/P1/P2 + default-FAIL")]
+    ScopeCmd --> Session[("session.json\nhandoff")]
+    InitCmd --> Progress[("PROGRESS.md\nagent-maintained")]
+    Progress --> Smoke["start app + smoke test\nverify demo path"]
+    Smoke --> FirstCommit["git commit\ninitial setup"]
+  end
+
+  subgraph Orchestration["1. Orchestration / Handoff"]
+    direction TB
+    FirstCommit --> Resume["hackathon resume\npwd -> git log -> PROGRESS.md -> smoke"]
+    Resume --> Route{"Next unpassed\nP0/P1/P2 KEEP feature?"}
+    Route -->|"yes"| Contract["hackathon sprint new --feature X"]
+    Contract --> Approve["hackathon sprint approve"]
+    Approve --> Sprint[("sprint.json\ncriteria + budget + rubric")]
+    Sprint --> Build
+    Route -->|"no"| Pipeline["Delivery pipeline\nfast-verify -> demo-coach -> judge-sim -> ship-pack"]
+  end
+
+  subgraph Generator["2. Generator (generator.md)"]
+    direction TB
+    Build["Read contract + session\nbuild one feature"] --> Self["Self-verify\nlint / tests / smoke"]
+    Self --> Commit["git commit + update session"]
+    Commit --> Checkpoint["hackathon checkpoint\nappend PROGRESS.md"]
+  end
+
+  subgraph Evaluator["3. Evaluator (evaluator.md)"]
+    direction TB
+    Checkpoint --> Review["hackathon sprint review"]
+    Review --> Eval[("eval.json\ncriteria default false")]
+    Eval --> Run["Run app / tests / browser / commands"]
+    Run --> Evidence["Collect machine-checkable evidence"]
+    Evidence --> Rubric{"Score rubric 0-5\nweight + hard threshold"}
+    Rubric --> Verdict{"Every criterion\nmeets threshold?"}
+    Verdict -->|"no"| Feedback["Write feedback + strategy\nto session.json"]
+    Feedback --> Resume
+    Verdict -->|"yes"| Accept["hackathon sprint accept"]
+    Accept --> Plan
+  end
+
+  subgraph Safety["4. Guardrails, Operator Controls & Observability"]
+    direction TB
+    Budget{"Budget gate\nminutes / max-iterations"} -->|"exhausted"| Blocked["sprint blocked\nverdict = blocked"]
+    Schema{"JSON Schema\n+ default-FAIL"} -->|"invalid"| Blocked
+    Stop{"AGENT_STOP?"} -->|"exists"| Blocked
+    Steer[("STEER.md")] -->|"surfaced once"| Resume
+    Blocked --> Session
+    Trace[("events.jsonl\nappend-only")] --> Observe["hackathon trace / replay / report"]
+    Checkpoint -. "trace" .-> Trace
+    Review -. "trace" .-> Trace
+    Accept -. "trace" .-> Trace
+    Pipeline -. "trace" .-> Trace
+  end
+
+  Pipeline --> Ship["Ready to submit"]
+  class Plan,Session,Sprint,Progress,Eval contract;
+  class Budget,Schema,Stop gate;
+  class Trace trace;
+  class Blocked,Feedback failure;
 ```
 
 ### Failure modes to harness gates
 
-| Paper failure mode                              | Harness gate                                    |
-| ----------------------------------------------- | ----------------------------------------------- |
-| Agent tries to one-shot the whole app           | one feature per sprint + default-FAIL           |
-| Agent declares victory before the demo works    | fresh-context evaluator + evidence              |
-| Next session guesses what the previous one did  | `PROGRESS.md` + git log + smoke before building |
-| Unit tests pass but user-visible flow is broken | browser / command evidence + `sprint accept`    |
+Each known long-running-agent failure mode is stopped by a specific gate:
+
+```mermaid
+flowchart LR
+  classDef fail fill:#fef2f2,stroke:#dc2626,color:#1f2937;
+  classDef gate fill:#eff6ff,stroke:#2563eb,color:#1f2937;
+
+  FM1["Failure: agent tries to one-shot\nthe whole app"] --> G1{"Gate:\none feature per sprint\n+ default-FAIL"}
+  FM2["Failure: agent declares victory\nbefore the demo works"] --> G2{"Gate:\nfresh-context evaluator\n+ machine-checkable evidence"}
+  FM3["Failure: next session guesses\nwhat the previous one did"] --> G3{"Gate:\nPROGRESS.md + git log\n+ smoke before building"}
+  FM4["Failure: unit tests pass but\nuser-visible flow is broken"] --> G4{"Gate:\nbrowser / command evidence\n+ sprint accept"}
+  G1 --> Loop(["Next unpassed KEEP feature"])
+  G2 --> Loop
+  G3 --> Loop
+  G4 --> Loop
+  class FM1,FM2,FM3,FM4 fail;
+  class G1,G2,G3,G4 gate;
+```
 
 ### Command timeline
 

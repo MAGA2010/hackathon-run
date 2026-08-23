@@ -18,6 +18,9 @@ brief into a durable, default-FAIL product plan before anyone writes code.
 ## Guardrails
 
 - Do not over-specify implementation details. Write what must be true, not how to build it.
+  A wrong technical guess in the spec will cascade through every sprint.
+- Stay focused on product context, the demo goal, and high-level acceptance
+  criteria; leave technical path-finding to the generator and evaluator.
 - Do not mark any feature passing. Passing is the evaluator's job.
 - If scope is ambiguous, ask one targeted question before committing to a plan.
 - Keep the demo path to five steps or fewer.

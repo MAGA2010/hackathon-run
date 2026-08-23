@@ -46,11 +46,11 @@ describe('MCP server', () => {
     assert.equal(res[0].result.serverInfo.name, 'hackathon-run');
   });
 
-  it('responds to tools/list with 24 tools', async () => {
+  it('responds to tools/list with 25 tools', async () => {
     const res = await call({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
     assert.equal(res.length, 1);
     const tools = res[0].result.tools;
-    assert.equal(tools.length, 24);
+    assert.equal(tools.length, 25);
     const names = tools.map((t) => t.name);
     assert.ok(names.includes('list_skills'));
     assert.ok(names.includes('get_skill'));
@@ -62,6 +62,7 @@ describe('MCP server', () => {
     assert.ok(names.includes('guard_stop'));
     assert.ok(names.includes('guard_clear'));
     assert.ok(names.includes('guard_steer'));
+    assert.ok(names.includes('eval_status'));
     assert.ok(names.includes('sprint_new'));
     assert.ok(names.includes('sprint_review'));
     assert.ok(names.includes('sprint_accept'));
@@ -363,6 +364,51 @@ describe('MCP server', () => {
         params: { name: 'guard_status', arguments: { cwd: dir } },
       });
       assert.equal(JSON.parse(afterRes[0].result.content[0].text).stopped, false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('eval_status returns rubric and strategy over MCP', async () => {
+    const { mkdtempSync, mkdirSync, rmSync, writeFileSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'hs-mcp-eval-'));
+    try {
+      mkdirSync(join(dir, '.hackathon', 'state'), { recursive: true });
+      writeFileSync(
+        join(dir, '.hackathon', 'state', 'eval.json'),
+        JSON.stringify({
+          version: '1.0',
+          generated_at: new Date().toISOString(),
+          sprint: 'sprint-1',
+          verdict: 'fail',
+          strategy: 'pivot',
+          criteria: [
+            {
+              id: 'c1',
+              description: 'A user can sign up and see the dashboard.',
+              passes: false,
+              score: 2,
+              weight: 0.5,
+              evidence: [],
+            },
+          ],
+          feedback: ['The sign-up flow is broken in the browser.'],
+        }),
+        'utf8',
+      );
+      const res = await call({
+        jsonrpc: '2.0',
+        id: 21,
+        method: 'tools/call',
+        params: { name: 'eval_status', arguments: { cwd: dir } },
+      });
+      const payload = JSON.parse(res[0].result.content[0].text);
+      assert.equal(payload.exitCode, 0);
+      assert.equal(payload.verdict, 'fail');
+      assert.equal(payload.strategy, 'pivot');
+      assert.equal(payload.criteria_passed, 0);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

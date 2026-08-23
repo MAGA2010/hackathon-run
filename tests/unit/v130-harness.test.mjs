@@ -325,4 +325,48 @@ describe('resume CLI', () => {
     assert.equal(payload.events[0].type, 'skill.invoke');
     rmSync(repo, { recursive: true, force: true });
   });
+
+  it('eval CLI reports strategy and weighted rubric score', () => {
+    const repo = makeHarnessRepo();
+    writeState({
+      repoRoot: repo,
+      file: 'eval.json',
+      data: {
+        version: '1.0',
+        generated_at: new Date().toISOString(),
+        sprint: 'sprint-Auth',
+        verdict: 'fail',
+        strategy: 'pivot',
+        criteria: [
+          {
+            id: 'c1',
+            description: 'A user can sign up and see the dashboard.',
+            passes: false,
+            score: 2,
+            weight: 0.5,
+            evidence: [],
+          },
+          {
+            id: 'c2',
+            description: 'The demo path is reachable.',
+            passes: true,
+            score: 4,
+            weight: 0.5,
+            evidence: [{ kind: 'browser', value: 'http://localhost:3000/signup' }],
+          },
+        ],
+        feedback: ['Pivot the sign-up flow.'],
+      },
+    });
+    const r = spawnSync(process.execPath, [CLI, 'eval', '--json', '-C', repo], {
+      encoding: 'utf8',
+    });
+    assert.equal(r.status, 0, r.stderr);
+    const payload = JSON.parse(r.stdout);
+    assert.equal(payload.verdict, 'fail');
+    assert.equal(payload.strategy, 'pivot');
+    assert.equal(payload.weighted_score, 3);
+    assert.equal(payload.criteria_passed, 1);
+    rmSync(repo, { recursive: true, force: true });
+  });
 });

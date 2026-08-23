@@ -18,8 +18,23 @@ export interface SprintCriterion {
   id: string;
   description: string;
   passes: boolean;
+  score?: number;
+  weight?: number;
+  threshold?: number;
   evidence?: SprintEvidence[];
   note?: string;
+}
+
+export interface SprintRubricDimension {
+  id: string;
+  name: string;
+  description: string;
+  weight: number;
+  threshold: number;
+}
+
+export interface SprintRubric {
+  dimensions: SprintRubricDimension[];
 }
 
 export interface Sprint {
@@ -34,6 +49,7 @@ export interface Sprint {
     'proposed' | 'approved' | 'in_progress' | 'pending_review' | 'passed' | 'failed' | 'blocked';
   definition_of_done?: string[];
   criteria: SprintCriterion[];
+  rubric?: SprintRubric;
   verdict?: 'pass' | 'fail' | 'pending';
   feedback?: string[];
   iterations?: number;
@@ -119,6 +135,38 @@ export function sprintFromPlan(plan: PlanLike | null, featureName?: string): Spr
     goal: plan?.demo_goal ?? 'Complete the current sprint.',
     criteria,
     definition_of_done: criteria.map((c) => c.description),
+    rubric: {
+      dimensions: [
+        {
+          id: 'functionality',
+          name: 'Functionality',
+          description: 'The feature works end-to-end the way a user would use it.',
+          weight: 0.4,
+          threshold: 4,
+        },
+        {
+          id: 'demo_path',
+          name: 'Demo path fit',
+          description: 'The feature is reachable inside the agreed demo path.',
+          weight: 0.3,
+          threshold: 4,
+        },
+        {
+          id: 'code_quality',
+          name: 'Code quality',
+          description: 'The code is clean, maintainable, and leaves no dead experiments.',
+          weight: 0.15,
+          threshold: 3,
+        },
+        {
+          id: 'originality',
+          name: 'Originality',
+          description: 'The implementation shows deliberate choices rather than generic defaults.',
+          weight: 0.15,
+          threshold: 3,
+        },
+      ],
+    },
   });
 }
 

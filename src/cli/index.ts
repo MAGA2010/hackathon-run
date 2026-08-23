@@ -37,6 +37,7 @@ import { resume } from './commands/resume.js';
 import { sprint } from './commands/sprint.js';
 import { checkpoint } from './commands/checkpoint.js';
 import { guard } from './commands/guard.js';
+import { evalStatus } from './commands/eval.js';
 import { trace } from './commands/trace.js';
 import { skills } from './commands/skills.js';
 import { search as skillsSearch } from './commands/skills-search.js';
@@ -169,6 +170,13 @@ program
       }),
     ),
   );
+
+program
+  .command('eval')
+  .description('Show the active evaluator verdict, rubric strategy, and weighted score')
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts) => process.exit(evalStatus({ cwd: opts.cwd, json: Boolean(opts.json) })));
 
 const guardCmd = program
   .command('guard')

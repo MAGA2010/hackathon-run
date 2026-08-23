@@ -34,8 +34,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`hackathon guard`** — operator controls: `stop`, `clear`, `steer`, and
   `status`; `AGENT_STOP` halts `resume`, `STEER.md` is surfaced once and
   cleared.
+- **`hackathon eval`** — evaluator dashboard that reads `eval.json` and reports
+  verdict, strategy, pass rate, and weighted rubric score.
+- **Grading rubrics** — `sprint.json` and `eval.json` now support weighted
+  dimensions with hard thresholds and per-criterion scores.
+- **Strategy decisions** — a failing evaluator returns
+  `refine` / `pivot` / `replan` / `stop`; `sprint accept` writes it back to
+  `session.next_action` so the next generator session knows whether to keep,
+  change, replan, or halt.
 - **MCP tools** — `checkpoint`, `guard_status`, `guard_stop`, `guard_clear`,
-  and `guard_steer`.
+  `guard_steer`, and `eval_status`.
 - **`scripts/harness-ab.mjs`** — compares solo-agent vs harness runs by wall
   time, exit code, and output size; wired as `npm run ab:harness`.
 
@@ -48,6 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   handoff log.
 - `hackathon resume` now surfaces a one-shot `STEER.md`, refuses to continue
   while `AGENT_STOP` exists, and reports the progress file path.
+- `hackathon resume` also surfaces `session.next_action` so the next session
+  knows whether the evaluator asked for refine, pivot, replan, or stop.
 - `hackathon run`, `hackathon flow --execute`, and `hackathon report` now
   record or surface harness trace events.
 - `hackathon flow` exposes `traceCount` in its JSON plan.

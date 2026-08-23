@@ -153,8 +153,9 @@ flowchart TD
     Review --> Eval[("eval.json\ncriteria default false")]
     Eval --> Run["Run app / tests / browser / commands"]
     Run --> Evidence["Collect machine-checkable evidence"]
-    Evidence --> Verdict{"Every criterion\npasses?"}
-    Verdict -->|"no"| Feedback["Write feedback\nto session.json"]
+    Evidence --> Rubric{"Score rubric 0-5\nweight + hard threshold"}
+    Rubric --> Verdict{"Every criterion\nmeets threshold?"}
+    Verdict -->|"no"| Feedback["Write feedback + strategy\nto session.json"]
     Feedback --> Resume
     Verdict -->|"yes"| Accept["hackathon sprint accept"]
     Accept --> Plan
@@ -234,12 +235,13 @@ sequenceDiagram
   G->>E: hackathon sprint review
   E->>S: write eval.json (criteria default false)
   E->>E: run app / tests / browser / commands
+  E->>E: score rubric 0-5 + set strategy
 
   alt all criteria pass
     E->>O: hackathon sprint accept
     O->>S: flip plan.json passes=true + evidence
   else criteria fail
-    E->>S: write feedback to session.json
+    E->>S: write feedback + strategy to session.json
     E-->>G: feedback for the next iteration
     G->>G: rebuild against the same contract
   end
@@ -266,12 +268,22 @@ sequenceDiagram
 | Handoffs                         | Initializer -> Planner -> Generator -> Evaluator -> Delivery                       |
 | Guardrails                       | JSON Schema validation, default-FAIL, trigger budget, fresh-context evaluator      |
 | Budget / max turns               | `sprint budget --minutes --max-iterations`; exhausted budget becomes `blocked`     |
+| Grading rubrics                  | weighted dimensions + hard thresholds in `sprint.json` / `eval.json`               |
+| Strategy decision                | evaluator returns `refine` / `pivot` / `replan` / `stop`                           |
 | Operator controls                | `hackathon guard stop/clear/steer/status` -> `AGENT_STOP` / `STEER.md`             |
 | Tools                            | bundled skills, scripts, MCP tools                                                 |
 | Tracing                          | append-only `events.jsonl` + `hackathon trace`                                     |
 | Failure policy                   | failing eval writes feedback to `session.json`; the next loop starts there         |
 | Failure-mode gates               | one feature per sprint, fresh evaluator, `PROGRESS.md` + git log, browser evidence |
 | Final output                     | validated state files + `report`                                                   |
+
+### Latest Anthropic patterns mapped
+
+| Anthropic article                               | Core pattern                                                          | Hackathon Run implementation                                                                          |
+| ----------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Harness design for long-running app development | Planner / Generator / Evaluator, sprint contracts, grading rubrics    | `planner.md`, `generator.md`, `evaluator.md`, `sprint.json` rubric dimensions, `eval.json` scores     |
+| Scaling Managed Agents                          | durable session outside context, decoupled hands, operator controls   | `session.json` + `PROGRESS.md` + `events.jsonl`, `hackathon resume`, `hackathon guard`                |
+| Demystifying evals for AI agents                | task / trial / grader, transcript + outcome, capability vs regression | `sprint review` produces `eval.json`, `hackathon eval` aggregates verdict + strategy + weighted score |
 
 ### Runtime command map
 
@@ -284,16 +296,17 @@ sequenceDiagram
 | Contract   | `hackathon sprint new` + `hackathon sprint approve`         | `sprint.json`                                              |
 | Review     | `hackathon sprint review`                                   | `eval.json` with default-FAIL criteria                     |
 | Accept     | `hackathon sprint accept`                                   | `plan.json`, `sprint.json`, `session.json`                 |
+| Eval       | `hackathon eval`                                            | weighted rubric score + strategy summary                   |
 | Guard      | `hackathon guard stop/clear/steer/status`                   | `AGENT_STOP`, `STEER.md`                                   |
 | Verify     | `hackathon run fast-verify`                                 | `verify.json`                                              |
 | Ship       | `hackathon flow --execute`                                  | `demo.json`, `review.json`, `ship.json`                    |
 | Observe    | `hackathon trace` / `hackathon replay` / `hackathon report` | `events.jsonl` + report                                    |
 
-| Role          | Responsibility                                                                                               | Must not do                                                      |
-| ------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| **Planner**   | Expand a short brief into a concrete demo goal, KEEP/CUT/DEFER list, and demo path.                          | Write implementation details or mark features as passing.        |
-| **Generator** | Resume from `session.json`, pick one unpassed KEEP feature, agree a sprint contract, and build it.           | Set `passes: true` or approve its own work.                      |
-| **Evaluator** | Read only. Run the app like a user, collect machine-checkable evidence, and return a hard pass/fail verdict. | Edit code or state, lower a threshold, or pass without evidence. |
+| Role          | Responsibility                                                                                                     | Must not do                                                      |
+| ------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| **Planner**   | Expand a short brief into a concrete demo goal, KEEP/CUT/DEFER list, and demo path.                                | Write implementation details or mark features as passing.        |
+| **Generator** | Resume from `session.json`, pick one unpassed KEEP feature, agree a sprint contract, and build it.                 | Set `passes: true` or approve its own work.                      |
+| **Evaluator** | Read only. Run the app like a user, score the rubric 0-5 against hard thresholds, and return pass/fail + strategy. | Edit code or state, lower a threshold, or pass without evidence. |
 
 The harness runtime turns those roles into durable artifacts:
 

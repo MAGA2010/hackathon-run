@@ -17,12 +17,15 @@ export interface SessionEnvironment {
   known_issues?: string[];
 }
 
+export type NextAction = 'refine' | 'pivot' | 'replan' | 'stop';
+
 export interface Session {
   version: '1.0';
   generated_at: string;
   updated_at?: string;
   current_stage: string;
   next_task: string;
+  next_action?: NextAction;
   completed: string[];
   blockers: string[];
   environment: SessionEnvironment;

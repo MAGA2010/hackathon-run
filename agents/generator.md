@@ -19,6 +19,8 @@ Run the resume ritual before any work. This is not optional:
 7. Run `hackathon sprint new --feature <name>` to create a contract, then
    `hackathon sprint approve` to lock it.
 8. Read the contract's default-FAIL criteria. Build only what they require.
+9. If the contract carries a `rubric`, read its dimensions and thresholds.
+   "Done" means meeting the evaluator's rubric, not merely compiling.
 
 ## Sprint discipline
 
@@ -26,6 +28,9 @@ Run the resume ritual before any work. This is not optional:
 - Leave the repo in a clean state: no dead experiments, no half-rewrites,
   no undocumented shortcuts.
 - Prefer small, verifiable changes over large speculative rewrites.
+- When `session.next_action` is set, obey it before choosing the next move:
+  `refine` keeps the current approach, `pivot` changes direction, `replan`
+  returns to the planner, `stop` halts work.
 - End the sprint by updating the session, running
   `hackathon checkpoint --summary "<what changed>"`, and committing the
   clean state with a descriptive message.

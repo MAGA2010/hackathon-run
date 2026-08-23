@@ -62,6 +62,8 @@ The harness layer adds five state artifacts and two operator-control files:
 - `session.json` — the compact handoff brief a fresh agent reads to resume work.
 - `sprint.json` — the agreed definition of done for the current feature.
 - `eval.json` — the evaluator's evidence-backed verdict and feedback.
+- `eval.json` also carries a weighted rubric score and a strategy
+  (`refine` / `pivot` / `replan` / `stop`) for the next generator session.
 - `PROGRESS.md` — the agent-maintained progress log that every session reads
   first and appends to before finishing.
 - `AGENT_STOP` — operator kill switch; `hackathon resume` refuses to continue
@@ -105,6 +107,8 @@ commands:
 - `hackathon init`, `hackathon status`, `hackathon flow`
 - `hackathon resume` — print the handoff brief for a fresh agent
 - `hackathon sprint new|approve|review|accept|status|budget` — contract lifecycle
+- `hackathon eval` — evaluator dashboard with verdict, strategy, pass rate,
+  and weighted rubric score
 - `hackathon checkpoint` — append an agent-maintained progress entry
 - `hackathon guard stop|clear|steer|status` — operator controls
 - `hackathon trace` — inspect the append-only harness event log

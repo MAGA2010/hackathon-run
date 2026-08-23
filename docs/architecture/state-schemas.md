@@ -60,6 +60,6 @@ malformed.
 | `decision-log.schema.json` | decision-log         | version, generated_at, entries                                                            |
 | `session.schema.json`      | harness init         | version, generated_at, current_stage, next_task, completed, blockers, environment         |
 | `sprint.schema.json`       | harness sprint       | version, generated_at, name, goal, feature, status, criteria                              |
-| `eval.schema.json`         | harness evaluator    | version, generated_at, sprint, verdict, criteria, feedback                                |
+| `eval.schema.json`         | harness evaluator    | version, generated_at, sprint, verdict, criteria, feedback; optional rubric + strategy    |
 
 To add a new one: see [How to add a new state file](#how-to-add-a-new-state-file) above.

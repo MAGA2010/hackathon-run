@@ -117,6 +117,7 @@ export function resume(opts: ResumeOptions): number {
   console.log();
   console.log(c.bold('Stage:    ') + c.cyan(session.current_stage));
   console.log(c.bold('Next:     ') + session.next_task);
+  if (session.next_action) console.log(c.bold('Strategy: ') + session.next_action);
   console.log(
     c.bold('Stage:    ') +
       c.dim(nextStage ? nextStage.skill + ' -> ' + nextStage.produces : 'complete'),

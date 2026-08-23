@@ -41,6 +41,9 @@
           "id": { "type": "string", "minLength": 1 },
           "description": { "type": "string", "minLength": 1 },
           "passes": { "type": "boolean", "default": false },
+          "score": { "type": "integer", "minimum": 0, "maximum": 5 },
+          "weight": { "type": "number", "minimum": 0 },
+          "threshold": { "type": "number", "minimum": 0, "maximum": 5 },
           "evidence": {
             "type": "array",
             "items": {
@@ -57,6 +60,27 @@
             }
           },
           "note": { "type": "string" }
+        }
+      }
+    },
+    "rubric": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dimensions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "description", "weight", "threshold"],
+            "additionalProperties": false,
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "name": { "type": "string", "minLength": 1 },
+              "description": { "type": "string", "minLength": 1 },
+              "weight": { "type": "number", "minimum": 0 },
+              "threshold": { "type": "number", "minimum": 0, "maximum": 5 }
+            }
+          }
         }
       }
     },

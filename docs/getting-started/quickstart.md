@@ -91,7 +91,18 @@ hackathon sprint accept
 
 On pass, the feature is flipped to `passes: true` and evidence is written to
 `plan.json`. On fail, feedback is written back into `session.json` for the
-next generator iteration.
+next generator iteration, along with a strategy:
+
+- `refine` — keep the current approach and fix the feedback
+- `pivot` — change direction while keeping the sprint contract
+- `replan` — take the feature back to the planner
+- `stop` — halt further work on this feature
+
+Inspect the evaluator verdict and rubric score with:
+
+```bash
+hackathon eval
+```
 
 ## 3. Verify the demo path
 

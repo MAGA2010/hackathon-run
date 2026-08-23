@@ -20,6 +20,10 @@
     "updated_at": { "type": "string", "format": "date-time" },
     "current_stage": { "type": "string", "minLength": 1 },
     "next_task": { "type": "string", "minLength": 1 },
+    "next_action": {
+      "enum": ["refine", "pivot", "replan", "stop"],
+      "description": "Strategic instruction for the next generator session."
+    },
     "completed": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 }

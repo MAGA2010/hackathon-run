@@ -35,6 +35,7 @@ import { resume } from '../cli/commands/resume.js';
 import { sprint } from '../cli/commands/sprint.js';
 import { checkpoint } from '../cli/commands/checkpoint.js';
 import { guard } from '../cli/commands/guard.js';
+import { evalStatus } from '../cli/commands/eval.js';
 import { trace } from '../cli/commands/trace.js';
 import { runChain } from '../cli/commands/run.js';
 import { skills as skillsCommand } from '../cli/commands/skills.js';
@@ -195,6 +196,16 @@ const TOOLS: ToolDef[] = [
         message: { type: 'string', description: 'operator redirect for the agent' },
         cwd: { type: 'string', description: 'repo root; defaults to CWD' },
       },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'eval_status',
+    description:
+      'Read the active eval.json and return verdict, strategy, pass rate, and weighted rubric score.',
+    inputSchema: {
+      type: 'object',
+      properties: { cwd: { type: 'string', description: 'repo root; defaults to CWD' } },
       additionalProperties: false,
     },
   },
@@ -548,6 +559,9 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
           json: true,
         }),
       );
+    }
+    case 'eval_status': {
+      return captureJsonCommand(() => evalStatus({ cwd: String(args.cwd ?? cwd), json: true }));
     }
     case 'sprint_new': {
       return captureJsonCommand(() =>

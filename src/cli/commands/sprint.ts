@@ -46,10 +46,15 @@ interface EvalResultLike {
   version?: string;
   sprint?: string;
   verdict?: 'pass' | 'fail' | 'blocked' | 'pending';
+  strategy?: 'refine' | 'pivot' | 'replan' | 'stop';
+  rubric?: unknown;
   criteria?: Array<{
     id?: string;
     description?: string;
     passes?: boolean;
+    score?: number;
+    weight?: number;
+    threshold?: number;
     evidence?: Array<{ kind: string; value: string; at?: string }>;
   }>;
   feedback?: string[];
@@ -95,9 +100,12 @@ function buildEvalSkeleton(sprint: Sprint) {
       id: criterion.id,
       description: criterion.description,
       passes: false,
+      score: 0,
       evidence: [],
     })),
     feedback: [],
+    strategy: 'refine',
+    ...(sprint.rubric ? { rubric: sprint.rubric } : {}),
     iterations: sprint.iterations ?? 0,
     budget_minutes: sprint.budget_minutes ?? 0,
   };
@@ -283,6 +291,7 @@ export function sprint(opts: SprintOptions): number {
     });
     const feedback = evalResult.feedback ?? [];
     const iterations = (current.iterations ?? 0) + 1;
+    const strategy = evalResult.strategy ?? 'refine';
 
     if (allPass) {
       feature.passes = true;
@@ -339,7 +348,15 @@ export function sprint(opts: SprintOptions): number {
       iterations,
       started_at: current.started_at ?? now,
     });
-    const nextStatus = budget.within ? 'failed' : 'blocked';
+    const nextStatus = strategy === 'stop' || !budget.within ? 'blocked' : 'failed';
+    const nextTask =
+      strategy === 'replan'
+        ? `Replan ${current.feature} with the planner; the contract no longer fits the demo path.`
+        : strategy === 'pivot'
+          ? `Pivot the approach for ${current.feature} while keeping the same sprint contract.`
+          : strategy === 'stop'
+            ? `Stop work on ${current.feature}; the evaluator called for a halt.`
+            : `Fix feedback for ${current.feature}; re-run the generator then sprint review.`;
     const updated = updateSprint(cwd, {
       status: nextStatus,
       verdict: 'fail',
@@ -349,8 +366,9 @@ export function sprint(opts: SprintOptions): number {
       iterations,
     });
     updateSession(cwd, {
-      current_stage: 'building',
-      next_task: `Fix feedback for ${current.feature}; re-run the generator then sprint review.`,
+      current_stage: strategy === 'replan' ? 'planning' : 'building',
+      next_task: nextTask,
+      next_action: strategy,
       completed: [
         ...(readSession(cwd)?.completed ?? []),
         `${current.feature} failed sprint ${current.name}`,
@@ -368,13 +386,22 @@ export function sprint(opts: SprintOptions): number {
     if (opts.json) {
       console.log(
         JSON.stringify(
-          { ok: false, action: 'accepted', verdict: 'fail', sprint: updated, feedback },
+          {
+            ok: false,
+            action: 'accepted',
+            verdict: 'fail',
+            strategy,
+            sprint: updated,
+            feedback,
+          },
           null,
           2,
         ),
       );
     } else {
-      log.err(`sprint ${current.name} ${nextStatus}: ${budget.reason ?? 'criteria not met'}`);
+      log.err(
+        `sprint ${current.name} ${nextStatus}: ${budget.reason ?? (strategy === 'stop' ? 'evaluator requested stop' : 'criteria not met')}`,
+      );
       for (const item of feedback.slice(0, 5)) log.dim('  - ' + item);
     }
     return nextStatus === 'blocked' ? 1 : 1;

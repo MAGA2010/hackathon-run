@@ -36,7 +36,7 @@ function call(request) {
       clearTimeout(timer);
       reject(error);
     });
-    child.on('exit', () => {
+    child.on('close', () => {
       clearTimeout(timer);
       resolve(responses);
     });

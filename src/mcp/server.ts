@@ -857,7 +857,9 @@ export function startMcpServer() {
   let pending = 0;
   let ended = false;
   const maybeExit = () => {
-    if (ended && pending === 0) process.exit(0);
+    if (ended && pending === 0) {
+      process.stdout.write('', () => process.exit(0));
+    }
   };
   process.stdin.setEncoding('utf-8');
   process.stdin.on('data', (chunk) => {

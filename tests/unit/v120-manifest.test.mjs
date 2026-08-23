@@ -257,7 +257,7 @@ describe('find_skills MCP manifest surface', () => {
         clearTimeout(timer);
         reject(error);
       });
-      child.on('exit', () => {
+      child.on('close', () => {
         clearTimeout(timer);
         resolve(responses);
       });

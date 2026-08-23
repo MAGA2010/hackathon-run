@@ -13,9 +13,15 @@ const SERVER = join(ROOT, 'dist', 'mcp', 'server.js');
 
 function call(request) {
   return new Promise((resolve, reject) => {
-    const child = spawn('node', [SERVER], { cwd: ROOT });
+    const child = spawn(process.execPath, [SERVER], { cwd: ROOT });
     const responses = [];
     let buf = '';
+    const timer = setTimeout(() => {
+      try {
+        child.kill();
+      } catch {}
+      reject(new Error('timeout'));
+    }, 15000);
     child.stdout.on('data', (chunk) => {
       buf += chunk;
       let nl;
@@ -26,14 +32,15 @@ function call(request) {
       }
     });
     child.stderr.on('data', () => {});
-    child.on('exit', () => resolve(responses));
+    child.on('error', (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.on('exit', () => {
+      clearTimeout(timer);
+      resolve(responses);
+    });
     child.stdin.end(JSON.stringify(request) + '\n');
-    setTimeout(() => {
-      try {
-        child.kill();
-      } catch {}
-      reject(new Error('timeout'));
-    }, 15000);
   });
 }
 

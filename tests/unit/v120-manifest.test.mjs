@@ -234,9 +234,15 @@ describe('find_skills MCP manifest surface', () => {
   it('surfaces manifest keys over JSON-RPC', async () => {
     const server = join(REPO, 'dist', 'mcp', 'server.js');
     const response = await new Promise((resolve, reject) => {
-      const child = spawn('node', [server], { cwd: REPO });
+      const child = spawn(process.execPath, [server], { cwd: REPO });
       const responses = [];
       let buf = '';
+      const timer = setTimeout(() => {
+        try {
+          child.kill();
+        } catch {}
+        reject(new Error('timeout'));
+      }, 15000);
       child.stdout.on('data', (chunk) => {
         buf += chunk;
         let nl;
@@ -247,7 +253,14 @@ describe('find_skills MCP manifest surface', () => {
         }
       });
       child.stderr.on('data', () => {});
-      child.on('exit', () => resolve(responses));
+      child.on('error', (error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+      child.on('exit', () => {
+        clearTimeout(timer);
+        resolve(responses);
+      });
       child.stdin.end(
         JSON.stringify({
           jsonrpc: '2.0',
@@ -256,12 +269,6 @@ describe('find_skills MCP manifest surface', () => {
           params: { name: 'find_skills', arguments: { category: 'scoping' } },
         }) + '\n',
       );
-      setTimeout(() => {
-        try {
-          child.kill();
-        } catch {}
-        reject(new Error('timeout'));
-      }, 5000);
     });
     assert.equal(response.length, 1);
     const payload = JSON.parse(response[0].result.content[0].text);

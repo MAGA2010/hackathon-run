@@ -16,9 +16,31 @@ if (files.length === 0) {
 const coverage = process.argv.includes('--coverage');
 const args = coverage ? ['--experimental-test-coverage', '--test', ...files] : ['--test', ...files];
 
-const result = spawnSync(process.execPath, args, { stdio: 'inherit' });
+const result = spawnSync(process.execPath, args, {
+  encoding: 'utf8',
+  maxBuffer: 50 * 1024 * 1024,
+});
+if (result.stdout) process.stdout.write(result.stdout);
+if (result.stderr) process.stderr.write(result.stderr);
 if (result.error) {
   console.error(result.error);
   process.exit(1);
 }
+
+if (result.status !== 0 && process.env.GITHUB_ACTIONS === 'true') {
+  const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
+  const failures = output
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('not ok ') || line.startsWith('\u2716 '));
+  const annotations = failures.length > 0 ? failures : output.split(/\r?\n/).slice(-120);
+  for (const message of annotations) {
+    const safeMessage = message
+      .replaceAll('%', '%25')
+      .replaceAll('\r', '%0D')
+      .replaceAll('\n', '%0A');
+    process.stdout.write(`::error title=unit test::${safeMessage}\n`);
+  }
+}
+
 process.exit(result.status ?? 1);

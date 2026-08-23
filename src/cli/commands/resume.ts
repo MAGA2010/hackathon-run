@@ -119,7 +119,7 @@ export function resume(opts: ResumeOptions): number {
   console.log(c.bold('Next:     ') + session.next_task);
   if (session.next_action) console.log(c.bold('Strategy: ') + session.next_action);
   console.log(
-    c.bold('Stage:    ') +
+    c.bold('Pipeline: ') +
       c.dim(nextStage ? nextStage.skill + ' -> ' + nextStage.produces : 'complete'),
   );
   if (plan) {

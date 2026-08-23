@@ -20,7 +20,7 @@ dependencies:
       args: ['dist/mcp/server.js']
       manifest: ./mcp-manifest.json
 
-manifest_version: 1.2.1.4
+manifest_version: 1.2.4
 
 skills_root: ./skills
 

@@ -39,6 +39,7 @@ interface RuntimeSummary {
   } | null;
   eval: {
     verdict: string;
+    strategy: string | null;
     criteria_passed: number;
     criteria_total: number;
   } | null;
@@ -222,6 +223,10 @@ function summarizeRuntime(cwd: string, stateDir: string): RuntimeSummary {
   const evalSummary = evalData
     ? {
         verdict: String((evalData as Record<string, unknown>).verdict ?? 'pending'),
+        strategy:
+          typeof (evalData as Record<string, unknown>).strategy === 'string'
+            ? String((evalData as Record<string, unknown>).strategy)
+            : null,
         criteria_passed: evalCriteria.filter((c) => c.passes === true).length,
         criteria_total: evalCriteria.length,
       }
@@ -345,6 +350,9 @@ export function status(opts: { cwd: string; json?: boolean }): number {
       c.bold('Eval:     ') +
         `${runtime.eval.verdict} ${runtime.eval.criteria_passed}/${runtime.eval.criteria_total} criteria`,
     );
+    if (runtime.eval.strategy) {
+      console.log(c.bold('Strategy: ') + runtime.eval.strategy);
+    }
   }
   console.log(c.bold('Trace:    ') + `${runtime.traceCount} events`);
   if (warnings.length) {

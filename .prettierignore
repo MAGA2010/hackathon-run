@@ -9,3 +9,7 @@ node_modules/
 
 # mkdocs build output
 site/
+
+# Local workspace drafts (not part of the package)
+Tone-Shift-*.md
+_*.py

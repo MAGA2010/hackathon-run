@@ -33,7 +33,7 @@ function call(request) {
         child.kill();
       } catch {}
       reject(new Error('timeout'));
-    }, 5000);
+    }, 15000);
   });
 }
 

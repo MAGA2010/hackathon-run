@@ -43,11 +43,10 @@ step "preconditions"
 git rev-parse --is-inside-work-tree >/dev/null 2>&1 || die "not a git repo"
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 [ "$BRANCH" = "main" ] || die "must be on main (currently on $BRANCH)"
-[ -z "$(git status --porcelain)" ] || die "working tree is dirty; commit or stash first"
+[ -z "$(git status --porcelain --untracked-files=no)" ] || die "working tree is dirty; commit or stash first"
 git fetch --quiet origin
-LOCAL=$(git rev-parse HEAD)
-REMOTE=$(git rev-parse origin/main)
-[ "$LOCAL" = "$REMOTE" ] || die "local main ($LOCAL) is behind origin/main ($REMOTE)"
+BEHIND=$(git rev-list --count HEAD..origin/main)
+[ "$BEHIND" -eq 0 ] || die "local main is behind origin/main by $BEHIND commit(s); pull first"
 node -v >/dev/null || die "node not found"
 [ -f package.json ] || die "package.json missing"
 
@@ -67,9 +66,9 @@ TAG="v${NEXT}"
 echo "  $CUR -> $NEXT (tag $TAG)"
 
 step "run tests + lint + build"
-npm test
+npm run test:all
 npm run lint
-npm run format:check
+git ls-files -z '*.ts' '*.md' '*.json' | xargs -0 -r npx prettier --check
 npm run build
 
 step "write CHANGELOG date placeholder if needed"

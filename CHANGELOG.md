@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `hackathon resume` no longer prints a duplicate `Stage:` label; the second
+  line is now labeled `Pipeline:`.
+- `hackathon sprint review` propagates rubric weights and thresholds from
+  `sprint.json` into the generated `eval.json`.
+- `hackathon sprint accept` syncs evaluator scores, weights, and thresholds
+  back into the updated sprint contract.
+- `hackathon status` and `hackathon report` now surface evaluator strategy and
+  rubric dimensions/scores.
+- `release.sh` ignores untracked local drafts, checks formatting only on
+  tracked files, allows local commits that are ahead of origin, and runs the
+  full `test:all` suite before tagging.
+- `.prettierignore` excludes local `Tone-Shift-*.md` workspace drafts.
+
+## [1.2.4] - 2026-08-23
+
 ### Added
 
 - **Harness primitives (P0/P1/P2)** — `plan.json` features now carry

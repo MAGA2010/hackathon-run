@@ -190,6 +190,36 @@ describe('sprint contract', () => {
     assert.equal(blocked.within, false);
     assert.match(blocked.reason ?? '', /iteration budget exhausted/);
   });
+
+  it('sprint review propagates rubric weights and thresholds into eval.json', () => {
+    const repo = makeHarnessRepo();
+    writeSprint(repo, {
+      ...defaultSprint({
+        name: 'sprint-Auth',
+        goal: 'A user can sign up and save a note.',
+        feature: 'Auth',
+        status: 'approved',
+        criteria: [
+          {
+            id: 'c1',
+            description: 'A user can sign up and see the dashboard.',
+            passes: false,
+            weight: 0.5,
+            threshold: 4,
+            evidence: [],
+          },
+        ],
+      }),
+    });
+    const r = spawnSync(process.execPath, [CLI, 'sprint', 'review', '-C', repo], {
+      encoding: 'utf8',
+    });
+    assert.equal(r.status, 0, r.stderr);
+    const evalData = readState({ repoRoot: repo, file: 'eval.json' });
+    assert.equal(evalData.criteria[0].weight, 0.5);
+    assert.equal(evalData.criteria[0].threshold, 4);
+    rmSync(repo, { recursive: true, force: true });
+  });
 });
 
 describe('sprint accept runtime loop', () => {
@@ -304,6 +334,17 @@ describe('resume CLI', () => {
     assert.equal(payload.plan.next_feature, 'Auth');
     assert.equal(payload.plan.passing_features, 0);
     assert.ok(payload.trace);
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('does not duplicate the Stage label in human output', () => {
+    const repo = makeHarnessRepo();
+    const r = spawnSync(process.execPath, [CLI, 'resume', '-C', repo], {
+      encoding: 'utf8',
+    });
+    assert.equal(r.status, 0, r.stderr);
+    assert.equal((r.stdout.match(/Stage:/g) ?? []).length, 1);
+    assert.match(r.stdout, /Pipeline:/);
     rmSync(repo, { recursive: true, force: true });
   });
 

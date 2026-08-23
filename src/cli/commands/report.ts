@@ -289,11 +289,18 @@ function sectionOf(file: string, json: Record<string, any>): string {
       for (const criterion of json.criteria ?? []) {
         const mark = criterion.passes ? 'x' : ' ';
         bullets.push(`- [${mark}] ${criterion.id}: ${criterion.description}`);
+        if (typeof criterion.score === 'number') bullets.push(`  - Score: ${criterion.score}/5`);
         for (const evidence of criterion.evidence ?? []) {
           bullets.push(`  - ${evidence.kind}: ${evidence.value}`);
         }
       }
+      if (json.strategy) bullets.push(`- **Strategy:** ${json.strategy}`);
       for (const item of json.feedback ?? []) bullets.push(`- Feedback: ${item}`);
+      for (const dimension of json.rubric?.dimensions ?? []) {
+        bullets.push(
+          `- **Rubric:** ${dimension.name ?? dimension.id ?? '?'} (weight ${dimension.weight ?? 0}, threshold ${dimension.threshold ?? 0})`,
+        );
+      }
       break;
     case 'session':
       bullets.push(`- **Stage:** ${json.current_stage ?? '?'}`);

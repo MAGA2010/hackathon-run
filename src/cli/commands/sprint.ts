@@ -101,6 +101,8 @@ function buildEvalSkeleton(sprint: Sprint) {
       description: criterion.description,
       passes: false,
       score: 0,
+      ...(criterion.weight != null ? { weight: criterion.weight } : {}),
+      ...(criterion.threshold != null ? { threshold: criterion.threshold } : {}),
       evidence: [],
     })),
     feedback: [],
@@ -287,6 +289,9 @@ export function sprint(opts: SprintOptions): number {
         ...criterion,
         passes: evaluated?.passes === true,
         evidence: (evaluated?.evidence ?? []) as SprintEvidence[],
+        score: evaluated?.score ?? criterion.score,
+        weight: evaluated?.weight ?? criterion.weight,
+        threshold: evaluated?.threshold ?? criterion.threshold,
       };
     });
     const feedback = evalResult.feedback ?? [];

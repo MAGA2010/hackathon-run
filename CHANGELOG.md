@@ -68,7 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README documents the ChatGPT / OpenAI production agent-loop pattern and
   Anthropic's long-running harness pattern (initializer, progress handoff,
   operator controls), mapped to the harness runtime, commands, and state
-  artifacts, plus a failure-mode-to-gate diagram.
+  artifacts, plus a clean command-level harness flow and a
+  failure-mode-to-gate table.
 
 ### Fixed
 

@@ -45,10 +45,24 @@ function call(request) {
     });
     child.on('close', (code, signal) => {
       clearTimeout(timer);
-      if (responses.length === 0 || responses.some((response) => response === undefined)) {
+      const allowsError =
+        request.method === 'no/such/method' ||
+        (request.method === 'tools/call' &&
+          request.params?.name === 'get_skill' &&
+          request.params?.arguments?.name === 'no-such-skill');
+      const unexpectedError = responses.find(
+        (response) => response?.error && !allowsError,
+      );
+      if (
+        responses.length === 0 ||
+        responses.some((response) => response === undefined) ||
+        unexpectedError
+      ) {
         reject(
           new Error(
-            `MCP server returned invalid responses (code=${code}, signal=${signal}): ${rawLines.join(
+            `MCP server returned invalid responses (code=${code}, signal=${signal}); error=${JSON.stringify(
+              unexpectedError?.error,
+            )}: ${rawLines.join(
               ' | ',
             )}; stderr: ${stderr.trim()}`,
           ),

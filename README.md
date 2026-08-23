@@ -114,20 +114,25 @@ real command, state artifact, or feedback handoff:
 
 ```mermaid
 flowchart TD
+  classDef contract fill:#fff7ed,stroke:#ea580c,color:#1f2937;
+  classDef gate fill:#eff6ff,stroke:#2563eb,color:#1f2937;
+  classDef trace fill:#f0fdf4,stroke:#16a34a,color:#1f2937;
+  classDef failure fill:#fef2f2,stroke:#dc2626,color:#1f2937;
+
   subgraph First["0. Initializer / First Session"]
     direction TB
     Brief(["User brief"]) --> InitCmd["hackathon init"]
-    InitCmd --> Scope["hackathon run scope-knife --apply"]
-    Scope --> Plan[("plan.json\nP0/P1/P2 + default-FAIL")]
-    Scope --> Session[("session.json\nhandoff")]
+    InitCmd --> ScopeCmd["hackathon run scope-knife --apply"]
+    ScopeCmd --> Plan[("plan.json\nP0/P1/P2 + default-FAIL")]
+    ScopeCmd --> Session[("session.json\nhandoff")]
     InitCmd --> Progress[("PROGRESS.md\nagent-maintained")]
     Progress --> FirstCommit["git commit\ninitial setup"]
-    FirstCommit -->|"handoff"| Resume
   end
 
   subgraph Orchestration["1. Orchestration / Handoff"]
     direction TB
-    Resume["hackathon resume\npwd -> git log -> PROGRESS.md -> smoke"] --> Route{"Next unpassed\nP0/P1/P2 KEEP feature?"}
+    FirstCommit --> Resume["hackathon resume\npwd -> git log -> PROGRESS.md -> smoke"]
+    Resume --> Route{"Next unpassed\nP0/P1/P2 KEEP feature?"}
     Route -->|"yes"| Contract["hackathon sprint new --feature X"]
     Contract --> Approve["hackathon sprint approve"]
     Approve --> Sprint[("sprint.json\ncriteria + budget")]
@@ -170,6 +175,32 @@ flowchart TD
   end
 
   Pipeline --> Ship["Ready to submit"]
+  class Plan,Session,Sprint,Progress,Eval contract;
+  class Budget,Schema,Stop gate;
+  class Trace trace;
+  class Blocked,Feedback failure;
+```
+
+### Failure modes to harness gates
+
+The diagram below maps the paper's failure modes to the exact gate that stops
+each one:
+
+```mermaid
+flowchart LR
+  classDef fail fill:#fef2f2,stroke:#dc2626,color:#1f2937;
+  classDef gate fill:#eff6ff,stroke:#2563eb,color:#1f2937;
+
+  FM1["Failure: agent tries to one-shot\nthe whole app"] --> G1{"Gate:\none feature per sprint\n+ default-FAIL"}
+  FM2["Failure: agent declares victory\nbefore the demo works"] --> G2{"Gate:\nfresh-context evaluator\n+ machine-checkable evidence"}
+  FM3["Failure: next session guesses\nwhat the previous one did"] --> G3{"Gate:\nPROGRESS.md + git log\n+ smoke before building"}
+  FM4["Failure: unit tests pass but\nuser-visible flow is broken"] --> G4{"Gate:\nbrowser / command evidence\n+ sprint accept"}
+  G1 --> Loop(["Next unpassed KEEP feature"])
+  G2 --> Loop
+  G3 --> Loop
+  G4 --> Loop
+  class FM1,FM2,FM3,FM4 fail;
+  class G1,G2,G3,G4 gate;
 ```
 
 ### Command timeline
@@ -225,21 +256,22 @@ sequenceDiagram
 
 ### Production primitives mapped to Hackathon Run
 
-| OpenAI / ChatGPT agent primitive | Hackathon Run implementation                                                   |
-| -------------------------------- | ------------------------------------------------------------------------------ |
-| Initializer agent                | `agents/initializer.md` + `hackathon init` + first clean git commit            |
-| Agent loop                       | `sprint new -> build -> review -> accept`                                      |
-| Context assembly                 | `session.json` + `plan.json` + active `SKILL.md` before the first turn         |
-| Sessions                         | `session.json` + `PROGRESS.md` handoff + `hackathon resume`                    |
-| Agent-maintained handoff         | `PROGRESS.md` + `hackathon checkpoint --summary`                               |
-| Handoffs                         | Initializer -> Planner -> Generator -> Evaluator -> Delivery                   |
-| Guardrails                       | JSON Schema validation, default-FAIL, trigger budget, fresh-context evaluator  |
-| Budget / max turns               | `sprint budget --minutes --max-iterations`; exhausted budget becomes `blocked` |
-| Operator controls                | `hackathon guard stop/clear/steer/status` -> `AGENT_STOP` / `STEER.md`         |
-| Tools                            | bundled skills, scripts, MCP tools                                             |
-| Tracing                          | append-only `events.jsonl` + `hackathon trace`                                 |
-| Failure policy                   | failing eval writes feedback to `session.json`; the next loop starts there     |
-| Final output                     | validated state files + `report`                                               |
+| OpenAI / ChatGPT agent primitive | Hackathon Run implementation                                                       |
+| -------------------------------- | ---------------------------------------------------------------------------------- |
+| Initializer agent                | `agents/initializer.md` + `hackathon init` + first clean git commit                |
+| Agent loop                       | `sprint new -> build -> review -> accept`                                          |
+| Context assembly                 | `session.json` + `plan.json` + active `SKILL.md` before the first turn             |
+| Sessions                         | `session.json` + `PROGRESS.md` handoff + `hackathon resume`                        |
+| Agent-maintained handoff         | `PROGRESS.md` + `hackathon checkpoint --summary`                                   |
+| Handoffs                         | Initializer -> Planner -> Generator -> Evaluator -> Delivery                       |
+| Guardrails                       | JSON Schema validation, default-FAIL, trigger budget, fresh-context evaluator      |
+| Budget / max turns               | `sprint budget --minutes --max-iterations`; exhausted budget becomes `blocked`     |
+| Operator controls                | `hackathon guard stop/clear/steer/status` -> `AGENT_STOP` / `STEER.md`             |
+| Tools                            | bundled skills, scripts, MCP tools                                                 |
+| Tracing                          | append-only `events.jsonl` + `hackathon trace`                                     |
+| Failure policy                   | failing eval writes feedback to `session.json`; the next loop starts there         |
+| Failure-mode gates               | one feature per sprint, fresh evaluator, `PROGRESS.md` + git log, browser evidence |
+| Final output                     | validated state files + `report`                                                   |
 
 ### Runtime command map
 

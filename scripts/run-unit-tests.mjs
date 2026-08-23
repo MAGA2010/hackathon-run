@@ -29,10 +29,22 @@ if (result.error) {
 
 if (result.status !== 0 && process.env.GITHUB_ACTIONS === 'true') {
   const output = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
-  const failures = output
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line.startsWith('not ok ') || line.startsWith('\u2716 '));
+  const failures = [];
+  let current = [];
+  for (const rawLine of output.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (line.startsWith('not ok ') || line.startsWith('\u2716 ')) {
+      if (current.length > 0) failures.push(current.join('\n'));
+      current = [line];
+    } else if (current.length > 0) {
+      current.push(line);
+      if (line === '...') {
+        failures.push(current.join('\n'));
+        current = [];
+      }
+    }
+  }
+  if (current.length > 0) failures.push(current.join('\n'));
   const annotations = failures.length > 0 ? failures : output.split(/\r?\n/).slice(-120);
   for (const message of annotations) {
     const safeMessage = message

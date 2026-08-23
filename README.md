@@ -78,21 +78,79 @@ menu of one-shot prompts. Three roles keep work moving without letting the
 same agent both build and approve its own output:
 
 ```mermaid
-flowchart LR
-  Brief[User brief] --> Planner[Planner]
-  Planner --> Plan[(plan.json\ndefault-FAIL)]
-  Session[(session.json)] --> Generator[Generator]
-  Plan --> Generator
-  Generator --> Sprint[(sprint.json)]
-  Sprint --> Evaluator[Evaluator]
-  Evaluator --> Eval[(eval.json)]
-  Eval -->|fail + feedback| Generator
-  Eval -->|pass| Verify[fast-verify]
-  Verify --> Demo[demo-coach]
-  Demo --> Judge[judge-sim]
-  Judge --> Ship[ship-pack]
-  Trace[(events.jsonl)] --> Replay[replay / report]
+flowchart TD
+  subgraph Runtime["Harness Runtime"]
+    Init["hackathon init"]
+    Session[("session.json")]
+    Resume["hackathon resume"]
+    Status["hackathon status"]
+    Trace[("events.jsonl")]
+    TraceCLI["hackathon trace"]
+  end
+
+  subgraph Planner["Planner"]
+    Brief["User brief"] --> Scope["scope-knife"]
+    Scope --> Plan[("plan.json")]
+    Plan -->|"default-FAIL\npasses=false"| Resume
+  end
+
+  subgraph Generator["Generator"]
+    Session --> Resume
+    Resume --> Pick["Pick next unpassed KEEP feature"]
+    Pick --> NewSprint["hackathon sprint new --feature X"]
+    NewSprint --> Sprint[("sprint.json")]
+    Sprint --> Approve["hackathon sprint approve"]
+    Approve --> Build["Build one feature"]
+    Build --> Commit["Self-verify + git commit"]
+  end
+
+  subgraph Evaluator["Evaluator"]
+    Commit --> Review["hackathon sprint review"]
+    Review --> Eval[("eval.json")]
+    Eval --> Run["Run tests / browser / commands"]
+    Run --> Verdict{"All criteria pass?"}
+    Verdict -->|"No: feedback"| Feedback["session.json\nnext task + blockers"]
+    Feedback --> Pick
+    Verdict -->|"Yes: evidence"| Accept["hackathon sprint accept"]
+    Accept --> Plan
+  end
+
+  subgraph Delivery["Delivery Pipeline"]
+    Accept --> Verify["fast-verify"]
+    Verify --> Demo["demo-coach"]
+    Demo --> Judge["judge-sim"]
+    Judge --> Ship["ship-pack"]
+    Ship --> Ready["Ready to submit"]
+  end
+
+  subgraph Observability["Observability"]
+    Trace --> TraceCLI
+    Trace --> Replay["hackathon replay"]
+    Trace --> Report["hackathon report"]
+  end
+
+  Commit -. "trace" .-> Trace
+  Review -. "trace" .-> Trace
+  Accept -. "trace" .-> Trace
+  Ship -. "trace" .-> Trace
+  Sprint -. "budget: --minutes --max-iterations" .-> Budget["Budget gate"]
+  Budget -->|"exhausted"| Blocked["sprint blocked"]
+  Blocked --> Pick
 ```
+
+### Runtime command map
+
+| Phase    | Command                                                     | State artifact                              |
+| -------- | ----------------------------------------------------------- | ------------------------------------------- |
+| Init     | `hackathon init`                                            | `.hackathon/`, `session.json`, `SESSION.md` |
+| Plan     | `hackathon run scope-knife --apply`                         | `plan.json` with `passes: false`            |
+| Resume   | `hackathon resume`                                          | compact handoff from `session.json`         |
+| Contract | `hackathon sprint new` + `hackathon sprint approve`         | `sprint.json`                               |
+| Review   | `hackathon sprint review`                                   | `eval.json` with default-FAIL criteria      |
+| Accept   | `hackathon sprint accept`                                   | `plan.json`, `sprint.json`, `session.json`  |
+| Verify   | `hackathon run fast-verify`                                 | `verify.json`                               |
+| Ship     | `hackathon flow --execute`                                  | `demo.json`, `review.json`, `ship.json`     |
+| Observe  | `hackathon trace` / `hackathon replay` / `hackathon report` | `events.jsonl` + report                     |
 
 | Role          | Responsibility                                                                                               | Must not do                                                      |
 | ------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |
@@ -184,6 +242,12 @@ hackathon run demo-coach # drafts the pitch
 hackathon run judge-sim # self-reviews before submitting
 hackathon run ship-pack # packages and checks for leaks
 hackathon resume # handoff brief for a fresh agent or new session
+hackathon sprint new --feature Auth # create a default-FAIL contract
+hackathon sprint approve # lock the contract before building
+hackathon sprint review # emit the evaluator handoff
+# Evaluator fills eval.json, then:
+hackathon sprint accept # apply the verdict back to plan/session
+hackathon trace # inspect the runtime event log
 
 # Chained run: follows Format v2 dependencies automatically
 hackathon run demo-rehearsal --chain # scope-knife -> fast-verify -> demo-coach -> demo-rehearsal

@@ -27,4 +27,4 @@ export {
   nextUnpassedFeature,
   enforceSprintBudget,
 } from './harness/sprint.js';
-export { appendTrace, readTraces, traceStats, traceFile } from './harness/trace.js';
+export { appendTrace, readTraces, traceStats, traceFile, traceEnabled } from './harness/trace.js';

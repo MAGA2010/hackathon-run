@@ -10,6 +10,8 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [x] **`hackathon sprint`** — `new / approve / review / status / budget` contract lifecycle
 - [x] **`hackathon trace`** — inspect `.hackathon/traces/events.jsonl`
 - [x] **MCP tools** — `resume`, `sprint_new`, `sprint_review`, `trace` over JSON-RPC
+- [x] **`sprint accept`** — applies evaluator verdicts back to `plan.json`, `sprint.json`, and `session.json`
+- [x] **Runtime observability** — `hackathon status` now reports session, sprint, eval, and trace counts
 - [x] **Planner / Generator / Evaluator role prompts** under `agents/`
 - [x] Skill matcher v2 (bigram + phrase + action-verb scoring)
 - [x] `hackathon status` / `doctor` / `flow` CLI commands

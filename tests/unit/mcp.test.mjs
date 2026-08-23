@@ -46,11 +46,11 @@ describe('MCP server', () => {
     assert.equal(res[0].result.serverInfo.name, 'hackathon-run');
   });
 
-  it('responds to tools/list with 18 tools', async () => {
+  it('responds to tools/list with 19 tools', async () => {
     const res = await call({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
     assert.equal(res.length, 1);
     const tools = res[0].result.tools;
-    assert.equal(tools.length, 18);
+    assert.equal(tools.length, 19);
     const names = tools.map((t) => t.name);
     assert.ok(names.includes('list_skills'));
     assert.ok(names.includes('get_skill'));
@@ -59,6 +59,7 @@ describe('MCP server', () => {
     assert.ok(names.includes('resume'));
     assert.ok(names.includes('sprint_new'));
     assert.ok(names.includes('sprint_review'));
+    assert.ok(names.includes('sprint_accept'));
     assert.ok(names.includes('trace'));
     assert.ok(names.includes('replay'));
     assert.ok(names.includes('report'));

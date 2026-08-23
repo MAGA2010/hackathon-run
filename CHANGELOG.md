@@ -16,10 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `.hackathon/state/session.json` so a fresh agent can continue work without
   the previous conversation.
 - **`hackathon sprint`** — contract lifecycle commands:
-  `new`, `approve`, `review`, `status`, `budget`.
+  `new`, `approve`, `review`, `accept`, `status`, `budget`.
+- **`sprint accept`** — reads `eval.json` and applies the evaluator verdict:
+  passing criteria flip `plan.features[].passes`, record evidence, update
+  `sprint.json`, and write the next task to `session.json`; failed verdicts
+  write feedback back into the session for the next generator iteration.
 - **`hackathon trace`** — reads the append-only `.hackathon/traces/events.jsonl`
   harness event log.
-- **MCP tools** — `resume`, `sprint_new`, `sprint_review`, and `trace` are
+- **MCP tools** — `resume`, `sprint_new`, `sprint_review`, `sprint_accept`, and `trace` are
   now available over JSON-RPC for Codex / Claude / MCP clients.
 - **Planner / Generator / Evaluator role prompts** in `agents/`, plus role and
   harness metadata in `agents/openai.yaml`.
@@ -34,6 +38,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `hackathon run`, `hackathon flow --execute`, and `hackathon report` now
   record or surface harness trace events.
 - `hackathon flow` exposes `traceCount` in its JSON plan.
+- `hackathon status` now includes session, sprint, eval, and trace counts in
+  both JSON and human output.
+- Trace writing only happens inside an initialized `.hackathon/` and can be
+  disabled with `HACKATHON_TRACE=0`.
 
 ### Fixed
 

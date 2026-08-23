@@ -3,6 +3,9 @@
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import { readSession } from '../../harness/session.js';
+import { readSprint } from '../../harness/sprint.js';
+import { readTraces } from '../../harness/trace.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
 
@@ -16,6 +19,30 @@ export interface StatusSummary {
   lifecycle: LifecycleStage;
   nextSuggestion: string | null;
   warnings: string[];
+  runtime: RuntimeSummary;
+}
+
+interface RuntimeSummary {
+  session: {
+    current_stage: string;
+    next_task: string;
+    completed_count: number;
+    blockers_count: number;
+  } | null;
+  sprint: {
+    name: string;
+    feature: string;
+    status: string;
+    verdict: string | null;
+    criteria_passed: number;
+    criteria_total: number;
+  } | null;
+  eval: {
+    verdict: string;
+    criteria_passed: number;
+    criteria_total: number;
+  } | null;
+  traceCount: number;
 }
 
 interface FileSummary {
@@ -155,6 +182,59 @@ function readJson(path: string): unknown | null {
   }
 }
 
+function summarizeRuntime(cwd: string, stateDir: string): RuntimeSummary {
+  let session: RuntimeSummary['session'] = null;
+  try {
+    const s = readSession(cwd);
+    if (s) {
+      session = {
+        current_stage: s.current_stage,
+        next_task: s.next_task,
+        completed_count: s.completed.length,
+        blockers_count: s.blockers.length,
+      };
+    }
+  } catch {
+    session = null;
+  }
+
+  let sprint: RuntimeSummary['sprint'] = null;
+  try {
+    const s = readSprint(cwd);
+    if (s) {
+      sprint = {
+        name: s.name,
+        feature: s.feature,
+        status: s.status,
+        verdict: s.verdict ?? null,
+        criteria_passed: s.criteria.filter((c) => c.passes).length,
+        criteria_total: s.criteria.length,
+      };
+    }
+  } catch {
+    sprint = null;
+  }
+
+  const evalData = readJson(join(stateDir, 'eval.json'));
+  const evalCriteria = Array.isArray((evalData as Record<string, unknown> | null)?.criteria)
+    ? ((evalData as Record<string, unknown>).criteria as Array<Record<string, unknown>>)
+    : [];
+  const evalSummary = evalData
+    ? {
+        verdict: String((evalData as Record<string, unknown>).verdict ?? 'pending'),
+        criteria_passed: evalCriteria.filter((c) => c.passes === true).length,
+        criteria_total: evalCriteria.length,
+      }
+    : null;
+
+  return {
+    session,
+    sprint,
+    eval: evalSummary,
+    traceCount: readTraces(cwd).length,
+  };
+}
+
 export function status(opts: { cwd: string; json?: boolean }): number {
   const cwd = resolve(opts.cwd);
   const stateDir = join(cwd, '.hackathon', 'state');
@@ -215,6 +295,7 @@ export function status(opts: { cwd: string; json?: boolean }): number {
   }
   const lifecycle = stageFor(files);
   const nextSuggestion = NEXT_SUGGESTION[lifecycle];
+  const runtime = summarizeRuntime(cwd, stateDir);
   const summary: StatusSummary = {
     initialized,
     stateDir,
@@ -222,6 +303,7 @@ export function status(opts: { cwd: string; json?: boolean }): number {
     lifecycle,
     nextSuggestion,
     warnings,
+    runtime,
   };
   if (opts.json) {
     console.log(JSON.stringify(summary, null, 2));
@@ -252,6 +334,19 @@ export function status(opts: { cwd: string; json?: boolean }): number {
     console.log('  ' + c.green(f.padEnd(14)) + ' ' + age);
     for (const line of info.highlights) console.log('    ' + c.dim('\u2022 ' + line));
   }
+  if (runtime.sprint) {
+    console.log(
+      c.bold('Sprint:   ') +
+        `${runtime.sprint.name} [${runtime.sprint.status}] ${runtime.sprint.criteria_passed}/${runtime.sprint.criteria_total} criteria passing`,
+    );
+  }
+  if (runtime.eval) {
+    console.log(
+      c.bold('Eval:     ') +
+        `${runtime.eval.verdict} ${runtime.eval.criteria_passed}/${runtime.eval.criteria_total} criteria`,
+    );
+  }
+  console.log(c.bold('Trace:    ') + `${runtime.traceCount} events`);
   if (warnings.length) {
     console.log();
     console.log(c.yellow('Warnings:'));

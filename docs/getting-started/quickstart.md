@@ -66,7 +66,15 @@ hackathon sprint review
 ```
 
 The generator builds against `sprint.json`; the evaluator fills
-`eval.json` with evidence and feedback.
+`eval.json` with evidence and feedback. Apply the verdict:
+
+```bash
+hackathon sprint accept
+```
+
+On pass, the feature is flipped to `passes: true` and evidence is written to
+`plan.json`. On fail, feedback is written back into `session.json` for the
+next generator iteration.
 
 ## 3. Verify the demo path
 

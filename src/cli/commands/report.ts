@@ -162,6 +162,9 @@ function titleOf(file: string): string {
     retro: 'Retrospective',
     rehearsal: 'Demo rehearsal',
     roster: 'Roster',
+    sprint: 'Sprint contract',
+    eval: 'Evaluator verdict',
+    session: 'Session handoff',
   };
   return map[stem] ?? stem;
 }
@@ -191,6 +194,16 @@ function highlightOf(file: string, json: Record<string, any>): string {
       return `${json.time_remaining_minutes ?? '?'}min, stage=${json.current_stage ?? '?'}`;
     case 'stack':
       return json.recommendation?.stack ?? '?';
+    case 'sprint':
+      return `${json.name ?? '?'} [${json.status ?? '?'}] ${
+        (json.criteria ?? []).filter((c: any) => c.passes).length
+      }/${(json.criteria ?? []).length} criteria`;
+    case 'eval':
+      return `${json.verdict ?? '?'} ${
+        (json.criteria ?? []).filter((c: any) => c.passes).length
+      }/${(json.criteria ?? []).length} criteria`;
+    case 'session':
+      return `${json.current_stage ?? '?'}: ${json.next_task ?? ''}`;
     default:
       return '(parsed)';
   }
@@ -264,6 +277,28 @@ function sectionOf(file: string, json: Record<string, any>): string {
       for (const r of json.runners_up ?? []) {
         bullets.push(`- Runner-up: ${r.stack ?? r}`);
       }
+      break;
+    case 'sprint':
+      for (const criterion of json.criteria ?? []) {
+        const mark = criterion.passes ? 'x' : ' ';
+        bullets.push(`- [${mark}] ${criterion.id}: ${criterion.description}`);
+      }
+      for (const item of json.feedback ?? []) bullets.push(`- Feedback: ${item}`);
+      break;
+    case 'eval':
+      for (const criterion of json.criteria ?? []) {
+        const mark = criterion.passes ? 'x' : ' ';
+        bullets.push(`- [${mark}] ${criterion.id}: ${criterion.description}`);
+        for (const evidence of criterion.evidence ?? []) {
+          bullets.push(`  - ${evidence.kind}: ${evidence.value}`);
+        }
+      }
+      for (const item of json.feedback ?? []) bullets.push(`- Feedback: ${item}`);
+      break;
+    case 'session':
+      bullets.push(`- **Stage:** ${json.current_stage ?? '?'}`);
+      bullets.push(`- **Next:** ${json.next_task ?? '?'}`);
+      for (const item of json.blockers ?? []) bullets.push(`- Blocker: ${item}`);
       break;
     default:
       return '';

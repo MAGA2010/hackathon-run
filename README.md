@@ -125,15 +125,23 @@ hackathon sprint approve
 hackathon sprint review
 
 # Evaluator fills .hackathon/state/eval.json with evidence and feedback, then:
+hackathon sprint accept
 hackathon trace
 hackathon flow --execute
 ```
+
+`sprint accept` applies the evaluator verdict: a passing eval flips the
+feature to `passes: true` and records evidence; a failing eval writes feedback
+back to `session.json` for the next generator iteration.
 
 Cost and time are first-class gates. Set them when creating a sprint:
 
 ```bash
 hackathon sprint budget --minutes 45 --max-iterations 3
 ```
+
+Trace is on by default for initialized projects. Disable it with
+`HACKATHON_TRACE=0` when you do not want runtime event noise.
 
 Run an A/B measurement before adding more harness machinery:
 

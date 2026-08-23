@@ -7,7 +7,7 @@
  * what actually happened rather than relying on final state snapshots.
  */
 
-import { appendFileSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 export interface TraceEvent {
@@ -30,7 +30,13 @@ export function traceFile(cwd: string): string {
   return join(traceDir(cwd), TRACE_FILE);
 }
 
-export function appendTrace(cwd: string, event: Omit<TraceEvent, 'at'>): string {
+export function traceEnabled(cwd: string): boolean {
+  if (process.env.HACKATHON_TRACE === '0') return false;
+  return existsSync(resolve(cwd, '.hackathon'));
+}
+
+export function appendTrace(cwd: string, event: Omit<TraceEvent, 'at'>): string | null {
+  if (!traceEnabled(cwd)) return null;
   const dir = traceDir(cwd);
   mkdirSync(dir, { recursive: true });
   const full: TraceEvent = { ...event, at: new Date().toISOString() };
@@ -89,5 +95,4 @@ export function clearTraces(cwd: string): void {
   mkdirSync(dir, { recursive: true });
   const target = traceFile(cwd);
   appendFileSync(target, '', 'utf8');
-  readdirSync(dir); // keep directory warm; no further side effect
 }

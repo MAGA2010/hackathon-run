@@ -93,7 +93,7 @@ commands:
 - `hackathon match "<utterance>"`
 - `hackathon init`, `hackathon status`, `hackathon flow`
 - `hackathon resume` — print the handoff brief for a fresh agent
-- `hackathon sprint new|approve|review|status|budget` — contract lifecycle
+- `hackathon sprint new|approve|review|accept|status|budget` — contract lifecycle
 - `hackathon trace` — inspect the append-only harness event log
 - `hackathon doctor`, `hackathon validate`, `hackathon validate-skill`
 - `hackathon replay`, `hackathon report`, `hackathon skills pin`

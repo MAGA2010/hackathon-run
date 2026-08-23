@@ -157,6 +157,7 @@ sprintCmd
   .option('--minutes <n>', 'time budget in minutes', parseInt)
   .option('--max-iterations <n>', 'generator/evaluator iteration cap', parseInt)
   .option('-f, --force', 'overwrite an existing active sprint')
+  .option('--json', 'machine-readable JSON output')
   .option('-C, --cwd <path>', 'repo root', process.cwd())
   .action((opts) =>
     process.exit(
@@ -168,6 +169,7 @@ sprintCmd
         minutes: opts.minutes,
         maxIterations: opts.maxIterations,
         force: opts.force,
+        json: Boolean(opts.json),
         cwd: opts.cwd,
       }),
     ),
@@ -176,14 +178,37 @@ sprintCmd
 sprintCmd
   .command('approve')
   .description('Approve the sprint contract before the generator starts')
+  .option('--json', 'machine-readable JSON output')
   .option('-C, --cwd <path>', 'repo root', process.cwd())
-  .action((opts) => process.exit(sprint({ subcommand: 'approve', cwd: opts.cwd })));
+  .action((opts) =>
+    process.exit(sprint({ subcommand: 'approve', cwd: opts.cwd, json: Boolean(opts.json) })),
+  );
 
 sprintCmd
   .command('review')
   .description('Emit the evaluator handoff and eval.json skeleton')
+  .option('--json', 'machine-readable JSON output')
   .option('-C, --cwd <path>', 'repo root', process.cwd())
-  .action((opts) => process.exit(sprint({ subcommand: 'review', cwd: opts.cwd })));
+  .action((opts) =>
+    process.exit(sprint({ subcommand: 'review', cwd: opts.cwd, json: Boolean(opts.json) })),
+  );
+
+sprintCmd
+  .command('accept')
+  .description('Apply the evaluator verdict from eval.json back to plan.json and session.json')
+  .option('--owner <name>', 'owner to record on the passing feature')
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts) =>
+    process.exit(
+      sprint({
+        subcommand: 'accept',
+        owner: opts.owner,
+        json: Boolean(opts.json),
+        cwd: opts.cwd,
+      }),
+    ),
+  );
 
 sprintCmd
   .command('status')
@@ -199,6 +224,7 @@ sprintCmd
   .description('Set time and iteration gates on the active sprint')
   .option('--minutes <n>', 'time budget in minutes', parseInt)
   .option('--max-iterations <n>', 'iteration cap', parseInt)
+  .option('--json', 'machine-readable JSON output')
   .option('-C, --cwd <path>', 'repo root', process.cwd())
   .action((opts) =>
     process.exit(
@@ -206,6 +232,7 @@ sprintCmd
         subcommand: 'budget',
         minutes: opts.minutes,
         maxIterations: opts.maxIterations,
+        json: Boolean(opts.json),
         cwd: opts.cwd,
       }),
     ),

@@ -162,6 +162,19 @@ const TOOLS: ToolDef[] = [
     },
   },
   {
+    name: 'sprint_accept',
+    description:
+      'Apply the evaluator verdict from eval.json back to plan.json, sprint.json, and session.json.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        owner: { type: 'string', description: 'owner to record on a passing feature' },
+        cwd: { type: 'string', description: 'repo root; defaults to CWD' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
     name: 'trace',
     description: 'Read the append-only harness event log at .hackathon/traces/events.jsonl.',
     inputSchema: {
@@ -439,12 +452,23 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
           minutes: args.minutes != null ? Number(args.minutes) : undefined,
           maxIterations: args.max_iterations != null ? Number(args.max_iterations) : undefined,
           force: Boolean(args.force),
+          json: true,
         }),
       );
     }
     case 'sprint_review': {
       return captureJsonCommand(() =>
-        sprint({ subcommand: 'review', cwd: String(args.cwd ?? cwd) }),
+        sprint({ subcommand: 'review', cwd: String(args.cwd ?? cwd), json: true }),
+      );
+    }
+    case 'sprint_accept': {
+      return captureJsonCommand(() =>
+        sprint({
+          subcommand: 'accept',
+          cwd: String(args.cwd ?? cwd),
+          owner: args.owner ? String(args.owner) : undefined,
+          json: true,
+        }),
       );
     }
     case 'trace': {

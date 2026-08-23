@@ -28,3 +28,24 @@ export {
   enforceSprintBudget,
 } from './harness/sprint.js';
 export { appendTrace, readTraces, traceStats, traceFile, traceEnabled } from './harness/trace.js';
+export {
+  progressPath,
+  progressExists,
+  readProgress,
+  defaultProgress,
+  appendProgress,
+  PROGRESS_FILE,
+} from './harness/progress.js';
+export {
+  stopPath,
+  steerPath,
+  isStopped,
+  stopMessage,
+  writeStop,
+  clearStop,
+  writeSteer,
+  readSteer,
+  guardStatus,
+  STOP_FILE,
+  STEER_FILE,
+} from './harness/guard.js';

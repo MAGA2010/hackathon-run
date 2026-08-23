@@ -27,6 +27,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   now available over JSON-RPC for Codex / Claude / MCP clients.
 - **Planner / Generator / Evaluator role prompts** in `agents/`, plus role and
   harness metadata in `agents/openai.yaml`.
+- **Initializer role prompt** in `agents/initializer.md`: first-session setup,
+  default-FAIL plan, smoke test, progress file, and one clean initial commit.
+- **`hackathon checkpoint`** — appends an agent-maintained entry to
+  `.hackathon/PROGRESS.md` and updates `session.json`.
+- **`hackathon guard`** — operator controls: `stop`, `clear`, `steer`, and
+  `status`; `AGENT_STOP` halts `resume`, `STEER.md` is surfaced once and
+  cleared.
+- **MCP tools** — `checkpoint`, `guard_status`, `guard_stop`, `guard_clear`,
+  and `guard_steer`.
 - **`scripts/harness-ab.mjs`** — compares solo-agent vs harness runs by wall
   time, exit code, and output size; wired as `npm run ab:harness`.
 
@@ -35,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `plan.schema.json` accepts the default-FAIL contract fields; existing plans
   without them remain valid for backward compatibility.
 - `hackathon init` seeds `session.json`, `SESSION.md`, and `.hackathon/traces/`.
+- `hackathon init` also seeds `.hackathon/PROGRESS.md`, the agent-maintained
+  handoff log.
+- `hackathon resume` now surfaces a one-shot `STEER.md`, refuses to continue
+  while `AGENT_STOP` exists, and reports the progress file path.
 - `hackathon run`, `hackathon flow --execute`, and `hackathon report` now
   record or surface harness trace events.
 - `hackathon flow` exposes `traceCount` in its JSON plan.
@@ -42,8 +55,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   both JSON and human output.
 - Trace writing only happens inside an initialized `.hackathon/` and can be
   disabled with `HACKATHON_TRACE=0`.
-- README documents the ChatGPT / OpenAI production agent-loop pattern and maps
-  it to the harness runtime, commands, and state artifacts.
+- README documents the ChatGPT / OpenAI production agent-loop pattern and
+  Anthropic's long-running harness pattern (initializer, progress handoff,
+  operator controls), mapped to the harness runtime, commands, and state
+  artifacts.
 
 ### Fixed
 

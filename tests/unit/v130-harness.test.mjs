@@ -18,6 +18,15 @@ import {
 } from '../../dist/harness/sprint.js';
 import { appendTrace, readTraces, traceStats } from '../../dist/harness/trace.js';
 import { readState, writeState } from '../../dist/harness/state.js';
+import { appendProgress, progressPath, readProgress } from '../../dist/harness/progress.js';
+import {
+  isStopped,
+  stopMessage,
+  writeStop,
+  clearStop,
+  writeSteer,
+  guardStatus,
+} from '../../dist/harness/guard.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = dirname(dirname(HERE));
@@ -73,6 +82,90 @@ describe('session handoff', () => {
     assert.equal(back.current_stage, 'building');
     assert.equal(back.next_task, 'Build Auth against sprint-1');
     assert.equal(back.environment.init_command, 'npm run dev');
+    rmSync(repo, { recursive: true, force: true });
+  });
+});
+
+describe('agent-maintained progress', () => {
+  it('appends a checkpoint and round-trips the progress file', () => {
+    const repo = makeHarnessRepo();
+    const path = appendProgress(repo, {
+      actor: 'generator',
+      stage: 'building',
+      feature: 'Auth',
+      next_task: 'Create a sprint for Notes CRUD.',
+      summary: 'Implemented sign-up and dashboard redirect.',
+    });
+    assert.ok(existsSync(path));
+    assert.ok(readProgress(repo)?.includes('Implemented sign-up and dashboard redirect.'));
+    assert.equal(progressPath(repo), path);
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('checkpoint CLI appends progress and updates session.json', () => {
+    const repo = makeHarnessRepo();
+    const r = spawnSync(
+      process.execPath,
+      [
+        CLI,
+        'checkpoint',
+        '--summary',
+        'Finished Auth sprint.',
+        '--stage',
+        'verifying',
+        '--feature',
+        'Auth',
+        '--json',
+        '-C',
+        repo,
+      ],
+      { encoding: 'utf8' },
+    );
+    assert.equal(r.status, 0, r.stderr);
+    const payload = JSON.parse(r.stdout);
+    assert.equal(payload.ok, true);
+    assert.ok(existsSync(payload.path));
+    const session = readSession(repo);
+    assert.equal(session.current_stage, 'verifying');
+    rmSync(repo, { recursive: true, force: true });
+  });
+});
+
+describe('operator controls', () => {
+  it('surfaces a steer once and clears it', () => {
+    const repo = makeHarnessRepo();
+    writeSteer(repo, 'Prioritize the browser demo path, not unit tests.');
+    const r = spawnSync(process.execPath, [CLI, 'resume', '--json', '-C', repo], {
+      encoding: 'utf8',
+    });
+    assert.equal(r.status, 0, r.stderr);
+    const payload = JSON.parse(r.stdout);
+    assert.equal(payload.steer, 'Prioritize the browser demo path, not unit tests.');
+    assert.equal(existsSync(join(repo, '.hackathon', 'STEER.md')), false);
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('AGENT_STOP makes resume refuse to continue until cleared', () => {
+    const repo = makeHarnessRepo();
+    writeStop(repo, 'Budget ran out.');
+    assert.equal(isStopped(repo), true);
+    assert.equal(stopMessage(repo), 'Budget ran out.');
+
+    const r = spawnSync(process.execPath, [CLI, 'resume', '--json', '-C', repo], {
+      encoding: 'utf8',
+    });
+    assert.equal(r.status, 1);
+    const payload = JSON.parse(r.stdout);
+    assert.equal(payload.stopped, true);
+    assert.equal(payload.stop_message, 'Budget ran out.');
+
+    clearStop(repo);
+    const resume = spawnSync(process.execPath, [CLI, 'resume', '--json', '-C', repo], {
+      encoding: 'utf8',
+    });
+    assert.equal(resume.status, 0);
+    assert.equal(JSON.parse(resume.stdout).stopped, false);
+    assert.equal(guardStatus(repo).stopped, false);
     rmSync(repo, { recursive: true, force: true });
   });
 });

@@ -35,6 +35,8 @@ import { replay } from './commands/replay.js';
 import { report } from './commands/report.js';
 import { resume } from './commands/resume.js';
 import { sprint } from './commands/sprint.js';
+import { checkpoint } from './commands/checkpoint.js';
+import { guard } from './commands/guard.js';
 import { trace } from './commands/trace.js';
 import { skills } from './commands/skills.js';
 import { search as skillsSearch } from './commands/skills-search.js';
@@ -143,6 +145,70 @@ program
   .option('--json', 'machine-readable JSON output')
   .option('-C, --cwd <path>', 'repo root', process.cwd())
   .action((opts) => process.exit(resume({ cwd: opts.cwd, json: Boolean(opts.json) })));
+
+program
+  .command('checkpoint')
+  .description('Append an agent-maintained progress entry to .hackathon/PROGRESS.md')
+  .requiredOption('--summary <text>', 'what this session changed')
+  .option('--stage <text>', 'current lifecycle stage')
+  .option('--next-task <text>', 'next task for the next session')
+  .option('--feature <name>', 'feature worked on')
+  .option('--actor <name>', 'actor writing the checkpoint', 'agent')
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts) =>
+    process.exit(
+      checkpoint({
+        cwd: opts.cwd,
+        summary: opts.summary,
+        stage: opts.stage,
+        nextTask: opts.nextTask,
+        feature: opts.feature,
+        actor: opts.actor,
+        json: Boolean(opts.json),
+      }),
+    ),
+  );
+
+const guardCmd = program
+  .command('guard')
+  .description('Operator controls for a running harness (stop / clear / steer / status)');
+
+guardCmd
+  .command('stop [reason]')
+  .description('Write AGENT_STOP so future resume calls refuse to continue')
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((reason: string | undefined, opts) =>
+    process.exit(guard({ subcommand: 'stop', reason, cwd: opts.cwd, json: Boolean(opts.json) })),
+  );
+
+guardCmd
+  .command('clear')
+  .description('Clear AGENT_STOP and any pending STEER.md')
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts) =>
+    process.exit(guard({ subcommand: 'clear', cwd: opts.cwd, json: Boolean(opts.json) })),
+  );
+
+guardCmd
+  .command('steer <message>')
+  .description('Write a one-shot operator redirect that the next resume surfaces and clears')
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((message: string, opts) =>
+    process.exit(guard({ subcommand: 'steer', message, cwd: opts.cwd, json: Boolean(opts.json) })),
+  );
+
+guardCmd
+  .command('status')
+  .description('Show AGENT_STOP and STEER.md status')
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action((opts) =>
+    process.exit(guard({ subcommand: 'status', cwd: opts.cwd, json: Boolean(opts.json) })),
+  );
 
 const sprintCmd = program
   .command('sprint')

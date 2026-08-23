@@ -7,17 +7,17 @@ interface:
     A decision-making and execution skill pack for hackathon teams operating
     under time pressure. 15 skills that walk a team through clarify, scope,
     time-box, build, verify, demo, judge, ship, recover, pivot, retro.
-  brand_color: "#FF3B30"  # urgency red, matches BRAND.md
+  brand_color: '#FF3B30' # urgency red, matches BRAND.md
 
 policy:
-  allow_implicit_invocation: true   # the MCP server match_skill tool drives routing
+  allow_implicit_invocation: true # the MCP server match_skill tool drives routing
 
 dependencies:
   tools:
     - type: mcp
       transport: stdio
       command: node
-      args: ["dist/mcp/server.js"]
+      args: ['dist/mcp/server.js']
       manifest: ./mcp-manifest.json
 
 manifest_version: 1.2.1.4
@@ -33,6 +33,8 @@ skills_root: ./skills
 metadata:
   format: v2
   roles:
+    - name: initializer
+      prompt_file: ./agents/initializer.md
     - name: planner
       prompt_file: ./agents/planner.md
     - name: generator
@@ -44,6 +46,9 @@ metadata:
     sprint_file: .hackathon/state/sprint.json
     eval_file: .hackathon/state/eval.json
     trace_file: .hackathon/traces/events.jsonl
+    progress_file: .hackathon/PROGRESS.md
+    stop_file: .hackathon/AGENT_STOP
+    steer_file: .hackathon/STEER.md
   supported_frontmatter_extras:
     - version
     - category

@@ -24,6 +24,7 @@ import { log } from '../lib/logger.js';
 import { findPackageRoot } from '../../harness/package-root.js';
 import { buildSkeleton } from './run.js';
 import { defaultSession, writeSession } from '../../harness/session.js';
+import { defaultProgress } from '../../harness/progress.js';
 
 function copyDirSync(src: string, dst: string): void {
   mkdirSync(dst, { recursive: true });
@@ -119,6 +120,7 @@ export async function init(opts: InitOptions): Promise<number> {
 
   const session = defaultSession(root);
   writeSession(root, session);
+  writeFileSync(join(target, 'PROGRESS.md'), defaultProgress(root), 'utf8');
   writeFileSync(
     join(target, 'SESSION.md'),
     [
@@ -136,7 +138,8 @@ export async function init(opts: InitOptions): Promise<number> {
       '',
       '## Handoff rule',
       '',
-      'A fresh agent should read SESSION.md, state/plan.json, and state/session.json before doing anything.',
+      'A fresh agent should read SESSION.md, PROGRESS.md, state/plan.json, and state/session.json before doing anything.',
+      'Then read git log, run the init/verify commands, and pick one unpassed KEEP feature.',
       '',
     ].join('\n'),
     'utf8',

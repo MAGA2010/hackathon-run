@@ -57,16 +57,27 @@ Every state file is validated against a published JSON Schema in
 
 ## Harness state
 
-The harness layer adds three state artifacts:
+The harness layer adds five state artifacts and two operator-control files:
 
 - `session.json` — the compact handoff brief a fresh agent reads to resume work.
 - `sprint.json` — the agreed definition of done for the current feature.
 - `eval.json` — the evaluator's evidence-backed verdict and feedback.
+- `PROGRESS.md` — the agent-maintained progress log that every session reads
+  first and appends to before finishing.
+- `AGENT_STOP` — operator kill switch; `hackathon resume` refuses to continue
+  while it exists.
+- `STEER.md` — one-shot operator redirect, surfaced once by the next resume.
 
 `plan.json` is the default-FAIL contract: every KEEP feature starts with
 `passes: false`, and only evidence-backed evaluation can flip it. All
 harness actions are appended to `.hackathon/traces/events.jsonl` for replay,
 report, and retrospective analysis.
+
+The first context window uses `agents/initializer.md` to set up the
+environment: `hackathon init`, `scope-knife`, `PROGRESS.md`, smoke test, and a
+clean initial git commit. Later sessions run `hackathon resume`, read git log
+and progress, start the app, verify the demo path, and build one feature per
+sprint.
 
 ## The trigger matcher
 
@@ -94,6 +105,8 @@ commands:
 - `hackathon init`, `hackathon status`, `hackathon flow`
 - `hackathon resume` — print the handoff brief for a fresh agent
 - `hackathon sprint new|approve|review|accept|status|budget` — contract lifecycle
+- `hackathon checkpoint` — append an agent-maintained progress entry
+- `hackathon guard stop|clear|steer|status` — operator controls
 - `hackathon trace` — inspect the append-only harness event log
 - `hackathon doctor`, `hackathon validate`, `hackathon validate-skill`
 - `hackathon replay`, `hackathon report`, `hackathon skills pin`

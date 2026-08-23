@@ -13,8 +13,8 @@ hackathon init
 
 This creates `.hackathon/{skills,state,artifacts,traces}/` and copies the
 bundled skills into `.hackathon/skills/`. It also seeds
-`.hackathon/state/session.json` and `SESSION.md` as the handoff brief for a
-fresh agent.
+`.hackathon/state/session.json`, `SESSION.md`, and `PROGRESS.md` as the
+handoff brief for a fresh agent.
 
 `init` seeds the five canonical flow state files (`plan.json`, `verify.json`,
 `demo.json`, `review.json`, `ship.json`). The optional skills create their own
@@ -55,6 +55,23 @@ Resume later with:
 
 ```bash
 hackathon resume
+```
+
+Before building a new feature, read `PROGRESS.md` and git log, start the app,
+and smoke-test the demo path. End every session with:
+
+```bash
+hackathon checkpoint --summary "what this session changed"
+git commit -m "clean state after <feature>"
+```
+
+An operator can stop or redirect a long run without restarting it:
+
+```bash
+hackathon guard steer "prioritize the browser demo path"
+hackathon guard stop "budget ran out"
+hackathon guard status
+hackathon guard clear
 ```
 
 ## 2.5 Run one sprint
@@ -131,6 +148,8 @@ A hidden directory in your project. It contains:
 - `artifacts/` — human-readable markdown files
 - `traces/` — append-only `events.jsonl` harness log
 - `SESSION.md` — human-readable handoff summary
+- `PROGRESS.md` — agent-maintained progress log
+- `AGENT_STOP` / `STEER.md` — operator controls (created on demand)
 
 You commit `.hackathon/` (or not — your choice). The skills read state but
 never require state to exist.

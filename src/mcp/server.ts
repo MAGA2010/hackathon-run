@@ -4,7 +4,7 @@
  * Cursor, etc.).
  *
  * The server speaks JSON-RPC 2.0 over stdio (per the MCP spec). It exposes
- * four tools:
+ * the harness tools:
  *
  *   list_skills        - enumerate every bundled skill
  *   get_skill          - read a SKILL.md by name
@@ -17,8 +17,8 @@
  *   node dist/mcp/server.js
  *
  * We deliberately keep this minimal: no third-party SDK, no schema files,
- * no capability negotiation beyond the four tools above. The harness is
- * the value; the MCP wrapper is a thin transport.
+ * no capability negotiation beyond the tools above. The harness is the
+ * value; the MCP wrapper is a thin transport.
  */
 
 import { fileURLToPath } from 'node:url';
@@ -33,6 +33,8 @@ import { replay } from '../cli/commands/replay.js';
 import { report } from '../cli/commands/report.js';
 import { resume } from '../cli/commands/resume.js';
 import { sprint } from '../cli/commands/sprint.js';
+import { checkpoint } from '../cli/commands/checkpoint.js';
+import { guard } from '../cli/commands/guard.js';
 import { trace } from '../cli/commands/trace.js';
 import { runChain } from '../cli/commands/run.js';
 import { skills as skillsCommand } from '../cli/commands/skills.js';
@@ -130,6 +132,69 @@ const TOOLS: ToolDef[] = [
     inputSchema: {
       type: 'object',
       properties: { cwd: { type: 'string', description: 'repo root; defaults to CWD' } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'checkpoint',
+    description:
+      'Append an agent-maintained checkpoint to .hackathon/PROGRESS.md and update session.json.',
+    inputSchema: {
+      type: 'object',
+      required: ['summary'],
+      properties: {
+        summary: { type: 'string', description: 'what this session changed' },
+        stage: { type: 'string', description: 'current lifecycle stage' },
+        next_task: { type: 'string', description: 'next task for the next session' },
+        feature: { type: 'string', description: 'feature worked on' },
+        actor: { type: 'string', description: 'actor writing the checkpoint' },
+        cwd: { type: 'string', description: 'repo root; defaults to CWD' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'guard_status',
+    description:
+      'Show whether .hackathon/AGENT_STOP or .hackathon/STEER.md is present. Resume refuses to continue while stopped.',
+    inputSchema: {
+      type: 'object',
+      properties: { cwd: { type: 'string', description: 'repo root; defaults to CWD' } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'guard_stop',
+    description: 'Write .hackathon/AGENT_STOP so the next resume call refuses to continue.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        reason: { type: 'string', description: 'why the operator stopped the run' },
+        cwd: { type: 'string', description: 'repo root; defaults to CWD' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'guard_clear',
+    description: 'Clear AGENT_STOP and any pending STEER.md.',
+    inputSchema: {
+      type: 'object',
+      properties: { cwd: { type: 'string', description: 'repo root; defaults to CWD' } },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'guard_steer',
+    description:
+      'Write a one-shot operator redirect. The next resume surfaces it once and clears it.',
+    inputSchema: {
+      type: 'object',
+      required: ['message'],
+      properties: {
+        message: { type: 'string', description: 'operator redirect for the agent' },
+        cwd: { type: 'string', description: 'repo root; defaults to CWD' },
+      },
       additionalProperties: false,
     },
   },
@@ -440,6 +505,49 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
     }
     case 'resume': {
       return captureJsonCommand(() => resume({ cwd: String(args.cwd ?? cwd), json: true }));
+    }
+    case 'checkpoint': {
+      return captureJsonCommand(() =>
+        checkpoint({
+          cwd: String(args.cwd ?? cwd),
+          summary: String(args.summary ?? ''),
+          stage: args.stage ? String(args.stage) : undefined,
+          nextTask: args.next_task ? String(args.next_task) : undefined,
+          feature: args.feature ? String(args.feature) : undefined,
+          actor: args.actor ? String(args.actor) : undefined,
+          json: true,
+        }),
+      );
+    }
+    case 'guard_status': {
+      return captureJsonCommand(() =>
+        guard({ subcommand: 'status', cwd: String(args.cwd ?? cwd), json: true }),
+      );
+    }
+    case 'guard_stop': {
+      return captureJsonCommand(() =>
+        guard({
+          subcommand: 'stop',
+          cwd: String(args.cwd ?? cwd),
+          reason: args.reason ? String(args.reason) : undefined,
+          json: true,
+        }),
+      );
+    }
+    case 'guard_clear': {
+      return captureJsonCommand(() =>
+        guard({ subcommand: 'clear', cwd: String(args.cwd ?? cwd), json: true }),
+      );
+    }
+    case 'guard_steer': {
+      return captureJsonCommand(() =>
+        guard({
+          subcommand: 'steer',
+          cwd: String(args.cwd ?? cwd),
+          message: String(args.message ?? ''),
+          json: true,
+        }),
+      );
     }
     case 'sprint_new': {
       return captureJsonCommand(() =>

@@ -46,17 +46,22 @@ describe('MCP server', () => {
     assert.equal(res[0].result.serverInfo.name, 'hackathon-run');
   });
 
-  it('responds to tools/list with 19 tools', async () => {
+  it('responds to tools/list with 24 tools', async () => {
     const res = await call({ jsonrpc: '2.0', id: 2, method: 'tools/list' });
     assert.equal(res.length, 1);
     const tools = res[0].result.tools;
-    assert.equal(tools.length, 19);
+    assert.equal(tools.length, 24);
     const names = tools.map((t) => t.name);
     assert.ok(names.includes('list_skills'));
     assert.ok(names.includes('get_skill'));
     assert.ok(names.includes('match_skill'));
     assert.ok(names.includes('status'));
     assert.ok(names.includes('resume'));
+    assert.ok(names.includes('checkpoint'));
+    assert.ok(names.includes('guard_status'));
+    assert.ok(names.includes('guard_stop'));
+    assert.ok(names.includes('guard_clear'));
+    assert.ok(names.includes('guard_steer'));
     assert.ok(names.includes('sprint_new'));
     assert.ok(names.includes('sprint_review'));
     assert.ok(names.includes('sprint_accept'));
@@ -278,6 +283,86 @@ describe('MCP server', () => {
       assert.equal(payload.exitCode, 0);
       assert.ok(payload.session);
       assert.equal(payload.session.current_stage, 'planning');
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('checkpoint appends progress over MCP', async () => {
+    const { mkdtempSync, mkdirSync, rmSync, existsSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'hs-mcp-checkpoint-'));
+    try {
+      mkdirSync(join(dir, '.hackathon', 'state'), { recursive: true });
+      const res = await call({
+        jsonrpc: '2.0',
+        id: 16,
+        method: 'tools/call',
+        params: {
+          name: 'checkpoint',
+          arguments: {
+            cwd: dir,
+            summary: 'Finished the sign-up flow.',
+            stage: 'building',
+            feature: 'Auth',
+          },
+        },
+      });
+      const payload = JSON.parse(res[0].result.content[0].text);
+      assert.equal(payload.exitCode, 0);
+      assert.equal(payload.ok, true);
+      assert.ok(existsSync(payload.path));
+      assert.ok(payload.path.includes('PROGRESS.md'));
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('guard stop/status/clear works over MCP', async () => {
+    const { mkdtempSync, mkdirSync, rmSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'hs-mcp-guard-'));
+    try {
+      mkdirSync(join(dir, '.hackathon', 'state'), { recursive: true });
+
+      const stopRes = await call({
+        jsonrpc: '2.0',
+        id: 17,
+        method: 'tools/call',
+        params: {
+          name: 'guard_stop',
+          arguments: { cwd: dir, reason: 'budget exhausted' },
+        },
+      });
+      assert.equal(JSON.parse(stopRes[0].result.content[0].text).exitCode, 0);
+
+      const statusRes = await call({
+        jsonrpc: '2.0',
+        id: 18,
+        method: 'tools/call',
+        params: { name: 'guard_status', arguments: { cwd: dir } },
+      });
+      const status = JSON.parse(statusRes[0].result.content[0].text);
+      assert.equal(status.stopped, true);
+      assert.equal(status.stop_message, 'budget exhausted');
+
+      const clearRes = await call({
+        jsonrpc: '2.0',
+        id: 19,
+        method: 'tools/call',
+        params: { name: 'guard_clear', arguments: { cwd: dir } },
+      });
+      assert.equal(JSON.parse(clearRes[0].result.content[0].text).exitCode, 0);
+
+      const afterRes = await call({
+        jsonrpc: '2.0',
+        id: 20,
+        method: 'tools/call',
+        params: { name: 'guard_status', arguments: { cwd: dir } },
+      });
+      assert.equal(JSON.parse(afterRes[0].result.content[0].text).stopped, false);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

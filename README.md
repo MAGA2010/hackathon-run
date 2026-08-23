@@ -74,13 +74,19 @@ Each skill is **independently invokable**. You can run any of them at any time w
 ## Agent workflow
 
 Hackathon Run works best when an agent treats it as a **harness**, not as a
-menu of one-shot prompts. Three roles keep work moving without letting the
-same agent both build and approve its own output.
+menu of one-shot prompts. Four roles keep long-running work moving without
+letting the same agent both build and approve its own output: an initializer
+sets up the first session, a planner writes the default-FAIL contract, a
+generator builds one feature per sprint, and an evaluator verifies it from a
+fresh context.
 
 The runtime follows the production agent-loop pattern used by ChatGPT and the
 OpenAI Agents SDK: context is assembled from sessions, every input and output
 passes a guardrail, tools return observable results, the loop is bounded by
-budget, and every meaningful step is traced.
+budget, and every meaningful step is traced. It also follows Anthropic's
+long-running harness pattern: the first session initializes the environment,
+every later session reads `PROGRESS.md` + git log, and the operator can stop or
+steer the loop from the outside.
 
 ### Production agent loop
 
@@ -108,18 +114,20 @@ real command, state artifact, or feedback handoff:
 
 ```mermaid
 flowchart TD
-  subgraph Entry["1. Planner / Entry & Planning"]
+  subgraph First["0. Initializer / First Session"]
     direction TB
-    Brief(["User brief"]) --> Init["hackathon init"]
-    Init --> Scope["hackathon run scope-knife --apply"]
+    Brief(["User brief"]) --> InitCmd["hackathon init"]
+    InitCmd --> Scope["hackathon run scope-knife --apply"]
     Scope --> Plan[("plan.json\nP0/P1/P2 + default-FAIL")]
     Scope --> Session[("session.json\nhandoff")]
-    Plan -->|"KEEP features start passes=false"| Resume
+    InitCmd --> Progress[("PROGRESS.md\nagent-maintained")]
+    Progress --> FirstCommit["git commit\ninitial setup"]
+    FirstCommit -->|"handoff"| Resume
   end
 
-  subgraph Orchestration["2. Orchestration / Handoff"]
+  subgraph Orchestration["1. Orchestration / Handoff"]
     direction TB
-    Resume["hackathon resume"] --> Route{"Next unpassed\nP0/P1/P2 KEEP feature?"}
+    Resume["hackathon resume\npwd -> git log -> PROGRESS.md -> smoke"] --> Route{"Next unpassed\nP0/P1/P2 KEEP feature?"}
     Route -->|"yes"| Contract["hackathon sprint new --feature X"]
     Contract --> Approve["hackathon sprint approve"]
     Approve --> Sprint[("sprint.json\ncriteria + budget")]
@@ -127,15 +135,16 @@ flowchart TD
     Route -->|"no"| Pipeline["Delivery pipeline\nfast-verify -> demo-coach -> judge-sim -> ship-pack"]
   end
 
-  subgraph Generator["3. Generator (generator.md)"]
+  subgraph Generator["2. Generator (generator.md)"]
     direction TB
     Build["Read contract + session\nbuild one feature"] --> Self["Self-verify\nlint / tests / smoke"]
     Self --> Commit["Commit + update session"]
+    Commit --> Checkpoint["hackathon checkpoint\nappend PROGRESS.md"]
   end
 
-  subgraph Evaluator["4. Evaluator (evaluator.md)"]
+  subgraph Evaluator["3. Evaluator (evaluator.md)"]
     direction TB
-    Commit --> Review["hackathon sprint review"]
+    Checkpoint --> Review["hackathon sprint review"]
     Review --> Eval[("eval.json\ncriteria default false")]
     Eval --> Run["Run app / tests / browser / commands"]
     Run --> Evidence["Collect machine-checkable evidence"]
@@ -146,13 +155,15 @@ flowchart TD
     Accept --> Plan
   end
 
-  subgraph Safety["5. Guardrails & Observability"]
+  subgraph Safety["4. Guardrails, Operator Controls & Observability"]
     direction TB
     Budget{"Budget gate\nminutes / max-iterations"} -->|"exhausted"| Blocked["sprint blocked\nverdict = blocked"]
     Schema{"JSON Schema\n+ default-FAIL"} -->|"invalid"| Blocked
+    Stop{"AGENT_STOP?"} -->|"exists"| Blocked
+    Steer[("STEER.md")] -->|"surfaced once"| Resume
     Blocked --> Session
     Trace[("events.jsonl\nappend-only")] --> Observe["hackathon trace / replay / report"]
-    Build -. "trace" .-> Trace
+    Checkpoint -. "trace" .-> Trace
     Review -. "trace" .-> Trace
     Accept -. "trace" .-> Trace
     Pipeline -. "trace" .-> Trace
@@ -168,20 +179,27 @@ The same loop at command level, including the failed-iteration feedback path:
 ```mermaid
 sequenceDiagram
   autonumber
-  participant P as Planner
+  participant I as Initializer
   participant O as Orchestrator (CLI)
   participant G as Generator
   participant E as Evaluator
   participant S as State Store
   participant T as Trace
+  participant Op as Operator
 
-  P->>O: hackathon run scope-knife --apply
+  I->>O: hackathon init
+  O->>S: seed session.json + PROGRESS.md
+  I->>O: hackathon run scope-knife --apply
   O->>S: write plan.json (P0/P1/P2, default-FAIL)
-  O->>S: write session.json (handoff)
-  P->>G: handoff session.json
+  I->>I: start app + smoke test
+  I->>O: git commit initial setup
+  O->>G: hackathon resume
+  G->>S: read PROGRESS.md + session.json + git log
   G->>O: hackathon sprint new + approve
   O->>S: write sprint.json (criteria + budget)
   G->>S: commit code + update session.json
+  G->>O: hackathon checkpoint --summary "..."
+  O->>S: append PROGRESS.md
   G->>E: hackathon sprint review
   E->>S: write eval.json (criteria default false)
   E->>E: run app / tests / browser / commands
@@ -195,6 +213,11 @@ sequenceDiagram
     G->>G: rebuild against the same contract
   end
 
+  Op->>O: hackathon guard steer / guard stop
+  O->>S: write STEER.md / AGENT_STOP
+  G->>O: hackathon resume
+  O-->>G: surface steer once / refuse when stopped
+
   G-->>T: append event to events.jsonl
   E-->>T: append verdict to events.jsonl
   O-->>T: append state transition to events.jsonl
@@ -204,12 +227,15 @@ sequenceDiagram
 
 | OpenAI / ChatGPT agent primitive | Hackathon Run implementation                                                   |
 | -------------------------------- | ------------------------------------------------------------------------------ |
+| Initializer agent                | `agents/initializer.md` + `hackathon init` + first clean git commit            |
 | Agent loop                       | `sprint new -> build -> review -> accept`                                      |
 | Context assembly                 | `session.json` + `plan.json` + active `SKILL.md` before the first turn         |
-| Sessions                         | `session.json` handoff + `hackathon resume`                                    |
-| Handoffs                         | Planner -> Generator -> Evaluator -> Delivery                                  |
-| Guardrails                       | JSON Schema validation, default-FAIL, trigger budget                           |
+| Sessions                         | `session.json` + `PROGRESS.md` handoff + `hackathon resume`                    |
+| Agent-maintained handoff         | `PROGRESS.md` + `hackathon checkpoint --summary`                               |
+| Handoffs                         | Initializer -> Planner -> Generator -> Evaluator -> Delivery                   |
+| Guardrails                       | JSON Schema validation, default-FAIL, trigger budget, fresh-context evaluator  |
 | Budget / max turns               | `sprint budget --minutes --max-iterations`; exhausted budget becomes `blocked` |
+| Operator controls                | `hackathon guard stop/clear/steer/status` -> `AGENT_STOP` / `STEER.md`         |
 | Tools                            | bundled skills, scripts, MCP tools                                             |
 | Tracing                          | append-only `events.jsonl` + `hackathon trace`                                 |
 | Failure policy                   | failing eval writes feedback to `session.json`; the next loop starts there     |
@@ -217,17 +243,19 @@ sequenceDiagram
 
 ### Runtime command map
 
-| Phase    | Command                                                     | State artifact                              |
-| -------- | ----------------------------------------------------------- | ------------------------------------------- |
-| Init     | `hackathon init`                                            | `.hackathon/`, `session.json`, `SESSION.md` |
-| Plan     | `hackathon run scope-knife --apply`                         | `plan.json` with `passes: false`            |
-| Resume   | `hackathon resume`                                          | compact handoff from `session.json`         |
-| Contract | `hackathon sprint new` + `hackathon sprint approve`         | `sprint.json`                               |
-| Review   | `hackathon sprint review`                                   | `eval.json` with default-FAIL criteria      |
-| Accept   | `hackathon sprint accept`                                   | `plan.json`, `sprint.json`, `session.json`  |
-| Verify   | `hackathon run fast-verify`                                 | `verify.json`                               |
-| Ship     | `hackathon flow --execute`                                  | `demo.json`, `review.json`, `ship.json`     |
-| Observe  | `hackathon trace` / `hackathon replay` / `hackathon report` | `events.jsonl` + report                     |
+| Phase      | Command                                                     | State artifact                                             |
+| ---------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
+| Init       | `hackathon init`                                            | `.hackathon/`, `session.json`, `SESSION.md`, `PROGRESS.md` |
+| Plan       | `hackathon run scope-knife --apply`                         | `plan.json` with `passes: false`                           |
+| Resume     | `hackathon resume`                                          | `session.json` + `PROGRESS.md` handoff                     |
+| Checkpoint | `hackathon checkpoint --summary`                            | `PROGRESS.md`, `session.json`                              |
+| Contract   | `hackathon sprint new` + `hackathon sprint approve`         | `sprint.json`                                              |
+| Review     | `hackathon sprint review`                                   | `eval.json` with default-FAIL criteria                     |
+| Accept     | `hackathon sprint accept`                                   | `plan.json`, `sprint.json`, `session.json`                 |
+| Guard      | `hackathon guard stop/clear/steer/status`                   | `AGENT_STOP`, `STEER.md`                                   |
+| Verify     | `hackathon run fast-verify`                                 | `verify.json`                                              |
+| Ship       | `hackathon flow --execute`                                  | `demo.json`, `review.json`, `ship.json`                    |
+| Observe    | `hackathon trace` / `hackathon replay` / `hackathon report` | `events.jsonl` + report                                    |
 
 | Role          | Responsibility                                                                                               | Must not do                                                      |
 | ------------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------- |

@@ -13,6 +13,8 @@ import { readSession, writeSession, defaultSession } from '../../harness/session
 import { readSprint } from '../../harness/sprint.js';
 import { traceStats } from '../../harness/trace.js';
 import { readState } from '../../harness/state.js';
+import { isStopped, stopMessage, readSteer } from '../../harness/guard.js';
+import { progressExists, progressPath } from '../../harness/progress.js';
 import { buildPlan } from './flow.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
@@ -55,6 +57,9 @@ export function resume(opts: ResumeOptions): number {
   const sprint = readSprint(cwd);
   const flowPlan = buildPlan({ cwd });
   const trace = traceStats(cwd);
+  const stopped = isStopped(cwd);
+  const steer = stopped ? null : readSteer(cwd, true);
+  const progressFile = progressPath(cwd);
 
   const keep = (plan?.features ?? []).filter((f) => f.classification === 'KEEP');
   const passed = keep.filter((f) => f.passes === true).length;
@@ -89,11 +94,22 @@ export function resume(opts: ResumeOptions): number {
       : null,
     next_stage: nextStage?.skill ?? 'complete',
     trace,
+    stopped,
+    stop_message: stopped ? stopMessage(cwd) : null,
+    steer,
+    progress_file: progressFile,
   };
 
   if (opts.json) {
     console.log(JSON.stringify(payload, null, 2));
-    return 0;
+    return stopped ? 1 : 0;
+  }
+
+  if (stopped) {
+    log.err('AGENT_STOP exists; agent must not continue.');
+    log.dim(stopMessage(cwd) ?? 'Operator requested stop.');
+    log.dim('Run: hackathon guard clear to resume.');
+    return 1;
   }
 
   console.log(c.bold('hackathon resume \u2014 ' + cwd));
@@ -107,12 +123,19 @@ export function resume(opts: ResumeOptions): number {
   );
   if (plan) {
     console.log(
-      c.bold('Progress: ') +
+      c.bold('Features: ') +
         `${passed}/${keep.length} KEEP features passing (${keep.length - passed} remain default-FAIL)`,
     );
     const nextFeature = keep.find((f) => f.passes !== true);
     if (nextFeature) console.log(c.bold('Feature:  ') + nextFeature.name);
   }
+  if (steer) {
+    console.log(c.bold('Steer:    ') + steer.replace(/\n/g, '\n          '));
+  }
+  console.log(
+    c.bold('Progress: ') +
+      (progressExists(cwd) ? progressFile : progressFile + ' (not yet created)'),
+  );
   if (sprint) {
     console.log(
       c.bold('Sprint:   ') +

@@ -80,6 +80,11 @@ and an empty `evidence` array. This is the **default-FAIL contract**: no feature
 considered done until an evaluator flips `passes` to `true` with machine-checkable
 evidence. Scope-knife itself never marks a feature passing.
 
+Acceptance criteria must describe **user-visible end-to-end behavior**, not an
+implementation detail. Example: "A user can open the app, sign up, save a note,
+and see it in the list." If a criterion can be checked only by reading source
+code, rewrite it as a behavior a judge could reproduce.
+
 ### 5. Task list
 
 Priorities:

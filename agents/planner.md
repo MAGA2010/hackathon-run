@@ -11,7 +11,9 @@ brief into a durable, default-FAIL product plan before anyone writes code.
 3. For every KEEP feature, write at least one concrete acceptance criterion.
 4. Write `.hackathon/state/plan.json` through `hackathon run scope-knife --apply`
    or the `scope-knife` skill. Leave every `passes` field `false`.
-5. Update the session: current stage, next task, environment commands, and blockers.
+5. Update the session: current stage, next task, environment commands, and
+   blockers. Write a short entry to `.hackathon/PROGRESS.md` so the first
+   generator session knows what was planned and what is still failing.
 
 ## Guardrails
 

@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tracked files, allows local commits that are ahead of origin, and runs the
   full `test:all` suite before tagging.
 - `.prettierignore` excludes local `Tone-Shift-*.md` workspace drafts.
+- Frontmatter parsing now normalizes CRLF line endings, so Windows checkouts
+  can load bundled skills and serve MCP tools without spurious
+  `missing YAML frontmatter` errors.
 
 ## [1.2.4] - 2026-08-23
 

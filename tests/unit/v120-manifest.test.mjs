@@ -236,6 +236,7 @@ describe('find_skills MCP manifest surface', () => {
     const response = await new Promise((resolve, reject) => {
       const child = spawn(process.execPath, [server], { cwd: REPO });
       const responses = [];
+      const rawLines = [];
       let buf = '';
       let stderr = '';
       const timer = setTimeout(() => {
@@ -250,7 +251,10 @@ describe('find_skills MCP manifest surface', () => {
         while ((nl = buf.indexOf('\n')) >= 0) {
           const line = buf.slice(0, nl).trim();
           buf = buf.slice(nl + 1);
-          if (line) responses.push(JSON.parse(line));
+          if (line) {
+            rawLines.push(line);
+            responses.push(JSON.parse(line));
+          }
         }
       });
       child.stderr.on('data', (chunk) => {
@@ -262,10 +266,12 @@ describe('find_skills MCP manifest surface', () => {
       });
       child.on('close', (code, signal) => {
         clearTimeout(timer);
-        if (responses.length === 0) {
+        if (responses.length === 0 || responses.some((response) => response === undefined)) {
           reject(
             new Error(
-              `MCP server exited without a response (code=${code}, signal=${signal}): ${stderr.trim()}`,
+              `MCP server returned invalid responses (code=${code}, signal=${signal}): ${rawLines.join(
+                ' | ',
+              )}; stderr: ${stderr.trim()}`,
             ),
           );
           return;

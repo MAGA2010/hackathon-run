@@ -72,3 +72,7 @@ desktop.ini
 .hackathon/traces/
 # Per-team skills catalog pin (rebuilt by `hackathon skills pin`)
 .hackathon/skills.json
+
+# Personal scratch projects kept at the repo root for cross-reference.
+ai-time-run/
+docs/research/

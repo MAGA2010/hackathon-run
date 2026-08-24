@@ -19,6 +19,8 @@ export default [
       "skills/**",
       ".hackathon/**",
       "src/**",
+      "ai-time-run/**",
+      "docs/research/**",
     ],
   },
   js.configs.recommended,

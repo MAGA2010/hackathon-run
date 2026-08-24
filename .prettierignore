@@ -13,3 +13,7 @@ site/
 # Local workspace drafts (not part of the package)
 Tone-Shift-*.md
 _*.py
+
+# Personal scratch projects kept at the repo root for cross-reference.
+ai-time-run/
+docs/research/

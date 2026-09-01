@@ -35,6 +35,13 @@ def run(cmd: str, timeout: int) -> tuple:
         return 1, "", f"runner error: {e}"
 
 
+def expected_is_present(expected: str, stdout: str, stderr: str) -> bool:
+    if not expected.strip():
+        return True
+    haystack = f"{stdout}\n{stderr}".lower()
+    return expected.strip().lower() in haystack
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--command", required=True)
@@ -45,7 +52,8 @@ def main() -> int:
     start = time.time()
     code, stdout, stderr = run(args.command, args.timeout)
     duration = time.time() - start
-    status = "pass" if code == 0 else "fail"
+    outcome_present = expected_is_present(args.expected_outcome, stdout, stderr)
+    status = "pass" if code == 0 and outcome_present else "fail"
     # Prefer a line that starts with a common error marker.
     sig = ""
     if stderr:
@@ -60,6 +68,8 @@ def main() -> int:
     result = {
         "status": status,
         "exit_code": code,
+        "expected_outcome": args.expected_outcome,
+        "outcome_present": outcome_present,
         "duration_seconds": round(duration, 3),
         "actual_outcome": (stdout.strip().splitlines()[-1] if stdout else "")[:200],
         "error_signature": sig,

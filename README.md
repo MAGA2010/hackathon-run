@@ -406,8 +406,14 @@ hackathon sprint review
 # Evaluator fills .hackathon/state/eval.json with evidence and feedback, then:
 hackathon sprint accept
 hackathon trace
-hackathon flow --execute
+hackathon flow --execute --demo-goal "sign up + save note" --time-remaining 240
 ```
+
+For automated verification, add a `command` to each `demo_path` step in
+`.hackathon/state/plan.json`. `flow --execute` runs those commands in order,
+checks the expected output, stops at the first failure, and writes a diagnosis
+to `verify.json`. Steps without commands are recorded as `skip`; they do not
+count as a verified demo, and the pipeline will not report ready to ship.
 
 `sprint accept` applies the evaluator verdict: a passing eval flips the
 feature to `passes: true` and records evidence; a failing eval writes feedback

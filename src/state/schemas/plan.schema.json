@@ -110,7 +110,17 @@
         "properties": {
           "step": { "type": "integer", "minimum": 1 },
           "action": { "type": "string", "minLength": 1 },
-          "expected_outcome": { "type": "string", "minLength": 1 }
+          "expected_outcome": { "type": "string", "minLength": 1 },
+          "command": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional shell command used by fast-verify for automated checking."
+          },
+          "timeout_seconds": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Optional command timeout for automated verification."
+          }
         }
       }
     },

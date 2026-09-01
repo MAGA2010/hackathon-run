@@ -128,9 +128,19 @@ program
   .description('Guided end-to-end pipeline (scope -> verify -> demo -> judge -> ship)')
   .option('--json', 'machine-readable plan')
   .option('--execute', 'actually run the python scripts for each remaining stage')
+  .option('--demo-goal <text>', 'one-sentence goal used by scope-knife and demo-coach')
+  .option('--time-remaining <n>', 'minutes remaining for scope-knife', parseInt)
   .option('-C, --cwd <path>', 'use a different working directory', process.cwd())
   .action((opts) =>
-    process.exit(flow({ cwd: opts.cwd, json: Boolean(opts.json), execute: Boolean(opts.execute) })),
+    process.exit(
+      flow({
+        cwd: opts.cwd,
+        json: Boolean(opts.json),
+        execute: Boolean(opts.execute),
+        demoGoal: opts.demoGoal,
+        timeRemaining: opts.timeRemaining,
+      }),
+    ),
   );
 
 program

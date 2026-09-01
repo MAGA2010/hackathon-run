@@ -105,6 +105,30 @@ describe('buildPlan', () => {
     }
     rmSync(repo, { recursive: true, force: true });
   });
+
+  it('resolves flow execution inputs and removes the hard-coded /tmp inventory', () => {
+    const repo = mkdtempSync(join(tmpdir(), 'hs-flow-inputs-'));
+    const inventory = join(tmpdir(), 'hs-flow-inputs-inventory.json');
+    const plan = buildPlan({
+      cwd: repo,
+      demoGoal: 'user signs in and saves a note',
+      timeRemaining: 90,
+      inventoryPath: inventory,
+      python: 'python3',
+    });
+
+    const scope = plan.stages[0];
+    const classify = scope.commands[1];
+    assert.ok(classify);
+    assert.ok(classify.includes('--inventory'));
+    assert.ok(classify.includes('inventory.json'));
+    assert.ok(!classify.includes('/tmp/inv.json'));
+    assert.ok(classify.includes('--demo-goal "user signs in and saves a note"'));
+    assert.ok(classify.includes('--time-remaining 90'));
+    assert.equal(plan.stages[1].steps.length, 0);
+    assert.match(plan.stages[2].steps[0].args.at(-1), /\.hackathon$/);
+    rmSync(repo, { recursive: true, force: true });
+  });
 });
 
 describe('flow', () => {
@@ -146,6 +170,36 @@ describe('flow', () => {
     assert.equal(code, 0);
     const clean = stripAnsi(captured);
     assert.ok(clean.includes('Ready to ship'));
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('does not claim ready to ship when verify.json is skipped', () => {
+    const repo = makeRepo({
+      'plan.json': emptyPlan(),
+      'verify.json': {
+        version: '1.0',
+        started_at: new Date().toISOString(),
+        status: 'skipped',
+        steps: [],
+      },
+      'demo.json': { version: '1.0', duration_seconds: 60, one_liner: 'x', steps: [] },
+      'review.json': {
+        version: '1.0',
+        overall: 4,
+        dimensions: [],
+        fix_priorities: { fix_now: [], fix_last_10min: [], do_not_touch: [] },
+      },
+      'ship.json': {
+        version: '1.0',
+        secret_scan: { clean: true, findings: [] },
+        checklist: { passed: [], failed: [] },
+        packaging_command: '',
+      },
+    });
+    captured = '';
+    const code = flow({ cwd: repo, json: false });
+    assert.equal(code, 1);
+    assert.match(stripAnsi(captured), /not verified/);
     rmSync(repo, { recursive: true, force: true });
   });
 

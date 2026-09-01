@@ -58,5 +58,37 @@ section "all state files validate against schemas"
 node "$ROOT/dist/cli/index.js" validate "$OUT/state"
 pass "all schemas valid"
 
+section "flow --execute"
+FLOW_REPO="$BASH_TMP/flow"
+mkdir -p "$FLOW_REPO/src/auth" "$FLOW_REPO/src/notes"
+touch "$FLOW_REPO/src/auth/index.ts" "$FLOW_REPO/src/notes/index.ts"
+cat > "$FLOW_REPO/README.md" <<EOF
+# Flow Demo
+Auth: sign in.
+Notes: save a note.
+EOF
+(
+  cd "$FLOW_REPO"
+  node "$ROOT/dist/cli/index.js" init --yes >/dev/null
+  rm -f .hackathon/state/plan.json .hackathon/state/verify.json \
+    .hackathon/state/demo.json .hackathon/state/review.json \
+    .hackathon/state/ship.json
+)
+if [[ "$PY" == */* || "$PY" == *\\* ]]; then
+  PY_DIR="$(dirname "$PY")"
+  if command -v cygpath >/dev/null 2>&1; then
+    PY_DIR="$(cygpath -u "$PY_DIR")"
+  fi
+  export PATH="$PY_DIR:$PATH"
+fi
+node "$ROOT/dist/cli/index.js" flow --execute -C "$FLOW_REPO" \
+  --demo-goal "user signs in and saves a note" \
+  --time-remaining 240 >/dev/null
+for f in plan verify demo review ship; do
+  test -f "$FLOW_REPO/.hackathon/state/$f.json" || fail "$f.json missing after flow --execute"
+done
+node "$ROOT/dist/cli/index.js" validate "$FLOW_REPO/.hackathon/state" >/dev/null
+pass "flow --execute completed and produced valid state files"
+
 echo
 echo "==> integration: PASSED"

@@ -24,6 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Frontmatter parsing now normalizes CRLF line endings, so Windows checkouts
   can load bundled skills and serve MCP tools without spurious
   `missing YAML frontmatter` errors.
+- `hackathon flow --execute` now captures the scope-knife inventory to a
+  temporary file, passes the demo goal/time remaining into the actual skill
+  scripts, and accepts `--demo-goal` and `--time-remaining` directly on the
+  CLI.
+- `hackathon flow --execute` now runs executable `demo_path` commands through
+  `fast-verify`, checks that each expected outcome appears in the output,
+  stops at the first failure with a diagnosis, and refuses to report the
+  pipeline ready to ship until `verify.json.status` is `pass`. Steps without
+  commands are recorded as `skip` and do not count as a verified demo.
 
 ## [1.2.4] - 2026-08-23
 

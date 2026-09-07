@@ -21,7 +21,7 @@ echo "$OUT" | grep -q '"status": "fail"' || fail "exit 1 should fail"
 pass "exit 1 classified as fail"
 
 section "Acceptance: verify_step.py captures error signature"
-TMPJS="$(mktemp --suffix=.js)"; echo "throw new Error(\"Cannot find module foo\");" > "$TMPJS"; OUT=$("$PY" "$ROOT/skills/fast-verify/scripts/verify_step.py" --command "node $TMPJS" 2>&1 || true); rm -f "$TMPJS"
+TMPJS="$(mktemp)"; echo "throw new Error(\"Cannot find module foo\");" > "$TMPJS"; OUT=$("$PY" "$ROOT/skills/fast-verify/scripts/verify_step.py" --command "node $TMPJS" 2>&1 || true); rm -f "$TMPJS"
 echo "$OUT" | grep -q "Cannot find module" || fail "did not capture signature"
 pass "error signature captured"
 

@@ -475,7 +475,9 @@ function executeFastVerify(python: string, stage: ResolvedStage, cwd: string): n
   );
   if (overall === 'fail') return 1;
   if (overall === 'skipped' || overall === 'partial') {
-    log.warn('fast-verify did not fully verify the demo path; skipped steps need commands or an agent');
+    log.warn(
+      'fast-verify did not fully verify the demo path; skipped steps need commands or an agent',
+    );
   }
   return 0;
 }
@@ -555,7 +557,11 @@ export function flow(opts: FlowOptions): number {
       const verification = readState<{ status?: string }>({ repoRoot: cwd, file: 'verify.json' });
       if (verification?.status !== 'pass') {
         console.log(c.yellow('All state files exist, but the demo is not verified.'));
-        console.log(c.dim('Add executable commands to plan.demo_path and re-run fast-verify before shipping.'));
+        console.log(
+          c.dim(
+            'Add executable commands to plan.demo_path and re-run fast-verify before shipping.',
+          ),
+        );
         return 1;
       }
       console.log(c.green('All 5 stages complete. Ready to ship.'));

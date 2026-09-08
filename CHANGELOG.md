@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.2.5] - 2026-09-08
 
 ### Fixed
 
@@ -33,6 +33,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stops at the first failure with a diagnosis, and refuses to report the
   pipeline ready to ship until `verify.json.status` is `pass`. Steps without
   commands are recorded as `skip` and do not count as a verified demo.
+- Skill matcher now honors explicit `triggers` declared in skill frontmatter
+  (previously only body `## Trigger phrases` were read), so phrases such as
+  "how much time per stage" dispatch to `time-box` instead of `demo-coach`.
+- Skill matcher now filters English filler words and rejects low-confidence
+  matches, so non-hackathon tasks like "write a python script to parse CSV" no
+  longer surface a demo skill as their best match.
+- `scope-knife` now stems demo-goal verbs and feature names, keeping core
+  actions such as "Order Prebooking" KEEP when the demo goal says "prebooks
+  one meal"; `scan_repo.py` also excludes `Demo` / `Run` README sections and
+  recognizes stemmed code symbols as implemented.
+- `prize-strategy` now accepts both string-style and list-style `criteria`,
+  scores against project feature names, and no longer crashes on multi-prize
+  events when writing anti-target rows.
+- `package-lock.json` was stale from the v1.2.0 package rename; it now matches
+  the published package name and current version.
+- Local scratch projects kept in the workspace are now excluded from Git,
+  Prettier, and ESLint discovery, so `npm run lint:eslint` stays green when
+  those directories are present.
 
 ## [1.2.4] - 2026-08-23
 

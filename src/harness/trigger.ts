@@ -35,6 +35,87 @@ function bigrams(words: string[]): string[] {
   return out;
 }
 
+// Function words that do not carry domain intent. They are still kept for
+// exact trigger-phrase checks, but removed before token/bigram scoring so an
+// unrelated sentence cannot match every skill through common filler words.
+const STOPWORDS = new Set([
+  'a',
+  'about',
+  'after',
+  'all',
+  'am',
+  'an',
+  'and',
+  'any',
+  'are',
+  'as',
+  'at',
+  'be',
+  'been',
+  'being',
+  'but',
+  'by',
+  'can',
+  'could',
+  'did',
+  'do',
+  'does',
+  'for',
+  'from',
+  'had',
+  'has',
+  'have',
+  'he',
+  'her',
+  'him',
+  'his',
+  'i',
+  'if',
+  'in',
+  'into',
+  'is',
+  'it',
+  'its',
+  'me',
+  'my',
+  'not',
+  'of',
+  'on',
+  'or',
+  'our',
+  'please',
+  'she',
+  'should',
+  'so',
+  'than',
+  'that',
+  'the',
+  'their',
+  'them',
+  'then',
+  'there',
+  'these',
+  'they',
+  'this',
+  'those',
+  'to',
+  'too',
+  'us',
+  'was',
+  'we',
+  'were',
+  'what',
+  'will',
+  'with',
+  'would',
+  'you',
+  'your',
+]);
+
+function significantWords(words: string[]): string[] {
+  return words.filter((w) => !STOPWORDS.has(w));
+}
+
 const PHRASE_HEADER_RE = /^## Trigger phrases/i;
 
 function extractTriggerPhrases(body: string): string[] {
@@ -71,21 +152,24 @@ function buildBag(skill: SkillManifest): Bag {
   const descTokens = tokens(skill.frontmatter.description);
   const wtuTokens = tokens(skill.frontmatter.when_to_use ?? '');
   const phraseLines = extractTriggerPhrases(skill.body);
+  const declaredPhrases = skill.frontmatter.triggers ?? [];
   const phraseTokens: string[] = [];
-  for (const line of phraseLines) phraseTokens.push(...tokens(line));
+  for (const line of [...phraseLines, ...declaredPhrases]) phraseTokens.push(...tokens(line));
   const nameTokens = tokens(skill.frontmatter.name.replace(/-/g, ' '));
 
   return {
     unigrams: new Set([...descTokens, ...wtuTokens, ...phraseTokens, ...nameTokens]),
     bigrams: new Set([...bigrams(descTokens), ...bigrams(wtuTokens), ...bigrams(phraseTokens)]),
-    phrases: phraseLines.map((p) => p.toLowerCase()),
+    phrases: [...phraseLines, ...declaredPhrases].map((p) => p.toLowerCase()),
     firstWord: firstWord(skill.frontmatter.description),
   };
 }
 
 function score(utteranceWords: string[], bag: Bag): { score: number; reasons: string[] } {
-  const uttSet = new Set(utteranceWords);
-  const uttBigrams = new Set(bigrams(utteranceWords));
+  const rawSet = new Set(utteranceWords);
+  const signalWords = significantWords(utteranceWords);
+  const uttSet = new Set(signalWords);
+  const uttBigrams = new Set(bigrams(signalWords));
   let score = 0;
   const reasons: string[] = [];
 
@@ -93,14 +177,14 @@ function score(utteranceWords: string[], bag: Bag): { score: number; reasons: st
   for (const phrase of bag.phrases) {
     const pTokens = tokens(phrase);
     if (pTokens.length === 0) continue;
-    if (pTokens.every((t) => uttSet.has(t))) {
+    if (pTokens.every((t) => rawSet.has(t))) {
       score += 5;
       reasons.push('+' + 5 + ' phrase: "' + phrase + '"');
     }
   }
 
   // First-word (action verb) bonus.
-  if (bag.firstWord && uttSet.has(bag.firstWord)) {
+  if (bag.firstWord && rawSet.has(bag.firstWord)) {
     score += 2;
     reasons.push('+' + 2 + ' action verb: ' + bag.firstWord);
   }
@@ -112,8 +196,9 @@ function score(utteranceWords: string[], bag: Bag): { score: number; reasons: st
       directHits++;
     } else {
       // soft substring hit (counts once per utterance token).
+      if (t.length < 4) continue;
       for (const b of bag.unigrams) {
-        if (b.length > 3 && (b.includes(t) || t.includes(b))) {
+        if (b.length >= 4 && (b.includes(t) || t.includes(b))) {
           directHits++;
           break;
         }
@@ -155,7 +240,7 @@ export interface MatchResult {
 const PARAPHRASE_GROUPS: Record<string, string[]> = {
   scope: ['trim', 'cut', 'narrow', 'shorten', 'reduce', 'descope', 'focus', 'mvp', 'minimal'],
   verify: ['test', 'check', 'run', 'smoke', 'validate', 'pass', 'works'],
-  demo: ['pitch', 'present', 'show', 'script', 'rehearse', 'dry', 'mock', 'speak'],
+  demo: ['pitch', 'present', 'show', 'rehearse', 'dry', 'mock', 'speak'],
   team: ['who', 'assign', 'role', 'roster', 'free', 'blocked', 'stuck', 'owner', 'accountable'],
   retro: ['review', 'postmortem', 'post', 'after', 'reflect', 'learn', 'retrospective'],
   stack: ['tech', 'language', 'framework', 'tool', 'choose', 'pick', 'recommend', 'lib'],
@@ -201,8 +286,25 @@ function rankCandidates(candidates: MatchCandidate[], byName: Map<string, SkillM
   });
 }
 
+function hasExplicitSignal(reasons: string[]): boolean {
+  return reasons.some((reason) => reason.includes('phrase:') || reason.includes('action verb:'));
+}
+
+/**
+ * Reject filler-heavy false positives. A match is only confident when it
+ * carries an explicit phrase/action signal, reaches a small absolute score, or
+ * covers most of the domain-bearing utterance tokens.
+ */
+function isConfidentMatch(candidate: MatchCandidate, significantCount: number): boolean {
+  if (significantCount <= 0) return false;
+  if (hasExplicitSignal(candidate.reasons)) return true;
+  if (candidate.score >= 4) return true;
+  return candidate.score / significantCount >= 0.8;
+}
+
 export function matchSkill(utterance: string, skills: SkillManifest[]): MatchResult {
   const utteranceWords = tokens(utterance);
+  const significantCount = significantWords(utteranceWords).length;
   const byName = new Map(skills.map((s) => [s.frontmatter.name, s]));
 
   const candidates: MatchCandidate[] = skills.map((s) => {
@@ -214,9 +316,15 @@ export function matchSkill(utterance: string, skills: SkillManifest[]): MatchRes
   rankCandidates(candidates, byName);
 
   const top = candidates[0];
-  if (!top || top.score <= 0) {
-    const expanded = expandWithParaphrases(utteranceWords);
-    if (expanded.length > utteranceWords.length) {
+  const directNoMatch = !top || top.score <= 0;
+  const directLowConfidence = !!top && !isConfidentMatch(top, significantCount);
+  if (directNoMatch || directLowConfidence) {
+    // Expand only domain-bearing words. Question filler such as "what" must not
+    // trigger idea-clarify, while "who" (kept as a domain word for roster
+    // synonym rescue) still can.
+    const signalWords = significantWords(utteranceWords);
+    const expanded = expandWithParaphrases(signalWords);
+    if (expanded.length > signalWords.length) {
       const fallbackCandidates: MatchCandidate[] = skills.map((s) => {
         const r = score(expanded, buildBag(s));
         return { name: s.frontmatter.name, score: r.score, reasons: r.reasons };

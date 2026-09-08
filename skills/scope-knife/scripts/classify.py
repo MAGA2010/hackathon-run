@@ -28,6 +28,7 @@ _sys.stderr.reconfigure(encoding='utf-8')
 import argparse
 import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -40,6 +41,26 @@ PRESSURE_TABLE = [
     (60, 0.70),
     (0, 0.90),
 ]
+
+
+def stem_word(word: str) -> str:
+    """Return a light English stem so demo verbs and feature nouns align."""
+    w = word.lower()
+    if len(w) > 6 and w.endswith("tion"):
+        return w[:-3]
+    for suffix in ("ing", "ies", "ed", "es", "s"):
+        if len(w) > len(suffix) + 3 and w.endswith(suffix):
+            return w[: -len(suffix)]
+    return w
+
+
+def demo_relevance(demo_goal: str, feature_name: str) -> int:
+    """Count demo-goal stems that appear inside a feature name."""
+    goal_tokens = set(re.findall(r"[a-z0-9]+", demo_goal.lower()))
+    name_tokens = set(re.findall(r"[a-z0-9]+", feature_name.lower()))
+    goal_stems = {stem_word(w) for w in goal_tokens if len(w) >= 4}
+    name_stems = {stem_word(w) for w in name_tokens if len(w) >= 4}
+    return len(goal_stems & name_stems)
 
 
 def pressure_cut_rate(time_remaining_minutes: int) -> float:
@@ -90,9 +111,8 @@ def classify(features: list[dict], demo_goal: str,
         (keep_pool if f.get("status") == "implemented" else defer_pool).append(f)
 
     # Sort each pool: demo-path relevance, then WSJF desc.
-    demo_keywords = set(demo_goal.lower().split())
     def relevance(f):
-        return sum(1 for w in demo_keywords if w in f["name"].lower())
+        return demo_relevance(demo_goal, f["name"])
     for pool in (keep_pool, defer_pool):
         pool.sort(key=lambda f: (-relevance(f), -f["wsjf_score"]))
 

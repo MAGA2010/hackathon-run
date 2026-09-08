@@ -66,7 +66,7 @@ NOISE = {
     "authors", "version", "changelog", "discord", "twitter", "show hn",
     "product hunt", "stars", "sponsors", "links", "documentation",
     "examples", "community", "star history", "the problem",
-    "how it works", "30-second quickstart", "one-time install",
+    "how it works", "demo", "run", "30-second quickstart", "one-time install",
     "inside any hackathon project", "table of contents", "license",
 }
 
@@ -144,6 +144,14 @@ def classify(root: Path, hints: list[str], code_signals: set[str]) -> list[dict]
     """Merge hints with code presence into a feature inventory."""
     inventory: list[dict] = []
     seen: set[str] = set()
+
+    def stem(w: str) -> str:
+        w = w.lower()
+        for suffix in ("ing", "tion", "ed", "es", "s"):
+            if len(w) > len(suffix) + 3 and w.endswith(suffix):
+                return w[: -len(suffix)] if suffix != "tion" else w[:-3]
+        return w
+
     for h in hints:
         key = h.lower().replace(" ", "-")
         if key in seen:
@@ -158,7 +166,9 @@ def classify(root: Path, hints: list[str], code_signals: set[str]) -> list[dict]
             # weak match: any token overlap
             tokens_hint = set(key.split("-"))
             tokens_sig = set(sig.lower().split("_"))
-            if tokens_hint & tokens_sig:
+            stems_hint = {stem(w) for w in tokens_hint}
+            stems_sig = {stem(w) for w in tokens_sig}
+            if tokens_hint & tokens_sig or stems_hint & stems_sig:
                 status = "implemented"
                 break
         inventory.append({

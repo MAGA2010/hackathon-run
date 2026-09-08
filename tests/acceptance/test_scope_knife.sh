@@ -121,6 +121,31 @@ awk -v r="$RATE" 'BEGIN{ exit !(r+0 >= 0.80) }' \
     || fail "CUT rate $RATE below 0.80 threshold for 30-min remaining"
 pass "30-min pressure: CUT rate = $RATE (>= 0.80)"
 
+section "Acceptance: demo-goal stems keep the core action on path"
+CORE_INV="$TMP/core-inventory.json"
+cat > "$CORE_INV" <<'EOF'
+{"features": [
+  {"name": "AI Meal Prediction", "status": "implemented", "time_estimate_minutes": 30},
+  {"name": "Canteen Menu Sync", "status": "implemented", "time_estimate_minutes": 30},
+  {"name": "Order Prebooking", "status": "unimplemented", "time_estimate_minutes": 60},
+  {"name": "User Allergen Profile", "status": "unimplemented", "time_estimate_minutes": 60},
+  {"name": "Admin Controls", "status": "unimplemented", "time_estimate_minutes": 60},
+  {"name": "Analytics Dashboard", "status": "unimplemented", "time_estimate_minutes": 60},
+  {"name": "Notifications", "status": "unimplemented", "time_estimate_minutes": 60}
+]}
+EOF
+CORE_OUT="$TMP/core-out"
+mkdir -p "$CORE_OUT"
+"$PY" "$ROOT/skills/scope-knife/scripts/classify.py" \
+    --inventory "$CORE_INV" \
+    --demo-goal "A student sees tomorrow's predicted surplus and prebooks one meal to reduce waste." \
+    --time-remaining 840 \
+    --out-dir "$CORE_OUT" > /dev/null
+CORE_PLAN="$CORE_OUT/state/plan.json"
+grep -A2 '"name": "Order Prebooking"' "$CORE_PLAN" | grep -q '"classification": "KEEP"' \
+    || fail "Order Prebooking must be KEEP when demo_goal says prebook"
+pass "core demo verb/noun kept on the demo path"
+
 section "Acceptance: plan.json validates against plan.schema.json"
 # Lightweight in-shell validation of required fields.
 for field in version generated_at demo_goal time_remaining_minutes features demo_path next_tasks; do

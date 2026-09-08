@@ -14,6 +14,7 @@ from __future__ import annotations
 VERSION = "1.0"  # contract pin: hackathon validate-skill checks this
 
 import argparse, json, sys
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -30,30 +31,53 @@ PRIZE_FIT_TOKENS = {
 
 def parse_csv(s): return [t.strip() for t in s.split(',') if t.strip()]
 
+
+def text_words(values) -> set[str]:
+    """Flatten string/list criteria and project text into lowercase tokens."""
+    if isinstance(values, str):
+        values = [values]
+    words: set[str] = set()
+    for v in values or []:
+        if isinstance(v, dict):
+            words.update(re.findall(r"[a-z0-9]+", v.get("name", "").lower()))
+        else:
+            words.update(re.findall(r"[a-z0-9]+", str(v).lower()))
+    return words
+
+
+def criteria_words(criteria) -> set[str]:
+    """Accept either a space-separated string or a list of criterion phrases."""
+    if isinstance(criteria, str):
+        criteria = [criteria]
+    words: set[str] = set()
+    for c in criteria or []:
+        words.update(re.findall(r"[a-z0-9]+", str(c).lower()))
+    return words
+
+
 def fit_score(prize, project, team_skills):
     """Compute fit_score in [0, 1]."""
-    criteria_words = set()
-    for c in prize.get('criteria', []):
-        criteria_words.update(w.lower() for w in c.split())
-    goal_words = set(project.get('demo_goal', '').lower().split())
-    feat_words = set()
-    for f in project.get('features', []):
-        feat_words.update(w.lower() for w in str(f).split())
+    criteria_tokens = criteria_words(prize.get('criteria', []))
+    goal_words = text_words(project.get('demo_goal', ''))
+    feat_words = text_words(project.get('features', []))
     all_words = goal_words | feat_words
-    if not criteria_words:
+    if not criteria_tokens:
         criteria_overlap = 0.0
     else:
-        criteria_overlap = len(criteria_words & all_words) / len(criteria_words)
-    if not goal_words or not criteria_words:
+        criteria_overlap = len(criteria_tokens & all_words) / len(criteria_tokens)
+    if not goal_words or not criteria_tokens:
         demo_goal_match = 0.0
     else:
-        demo_goal_match = len(goal_words & criteria_words) / len(goal_words)
-    stack_words = set(s.lower() for s in project.get('stack', []))
-    stack_match = 1.0 if (stack_words & criteria_words) else 0.0
+        demo_goal_match = len(goal_words & criteria_tokens) / len(goal_words)
+    stack_words = text_words(project.get('stack', []))
+    stack_match = 1.0 if (stack_words & criteria_tokens) else 0.0
     prize_key = prize.get('name', '').lower()
     fit_tokens = set(PRIZE_FIT_TOKENS.get(prize_key, []))
     team_set = set(s.lower() for s in team_skills)
-    team_fit = 1.0 if (team_set & fit_tokens) else (0.5 if fit_tokens and (fit_tokens & all_words) else 0.0)
+    team_fit = (
+        1.0 if (team_set & fit_tokens)
+        else (0.5 if fit_tokens and (fit_tokens & all_words) else 0.0)
+    )
     score = round(0.45 * criteria_overlap + 0.30 * demo_goal_match + 0.15 * stack_match + 0.10 * team_fit, 3)
     return score, {
         'criteria_overlap': round(criteria_overlap, 3),
@@ -104,17 +128,20 @@ def main():
     target = scored[0]
     anti = scored[-2:] if len(scored) >= 2 else []
 
+    def prize_name(entry):
+        return entry['prize'].get('name', '?')
+
     rec = {
         'version': '1.0',
         'generated_at': datetime.now(timezone.utc).isoformat().replace('+00:00', 'Z'),
         'target_prize': {
-            'name': target['prize']['name'],
+            'name': prize_name(target),
             'fit_score': target['score'],
             'weight': target['prize'].get('weight', 1),
             'breakdown': target['breakdown'],
             'rationale': 'Best fit across ' + str(len(prizes)) + ' prizes; criteria_overlap=' + str(target['breakdown']['criteria_overlap']) + ' demo_goal_match=' + str(target['breakdown']['demo_goal_match']),
         },
-        'anti_targets': [{'name': a['prize']['name'], 'fit_score': a['score'], 'reason': 'lowest fit_score'} for a in anti],
+        'anti_targets': [{'name': prize_name(a), 'fit_score': a['score'], 'reason': 'lowest fit_score'} for a in anti],
         'positioning': positioning_notes(target['prize'], project),
     }
 
@@ -126,7 +153,7 @@ def main():
     md = [
         '# Prize strategy',
         '',
-        'Target prize: ' + target['prize']['name'] + ' (fit_score ' + str(target['score']) + ', weight ' + str(target['prize'].get('weight', 1)) + ').',
+        'Target prize: ' + prize_name(target) + ' (fit_score ' + str(target['score']) + ', weight ' + str(target['prize'].get('weight', 1)) + ').',
         '',
         '## Why',
         '',
@@ -143,7 +170,7 @@ def main():
     if anti:
         md += ['', '## Skip', '']
         for a in anti:
-            md.append('- ' + a['name'] + ' (fit_score ' + str(a['fit_score']) + '): low fit for this project')
+            md.append('- ' + prize_name(a) + ' (fit_score ' + str(a['score']) + '): low fit for this project')
     (out / 'artifacts' / 'prize-strategy.md').write_text(' '.join(md) + ' ', encoding='utf-8')
 
     print('target_prize: ' + target['prize']['name'] + ' (fit_score ' + str(target['score']) + ')')
@@ -153,4 +180,3 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
-

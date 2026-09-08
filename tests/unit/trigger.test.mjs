@@ -3,8 +3,14 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { matchSkill } from '../../dist/harness/trigger.js';
+import { loadAllSkills } from '../../dist/harness/loader.js';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = resolve(HERE, '..', '..');
 
 /** @returns {import('../../dist/harness/types.js').SkillManifest} */
 function mk(
@@ -134,6 +140,31 @@ describe('matchSkill', () => {
     const r = matchSkill('please run the fast verify script now', skills);
     assert.equal(r.skill?.frontmatter.name, 'b');
     assert.ok(r.candidates[0].reasons.some((s) => s.includes('phrase')));
+  });
+
+  it('honors explicit trigger phrases declared in frontmatter', () => {
+    const demoCoach = mk('demo-coach', 'Drafts the demo pitch script', '');
+    const timeBox = mk('time-box', 'Allocates time across the hackathon lifecycle', '');
+    timeBox.frontmatter.triggers = ['how much time per stage'];
+    demoCoach.frontmatter.triggers = ['draft a pitch'];
+    const skills = [demoCoach, timeBox];
+    const r = matchSkill('how much time per stage', skills);
+    assert.equal(r.skill?.frontmatter.name, 'time-box');
+    assert.ok(r.candidates[0].reasons.some((s) => s.includes('phrase')));
+  });
+
+  it('does not match filler-heavy non-hackathon queries against the real pack', () => {
+    const skills = loadAllSkills(ROOT);
+    const r = matchSkill('what should we cook for dinner', skills);
+    assert.equal(r.skill, null);
+    assert.equal(r.score, 0);
+  });
+
+  it('does not match code-file tasks against the real pack', () => {
+    const skills = loadAllSkills(ROOT);
+    const r = matchSkill('write a python script to parse CSV', skills);
+    assert.equal(r.skill, null);
+    assert.equal(r.score, 0);
   });
 
   it('first-word (action verb) match adds a small bonus', () => {

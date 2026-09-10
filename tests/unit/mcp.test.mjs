@@ -50,9 +50,7 @@ function call(request) {
         (request.method === 'tools/call' &&
           request.params?.name === 'get_skill' &&
           request.params?.arguments?.name === 'no-such-skill');
-      const unexpectedError = responses.find(
-        (response) => response?.error && !allowsError,
-      );
+      const unexpectedError = responses.find((response) => response?.error && !allowsError);
       if (
         responses.length === 0 ||
         responses.some((response) => response === undefined) ||
@@ -62,9 +60,7 @@ function call(request) {
           new Error(
             `MCP server returned invalid responses (code=${code}, signal=${signal}); error=${JSON.stringify(
               unexpectedError?.error,
-            )}: ${rawLines.join(
-              ' | ',
-            )}; stderr: ${stderr.trim()}`,
+            )}: ${rawLines.join(' | ')}; stderr: ${stderr.trim()}`,
           ),
         );
         return;
@@ -120,6 +116,7 @@ describe('MCP server', () => {
       params: { name: 'list_skills', arguments: {} },
     });
     const payload = JSON.parse(res[0].result.content[0].text);
+    assert.deepEqual(res[0].result.structuredContent, payload);
     const names = payload.skills.map((s) => s.name);
     assert.ok(names.includes('scope-knife'));
     assert.ok(names.includes('fast-verify'));
@@ -158,10 +155,8 @@ describe('MCP server', () => {
       method: 'tools/call',
       params: { name: 'get_skill', arguments: { name: 'no-such-skill' } },
     });
-    // The error is returned in the tool result, not as a JSON-RPC error,
-    // because toolCall throws and we wrap it in a content response.
-    // In our impl, throwing from toolCall surfaces as JSON-RPC error.
-    assert.ok(res[0].error || res[0].result);
+    assert.equal(res[0].result.isError, true);
+    assert.match(res[0].result.structuredContent.error, /skill not found/);
   });
 
   it('match_skill returns best + candidates', async () => {
@@ -469,6 +464,87 @@ describe('MCP server', () => {
       assert.equal(payload.exitCode, 0);
       assert.equal(payload.total, 0);
       assert.deepEqual(payload.events, []);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('rejects invalid tool arguments as a structured tool error', async () => {
+    const res = await call({
+      jsonrpc: '2.0',
+      id: 22,
+      method: 'tools/call',
+      params: { name: 'checkpoint', arguments: { summary: 42 } },
+    });
+    assert.equal(res[0].result.isError, true);
+    assert.equal(res[0].result.structuredContent.tool, 'checkpoint');
+    assert.ok(Array.isArray(res[0].result.structuredContent.issues));
+    assert.deepEqual(JSON.parse(res[0].result.content[0].text), res[0].result.structuredContent);
+  });
+
+  it('apply_skill_advice rejects schema-invalid payloads atomically', async () => {
+    const { mkdtempSync, rmSync, existsSync, readdirSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'hs-mcp-invalid-'));
+    try {
+      const res = await call({
+        jsonrpc: '2.0',
+        id: 23,
+        method: 'tools/call',
+        params: {
+          name: 'apply_skill_advice',
+          arguments: { state_file: 'plan', payload: {}, cwd: dir },
+        },
+      });
+      assert.equal(res[0].result.isError, true);
+      assert.match(res[0].result.structuredContent.error, /state validation failed/);
+      const stateDir = join(dir, '.hackathon', 'state');
+      assert.equal(existsSync(join(stateDir, 'plan.json')), false);
+      const leftovers = existsSync(stateDir)
+        ? readdirSync(stateDir).filter((name) => name.endsWith('.tmp'))
+        : [];
+      assert.deepEqual(leftovers, []);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('skill_chain returns structured chain metadata and text output', async () => {
+    const res = await call({
+      jsonrpc: '2.0',
+      id: 24,
+      method: 'tools/call',
+      params: { name: 'skill_chain', arguments: { target: 'stack-picker' } },
+    });
+    const payload = res[0].result.structuredContent;
+    assert.equal(payload.target, 'stack-picker');
+    assert.ok(payload.order.includes('idea-clarify'));
+    assert.ok(payload.order.includes('scope-knife'));
+    assert.ok(payload.output.includes('stack-picker'));
+    assert.deepEqual(JSON.parse(res[0].result.content[0].text), payload);
+  });
+
+  it('validate_skill returns both legacy findings and structured details', async () => {
+    const { mkdtempSync, writeFileSync, rmSync } = await import('node:fs');
+    const { tmpdir } = await import('node:os');
+    const { join } = await import('node:path');
+    const dir = mkdtempSync(join(tmpdir(), 'hs-mcp-findings-'));
+    try {
+      writeFileSync(
+        join(dir, 'SKILL.md'),
+        '---\nname: bad\ndescription: leads with no verb\n---\n# bad\n',
+      );
+      const res = await call({
+        jsonrpc: '2.0',
+        id: 25,
+        method: 'tools/call',
+        params: { name: 'validate_skill', arguments: { target: dir } },
+      });
+      const payload = res[0].result.structuredContent;
+      assert.equal(res[0].result.isError, true);
+      assert.ok(payload.findings.some((finding) => finding.startsWith('[error]')));
+      assert.ok(payload.finding_details.some((finding) => finding.severity === 'error'));
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

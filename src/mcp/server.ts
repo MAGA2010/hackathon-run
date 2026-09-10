@@ -23,22 +23,26 @@
 
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { readFileSync, existsSync, mkdirSync, writeFileSync, readdirSync, statSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
+import Ajv, { type ValidateFunction } from 'ajv';
+import addFormats from 'ajv-formats';
 import { loadAllSkills } from '../harness/loader.js';
 import { matchSkill } from '../harness/trigger.js';
 import { matchSkillWithBackend } from '../harness/embed.js';
-import { status } from '../cli/commands/status.js';
-import { validateSkill } from '../cli/commands/validate-skill.js';
-import { replay } from '../cli/commands/replay.js';
-import { report } from '../cli/commands/report.js';
-import { resume } from '../cli/commands/resume.js';
-import { sprint } from '../cli/commands/sprint.js';
-import { checkpoint } from '../cli/commands/checkpoint.js';
-import { guard } from '../cli/commands/guard.js';
-import { evalStatus } from '../cli/commands/eval.js';
-import { trace } from '../cli/commands/trace.js';
-import { runChain } from '../cli/commands/run.js';
-import { skills as skillsCommand } from '../cli/commands/skills.js';
+import { readState, writeState, defaultSchemaPath } from '../harness/state.js';
+import { statusResult } from '../cli/commands/status.js';
+import { validateSkillResult } from '../cli/commands/validate-skill.js';
+import { replayResult } from '../cli/commands/replay.js';
+import { reportResult } from '../cli/commands/report.js';
+import { resumeResult } from '../cli/commands/resume.js';
+import { sprintResult } from '../cli/commands/sprint.js';
+import { checkpointResult } from '../cli/commands/checkpoint.js';
+import { guardResult } from '../cli/commands/guard.js';
+import { evalStatusResult } from '../cli/commands/eval.js';
+import { traceResult } from '../cli/commands/trace.js';
+import { runChainResult } from '../cli/commands/run.js';
+import { skillsDiffResult, skillsPinResult } from '../cli/commands/skills.js';
+import type { CommandResult } from '../cli/lib/command-result.js';
 
 // Resolve the package version once at startup. Falls back to '0.0.0' if package.json
 // is unreachable (e.g. when the package is installed globally and bundled differently).
@@ -81,6 +85,18 @@ interface ToolDef {
   description: string;
   inputSchema: Record<string, unknown>;
 }
+
+interface ToolCallResult {
+  isError: boolean;
+  structuredContent: Record<string, unknown>;
+}
+
+interface ToolValidationError {
+  instancePath: string;
+  message: string;
+}
+
+class ToolExecutionError extends Error {}
 
 const TOOLS: ToolDef[] = [
   {
@@ -438,93 +454,109 @@ const TOOLS: ToolDef[] = [
   },
 ];
 
-function captureJsonCommand(fn: () => number): unknown {
-  const captured: string[] = [];
-  const orig = console.log;
-  console.log = (...a) => {
-    captured.push(a.join(' '));
-  };
-  try {
-    const exitCode = fn();
-    const raw = captured.join('\n');
-    let payload: unknown = null;
-    try {
-      payload = raw ? JSON.parse(raw) : null;
-    } catch {
-      payload = raw;
-    }
-    return { exitCode, ...(payload && typeof payload === 'object' ? payload : { output: raw }) };
-  } finally {
-    console.log = orig;
-  }
+const ajv = new Ajv({ allErrors: true, strict: false });
+addFormats(ajv);
+const toolValidators = new Map<string, ValidateFunction>();
+
+function validatorFor(tool: ToolDef): ValidateFunction {
+  const cached = toolValidators.get(tool.name);
+  if (cached) return cached;
+  const validate = ajv.compile(tool.inputSchema);
+  toolValidators.set(tool.name, validate);
+  return validate;
 }
 
-async function toolCall(name: string, args: Record<string, unknown>): Promise<unknown> {
+function validateToolArguments(
+  tool: ToolDef,
+  args: Record<string, unknown>,
+): ToolValidationError[] | null {
+  const validate = validatorFor(tool);
+  if (validate(args)) return null;
+  return (validate.errors ?? []).map((error) => ({
+    instancePath: error.instancePath || '/',
+    message: error.message ?? 'invalid value',
+  }));
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return { result: value };
+}
+
+function toolSuccess(data: unknown): ToolCallResult {
+  return { isError: false, structuredContent: asRecord(data) };
+}
+
+function toolFailure(message: string, details: Record<string, unknown> = {}): ToolCallResult {
+  return {
+    isError: true,
+    structuredContent: { error: message, ...details },
+  };
+}
+
+function commandToolResult<T>(result: CommandResult<T>): ToolCallResult {
+  return {
+    isError: result.exitCode !== 0,
+    structuredContent: { exitCode: result.exitCode, ...asRecord(result.data) },
+  };
+}
+
+async function toolCall(tool: ToolDef, args: Record<string, unknown>): Promise<ToolCallResult> {
   const cwd = process.cwd();
   const skills = loadAllSkills(cwd);
-  switch (name) {
+  switch (tool.name) {
     case 'list_skills': {
-      return {
+      return toolSuccess({
         skills: skills.map((s) => ({
           name: s.frontmatter.name,
           description: s.frontmatter.description,
           triggerBudget: s.triggerBudget,
           budgetPercent: Math.round((s.triggerBudget / 1536) * 100),
         })),
-      };
+      });
     }
     case 'get_skill': {
       const skillName = String(args.name ?? '');
       const skill = skills.find((s) => s.frontmatter.name === skillName);
       if (!skill) {
-        throw new Error(
+        throw new ToolExecutionError(
           'skill not found: ' +
             skillName +
             '; available: ' +
             skills.map((s) => s.frontmatter.name).join(', '),
         );
       }
-      return {
+      return toolSuccess({
         name: skill.frontmatter.name,
         description: skill.frontmatter.description,
         when_to_use: skill.frontmatter.when_to_use ?? null,
         triggerBudget: skill.triggerBudget,
         body: skill.body,
-      };
+      });
     }
     case 'match_skill': {
       const utterance = String(args.utterance ?? '');
       const debug = Boolean(args.debug);
       const outcome = await matchSkillWithBackend(utterance, skills);
       const result = outcome.result;
-      return {
+      return toolSuccess({
         utterance,
         source: outcome.source,
         best: result.skill ? { name: result.skill.frontmatter.name, score: result.score } : null,
         candidates: result.candidates.slice(0, debug ? skills.length : 5),
-      };
+      });
     }
     case 'status': {
-      const captured: string[] = [];
-      const orig = console.log;
-      console.log = (...a) => {
-        captured.push(a.join(' '));
-      };
-      try {
-        const code = status({ cwd: String(args.cwd ?? cwd), json: true });
-        const raw = captured.join('\n');
-        const json = raw ? JSON.parse(raw) : {};
-        return { exitCode: code, ...json };
-      } finally {
-        console.log = orig;
-      }
+      return commandToolResult(statusResult({ cwd: String(args.cwd ?? cwd) }));
     }
     case 'resume': {
-      return captureJsonCommand(() => resume({ cwd: String(args.cwd ?? cwd), json: true }));
+      return commandToolResult(resumeResult({ cwd: String(args.cwd ?? cwd) }));
     }
     case 'checkpoint': {
-      return captureJsonCommand(() =>
-        checkpoint({
+      return commandToolResult(
+        checkpointResult({
           cwd: String(args.cwd ?? cwd),
           summary: String(args.summary ?? ''),
           stage: args.stage ? String(args.stage) : undefined,
@@ -532,46 +564,39 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
           feature: args.feature ? String(args.feature) : undefined,
           actor: args.actor ? String(args.actor) : undefined,
           compress: args.compress === true,
-          json: true,
         }),
       );
     }
     case 'guard_status': {
-      return captureJsonCommand(() =>
-        guard({ subcommand: 'status', cwd: String(args.cwd ?? cwd), json: true }),
-      );
+      return commandToolResult(guardResult({ subcommand: 'status', cwd: String(args.cwd ?? cwd) }));
     }
     case 'guard_stop': {
-      return captureJsonCommand(() =>
-        guard({
+      return commandToolResult(
+        guardResult({
           subcommand: 'stop',
           cwd: String(args.cwd ?? cwd),
           reason: args.reason ? String(args.reason) : undefined,
-          json: true,
         }),
       );
     }
     case 'guard_clear': {
-      return captureJsonCommand(() =>
-        guard({ subcommand: 'clear', cwd: String(args.cwd ?? cwd), json: true }),
-      );
+      return commandToolResult(guardResult({ subcommand: 'clear', cwd: String(args.cwd ?? cwd) }));
     }
     case 'guard_steer': {
-      return captureJsonCommand(() =>
-        guard({
+      return commandToolResult(
+        guardResult({
           subcommand: 'steer',
           cwd: String(args.cwd ?? cwd),
           message: String(args.message ?? ''),
-          json: true,
         }),
       );
     }
     case 'eval_status': {
-      return captureJsonCommand(() => evalStatus({ cwd: String(args.cwd ?? cwd), json: true }));
+      return commandToolResult(evalStatusResult({ cwd: String(args.cwd ?? cwd) }));
     }
     case 'sprint_new': {
-      return captureJsonCommand(() =>
-        sprint({
+      return commandToolResult(
+        sprintResult({
           subcommand: 'new',
           cwd: String(args.cwd ?? cwd),
           feature: args.feature ? String(args.feature) : undefined,
@@ -580,30 +605,27 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
           minutes: args.minutes != null ? Number(args.minutes) : undefined,
           maxIterations: args.max_iterations != null ? Number(args.max_iterations) : undefined,
           force: Boolean(args.force),
-          json: true,
         }),
       );
     }
     case 'sprint_review': {
-      return captureJsonCommand(() =>
-        sprint({ subcommand: 'review', cwd: String(args.cwd ?? cwd), json: true }),
+      return commandToolResult(
+        sprintResult({ subcommand: 'review', cwd: String(args.cwd ?? cwd) }),
       );
     }
     case 'sprint_accept': {
-      return captureJsonCommand(() =>
-        sprint({
+      return commandToolResult(
+        sprintResult({
           subcommand: 'accept',
           cwd: String(args.cwd ?? cwd),
           owner: args.owner ? String(args.owner) : undefined,
-          json: true,
         }),
       );
     }
     case 'trace': {
-      return captureJsonCommand(() =>
-        trace({
+      return commandToolResult(
+        traceResult({
           cwd: String(args.cwd ?? cwd),
-          json: true,
           last: args.last != null ? Number(args.last) : undefined,
           verify: args.verify === true,
         }),
@@ -611,31 +633,35 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
     }
     case 'validate_skill': {
       const target = String(args.target ?? '');
-      if (!target) throw new Error('target is required');
-      const captured: string[] = [];
-      const orig = console.log;
-      console.log = (...a) => {
-        captured.push(a.join(' '));
-      };
-      try {
-        const exitCode = validateSkill({ target, cwd });
-        return { target, exitCode, findings: captured };
-      } finally {
-        console.log = orig;
+      const result = validateSkillResult({ target, cwd });
+      if ('error' in result.data) {
+        return commandToolResult({ ...result, data: { target, error: result.data.error } });
       }
+      return commandToolResult({
+        exitCode: result.exitCode,
+        data: {
+          target,
+          errors: result.data.errors,
+          warnings: result.data.warnings,
+          findings: result.data.findings.map(
+            (finding) => `[${finding.severity}] ${finding.message}`,
+          ),
+          finding_details: result.data.findings,
+        },
+      });
     }
     case 'apply_skill_advice': {
       const stateFile = String(args.state_file ?? '');
-      if (!stateFile) throw new Error('state_file is required');
+      if (!stateFile) throw new ToolExecutionError('state_file is required');
       const payload = (args.payload ?? {}) as Record<string, unknown>;
       const merge = Boolean(args.merge);
       const repoRoot = String(args.cwd ?? cwd);
-      return applySkillAdvice(stateFile, payload, merge, repoRoot);
+      return toolSuccess({ exitCode: 0, ...applySkillAdvice(stateFile, payload, merge, repoRoot) });
     }
     case 'list_examples': {
       const filterStack = args.stack ? String(args.stack).toLowerCase() : '';
       const examplesDir = join(__dirname, '..', '..', 'examples');
-      if (!existsSync(examplesDir)) return { examples: [] };
+      if (!existsSync(examplesDir)) return toolSuccess({ examples: [] });
 
       const entries = readdirSync(examplesDir).filter((d) =>
         statSync(join(examplesDir, d)).isDirectory(),
@@ -664,12 +690,12 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
         if (filterStack && !stack.includes(filterStack)) continue;
         out.push({ name: d, stack, stage, has_state: hasState });
       }
-      return { examples: out };
+      return toolSuccess({ examples: out });
     }
     case 'get_recovery_plan': {
       const failing = String(args.failing_step ?? 'unknown');
       const mins = Number(args.time_remaining_minutes ?? 30);
-      return {
+      return toolSuccess({
         failing_step: failing,
         time_remaining_minutes: mins,
         fallback_script: [
@@ -690,23 +716,19 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
           'have the recovery script open in a second tab',
           'have a teammate on standby for hot-fixes',
         ],
-      };
+      });
     }
     case 'replay': {
-      return captureJsonCommand(() => replay({ cwd: String(args.cwd ?? cwd), json: true }));
+      return commandToolResult(replayResult({ cwd: String(args.cwd ?? cwd) }));
     }
     case 'report': {
-      return captureJsonCommand(() => report({ cwd: String(args.cwd ?? cwd), json: true }));
+      return commandToolResult(reportResult({ cwd: String(args.cwd ?? cwd) }));
     }
     case 'skills_pin': {
-      return captureJsonCommand(() =>
-        skillsCommand({ subcommand: 'pin', cwd: String(args.cwd ?? cwd) }),
-      );
+      return commandToolResult(skillsPinResult(String(args.cwd ?? cwd)));
     }
     case 'skills_diff': {
-      return captureJsonCommand(() =>
-        skillsCommand({ subcommand: 'diff', cwd: String(args.cwd ?? cwd) }),
-      );
+      return commandToolResult(skillsDiffResult(String(args.cwd ?? cwd)));
     }
     case 'find_skills': {
       const tag = args.tag ? String(args.tag) : undefined;
@@ -721,7 +743,7 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
         if (depends_on && !(fm.dependencies ?? []).includes(depends_on)) return false;
         return true;
       });
-      return {
+      return toolSuccess({
         total: skills.length,
         matched: matched.length,
         filters: { tag, category, writes, depends_on },
@@ -739,16 +761,24 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
           repository: s.frontmatter.repository ?? null,
           compatibility: s.frontmatter.compatibility ?? null,
         })),
-      };
+      });
     }
     case 'skill_chain': {
       const target = String(args.target ?? '');
-      if (!target) throw new Error('target is required');
-      return captureJsonCommand(() => runChain({ skillName: target, noBanner: true, cwd }));
+      if (!target) throw new ToolExecutionError('target is required');
+      return commandToolResult(runChainResult({ skillName: target, noBanner: true, cwd }));
     }
     default:
-      throw new Error('unknown tool: ' + name);
+      throw new ToolExecutionError('unknown tool: ' + tool.name);
   }
+}
+
+function toToolResponse(result: ToolCallResult): Record<string, unknown> {
+  return {
+    content: [{ type: 'text', text: JSON.stringify(result.structuredContent, null, 2) }],
+    structuredContent: result.structuredContent,
+    ...(result.isError ? { isError: true } : {}),
+  };
 }
 
 async function handleRequest(req: JsonRpcRequest): Promise<JsonRpcResponse | null> {
@@ -773,12 +803,37 @@ async function handleRequest(req: JsonRpcRequest): Promise<JsonRpcResponse | nul
         const params = req.params ?? {};
         const toolName = String(params.name ?? '');
         const args = (params.arguments ?? {}) as Record<string, unknown>;
-        const result = await toolCall(toolName, args);
-        return {
-          jsonrpc: '2.0',
-          id: req.id,
-          result: { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] },
-        };
+        const tool = TOOLS.find((candidate) => candidate.name === toolName);
+        if (!tool) {
+          return {
+            jsonrpc: '2.0',
+            id: req.id,
+            error: { code: -32602, message: 'unknown tool: ' + toolName },
+          };
+        }
+        const validationErrors = validateToolArguments(tool, args);
+        if (validationErrors) {
+          return {
+            jsonrpc: '2.0',
+            id: req.id,
+            result: toToolResponse(
+              toolFailure('invalid arguments for ' + toolName, {
+                tool: toolName,
+                issues: validationErrors,
+              }),
+            ),
+          };
+        }
+        try {
+          const result = await toolCall(tool, args);
+          return { jsonrpc: '2.0', id: req.id, result: toToolResponse(result) };
+        } catch (e) {
+          return {
+            jsonrpc: '2.0',
+            id: req.id,
+            result: toToolResponse(toolFailure((e as Error).message, { tool: toolName })),
+          };
+        }
       }
       case 'ping':
         return { jsonrpc: '2.0', id: req.id, result: { ok: true } };
@@ -827,36 +882,31 @@ function applySkillAdvice(
   payload: Record<string, unknown>,
   merge: boolean,
   repoRoot: string,
-): unknown {
+): Record<string, unknown> {
   const allowed = ['plan', 'verify', 'review', 'demo', 'ship', 'recovery'];
   if (!allowed.includes(stateFile)) {
     throw new Error('state_file must be one of ' + allowed.join(', ') + '; got ' + stateFile);
   }
-  const schemaPath = join(
-    __dirname,
-    '..',
-    '..',
-    'src',
-    'state',
-    'schemas',
-    stateFile + '.schema.json',
-  );
+  const file = stateFile + '.json';
+  const schemaPath = defaultSchemaPath(repoRoot, file);
   if (!existsSync(schemaPath)) {
     throw new Error('schema not found at ' + schemaPath);
   }
 
   const schema = JSON.parse(readFileSync(schemaPath, 'utf8'));
-
-  const targetPath = join(repoRoot, '.hackathon', 'state', stateFile + '.json');
-  let final = payload;
-  if (merge && existsSync(targetPath)) {
-    const existing = JSON.parse(readFileSync(targetPath, 'utf8'));
-    final = deepMerge(existing, payload);
+  let final: Record<string, unknown> = payload;
+  if (merge) {
+    const existing = readState<Record<string, unknown>>({ repoRoot, file });
+    if (existing) {
+      final = deepMerge(existing, payload);
+    }
   }
-  const dir = dirname(targetPath);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  writeFileSync(targetPath, JSON.stringify(final, null, 2) + '\n');
-  return { wrote: targetPath, bytes: statSync(targetPath).size, schema: schema.title ?? stateFile };
+  const wrote = writeState({ repoRoot, file, data: final });
+  return {
+    wrote,
+    bytes: statSync(wrote).size,
+    schema: schema.title ?? stateFile,
+  };
 }
 
 export function startMcpServer() {

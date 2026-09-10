@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-09-10
+
+### Added
+
+- **MCP structured results** — every tool now returns MCP
+  `structuredContent` alongside the existing text JSON payload. Tool clients
+  can consume typed fields without parsing CLI output.
+- **MCP argument validation** — each `tools/call` request is checked against
+  the tool's advertised JSON Schema before dispatch. Invalid arguments
+  return a tool-level error with machine-readable issues.
+- **Structured failure semantics** — expected command failures set
+  `isError: true` while preserving the command payload and `exitCode`.
+- **MCP protocol documentation** — `docs/architecture/mcp-protocol.md`
+  documents the 25-tool surface, response envelope, validation behavior,
+  and atomic state-write path.
+
+### Changed
+
+- **Typed command result APIs** — `status`, `resume`, `checkpoint`, `guard`,
+  `eval`, `sprint`, `trace`, `replay`, `report`, `skills`, `run`, and
+  `validate-skill` now expose result-producing functions shared by CLI and
+  MCP. Human CLI output remains unchanged.
+- **MCP no longer monkeypatches `console.log`** — the server dispatches to
+  typed results directly, eliminating interleaving and global-console
+  hazards in long-lived processes.
+- **`apply_skill_advice` now writes atomically** — writes are schema
+  validated through `writeState`, use the cross-process file lock, and
+  publish via temporary file plus atomic rename.
+- **`skill_chain` returns structured metadata** — the result includes
+  target, upstream, order, step status, and the legacy text output.
+
 ## [1.4.0] - 2026-09-10
 
 ### Added

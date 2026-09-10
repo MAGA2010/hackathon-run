@@ -3,21 +3,23 @@
 This directory contains the ADRs for Hackathon Run. Each captures a
 significant architectural choice, its context, and its consequences.
 
-| ID                                         | Title                                                                                        | Status   |
-| ------------------------------------------ | -------------------------------------------------------------------------------------------- | -------- |
-| [0001](0001-skill-format.md)               | Skill format follows `SKILL.md` convention                                                   | Accepted |
-| [0002](0002-state-filesystem.md)           | State lives in `.hackathon/state/*.json`                                                     | Accepted |
-| [0003](0003-agent-skills-standard.md)      | Skills follow the Agent Skills open standard                                                 | Accepted |
-| [0004](0004-skill-extensibility.md)        | Skills are extensible via CLI + JSON Schema pairing                                          | Accepted |
-| [0005](0005-skill-roster-v040.md)          | v0.4 skill roster expansion (time-box, stack-picker, retro) + MCP surface growth             | Accepted |
-| [0006](0006-v050-run-replay-catalog.md)    | v0.5 run-time argument parsing + replay + skills.json catalog + demo-rehearsal + team-roster | Accepted |
-| [0007](0007-v060-report-decision-log.md)   | v0.6 report + decision-log skill + MCP closure + validation hardening                        | Accepted |
-| [0008](0008-v070-v080-matcher-backends.md) | v0.7-v0.8 semantic fallback + pluggable backends + validation no-op fix                      | Accepted |
-| [0009](0009-skill-format-v2.md)            | Skill Format v2 — first-class metadata for discovery                                         | Accepted |
-| [0010](0010-v110-chain-pin-embed.md)       | v1.1 chain execution + per-skill pin + pluggable embedding backend                           | Accepted |
-| [0011](0011-v120-skill-manifest.md)        | v1.2 third-party skill manifest (author, license, homepage, repository, compatibility)       | Accepted |
-| [0012](0012-v130-harness-primitives.md)    | v1.3 harness primitives: default-FAIL, session, sprint, trace, role prompts                  | Accepted |
-| [0013](0013-v130-routing-audit-judge.md)   | v1.3 BM25 routing, skill security audit, and typed LLM judge protocol                        | Accepted |
+| ID                                          | Title                                                                                        | Status   |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------- | -------- |
+| [0001](0001-skill-format.md)                | Skill format follows `SKILL.md` convention                                                   | Accepted |
+| [0002](0002-state-filesystem.md)            | State lives in `.hackathon/state/*.json`                                                     | Accepted |
+| [0003](0003-agent-skills-standard.md)       | Skills follow the Agent Skills open standard                                                 | Accepted |
+| [0004](0004-skill-extensibility.md)         | Skills are extensible via CLI + JSON Schema pairing                                          | Accepted |
+| [0005](0005-skill-roster-v040.md)           | v0.4 skill roster expansion (time-box, stack-picker, retro) + MCP surface growth             | Accepted |
+| [0006](0006-v050-run-replay-catalog.md)     | v0.5 run-time argument parsing + replay + skills.json catalog + demo-rehearsal + team-roster | Accepted |
+| [0007](0007-v060-report-decision-log.md)    | v0.6 report + decision-log skill + MCP closure + validation hardening                        | Accepted |
+| [0008](0008-v070-v080-matcher-backends.md)  | v0.7-v0.8 semantic fallback + pluggable backends + validation no-op fix                      | Accepted |
+| [0009](0009-skill-format-v2.md)             | Skill Format v2 — first-class metadata for discovery                                         | Accepted |
+| [0010](0010-v110-chain-pin-embed.md)        | v1.1 chain execution + per-skill pin + pluggable embedding backend                           | Accepted |
+| [0011](0011-v120-skill-manifest.md)         | v1.2 third-party skill manifest (author, license, homepage, repository, compatibility)       | Accepted |
+| [0012](0012-v130-harness-primitives.md)     | v1.3 harness primitives: default-FAIL, session, sprint, trace, role prompts                  | Accepted |
+| [0013](0013-v130-routing-audit-judge.md)    | v1.3 BM25 routing, skill security audit, and typed LLM judge protocol                        | Accepted |
+| [0014](0014-v140-evidence-eval-security.md) | v1.4 evidence chains, agent evaluation, and skill capability policy                          | Accepted |
+| [0015](0015-v150-mcp-structured-kernel.md)  | v1.5 MCP structured kernel, typed command results, and argument validation                   | Accepted |
 
 ## Adding a new ADR
 

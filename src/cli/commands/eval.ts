@@ -12,6 +12,7 @@ import { join, resolve } from 'node:path';
 import { readSprint } from '../../harness/sprint.js';
 import { readState } from '../../harness/state.js';
 import { c } from '../lib/colors.js';
+import { commandFail, commandOk, type CommandResult } from '../lib/command-result.js';
 import { log } from '../lib/logger.js';
 
 interface EvalFileLike {
@@ -41,19 +42,38 @@ export interface EvalStatusOptions {
   json?: boolean;
 }
 
-export function evalStatus(opts: EvalStatusOptions): number {
+export interface EvalStatusPayload {
+  verdict: string;
+  strategy: string;
+  criteria_passed: number;
+  criteria_total: number;
+  weighted_score: number | null;
+  rubric_dimensions: Array<{
+    id: string;
+    name: string;
+    weight: number;
+    threshold: number;
+  }>;
+  sprint: { name: string; feature: string; status: string } | null;
+  feedback: string[];
+}
+
+export interface EvalStatusErrorPayload {
+  error: string;
+}
+
+export function evalStatusResult(
+  opts: EvalStatusOptions,
+): CommandResult<EvalStatusPayload | EvalStatusErrorPayload> {
   const cwd = resolve(opts.cwd);
   const stateDir = join(cwd, '.hackathon', 'state');
   if (!existsSync(stateDir)) {
-    log.err('.hackathon/state/ not found in ' + cwd);
-    log.dim('Run: hackathon init');
-    return 1;
+    return commandFail({ error: '.hackathon/state/ not found in ' + cwd });
   }
 
   const evalData = readState<EvalFileLike>({ repoRoot: cwd, file: 'eval.json' });
   if (!evalData) {
-    log.err('eval.json missing; run hackathon sprint review first');
-    return 1;
+    return commandFail({ error: 'eval.json missing; run hackathon sprint review first' });
   }
 
   const sprint = readSprint(cwd);
@@ -76,7 +96,7 @@ export function evalStatus(opts: EvalStatusOptions): number {
   const strategy = evalData.strategy ?? 'refine';
   const dimensions = evalData.rubric?.dimensions ?? [];
 
-  const payload = {
+  const payload: EvalStatusPayload = {
     verdict: evalData.verdict ?? 'pending',
     strategy,
     criteria_passed: passed,
@@ -91,26 +111,39 @@ export function evalStatus(opts: EvalStatusOptions): number {
     sprint: sprint ? { name: sprint.name, feature: sprint.feature, status: sprint.status } : null,
     feedback: evalData.feedback ?? [],
   };
+  return commandOk(payload);
+}
 
+export function evalStatus(opts: EvalStatusOptions): number {
+  const result = evalStatusResult(opts);
+  if ('error' in result.data) {
+    log.err(result.data.error);
+    if (result.data.error.includes('.hackathon/state/')) log.dim('Run: hackathon init');
+    return result.exitCode;
+  }
+  const payload = result.data;
   if (opts.json) {
     console.log(JSON.stringify(payload, null, 2));
-    return 0;
+    return result.exitCode;
   }
 
+  const cwd = resolve(opts.cwd);
   console.log(c.bold('hackathon eval \u2014 ' + cwd));
-  console.log('  verdict:      ' + (evalData.verdict ?? 'pending'));
-  console.log('  strategy:     ' + strategy);
-  console.log('  criteria:     ' + `${passed}/${criteria.length} passing`);
-  if (weightedScore != null) console.log('  weighted:     ' + weightedScore + ' / 5');
-  for (const dimension of dimensions) {
+  console.log('  verdict:      ' + payload.verdict);
+  console.log('  strategy:     ' + payload.strategy);
+  console.log('  criteria:     ' + `${payload.criteria_passed}/${payload.criteria_total} passing`);
+  if (payload.weighted_score != null) {
+    console.log('  weighted:     ' + payload.weighted_score + ' / 5');
+  }
+  for (const dimension of payload.rubric_dimensions) {
     console.log(
       '  rubric:       ' +
         `${dimension.name ?? dimension.id ?? '?'} (weight ${dimension.weight ?? 0}, threshold ${dimension.threshold ?? 0})`,
     );
   }
-  if ((evalData.feedback ?? []).length > 0) {
+  if (payload.feedback.length > 0) {
     console.log(c.bold('  feedback:'));
-    for (const item of (evalData.feedback ?? []).slice(0, 5)) console.log('    - ' + item);
+    for (const item of payload.feedback.slice(0, 5)) console.log('    - ' + item);
   }
-  return 0;
+  return result.exitCode;
 }

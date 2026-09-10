@@ -123,6 +123,11 @@ commands:
 - `hackathon replay`, `hackathon report`, `hackathon skills pin`
 - `hackathon mcp` — Model Context Protocol server (`tools/list`, `find_skills`, ...)
 
+The MCP server dispatches to typed CLI result APIs and validates every tool
+argument against its advertised JSON Schema. Responses carry
+`structuredContent` plus a text JSON fallback; expected tool failures use
+`isError: true`. See [MCP protocol](mcp-protocol.md).
+
 ## What's in the repo
 
 | Path                 | Purpose                                                                          |

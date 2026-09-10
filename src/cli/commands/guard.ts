@@ -21,6 +21,7 @@ import {
   writeStop,
 } from '../../harness/guard.js';
 import { appendTrace } from '../../harness/trace.js';
+import { commandFail, commandOk, type CommandResult } from '../lib/command-result.js';
 import { log } from '../lib/logger.js';
 import { c } from '../lib/colors.js';
 
@@ -32,13 +33,25 @@ export interface GuardOptions {
   json?: boolean;
 }
 
-export function guard(opts: GuardOptions): number {
+export interface GuardPayload {
+  ok: boolean;
+  action: GuardOptions['subcommand'];
+  path?: string;
+  stopped?: boolean;
+  stop_message?: string | null;
+  steer_present?: boolean;
+  error?: string;
+}
+
+export function guardResult(opts: GuardOptions): CommandResult<GuardPayload> {
   const cwd = resolve(opts.cwd);
   const stateDir = join(cwd, '.hackathon', 'state');
   if (!existsSync(stateDir)) {
-    log.err('.hackathon/state/ not found in ' + cwd);
-    log.dim('Run: hackathon init');
-    return 1;
+    return commandFail({
+      ok: false,
+      action: opts.subcommand,
+      error: '.hackathon/state/ not found in ' + cwd,
+    });
   }
 
   if (opts.subcommand === 'stop') {
@@ -50,12 +63,7 @@ export function guard(opts: GuardOptions): number {
       status: 'warn',
       summary: opts.reason ?? 'Operator requested stop.',
     });
-    if (opts.json) {
-      console.log(JSON.stringify({ ok: true, action: 'stop', path: target }, null, 2));
-    } else {
-      log.warn(`stop requested; wrote ${target}`);
-    }
-    return 0;
+    return commandOk({ ok: true, action: 'stop', path: target });
   }
 
   if (opts.subcommand === 'clear') {
@@ -68,19 +76,13 @@ export function guard(opts: GuardOptions): number {
       status: 'ok',
       summary: 'Operator controls cleared',
     });
-    if (opts.json) {
-      console.log(JSON.stringify({ ok: true, action: 'clear' }, null, 2));
-    } else {
-      log.ok('AGENT_STOP and STEER.md cleared');
-    }
-    return 0;
+    return commandOk({ ok: true, action: 'clear' });
   }
 
   if (opts.subcommand === 'steer') {
     const message = (opts.message ?? '').trim();
     if (!message) {
-      log.err('steer requires a message');
-      return 1;
+      return commandFail({ ok: false, action: 'steer', error: 'steer requires a message' });
     }
     const target = writeSteer(cwd, message);
     appendTrace(cwd, {
@@ -90,25 +92,44 @@ export function guard(opts: GuardOptions): number {
       status: 'ok',
       summary: message,
     });
-    if (opts.json) {
-      console.log(JSON.stringify({ ok: true, action: 'steer', path: target }, null, 2));
-    } else {
-      log.ok(`steer written to ${target}`);
-    }
-    return 0;
+    return commandOk({ ok: true, action: 'steer', path: target });
   }
 
   const status = guardStatus(cwd);
-  if (opts.json) {
-    console.log(JSON.stringify({ ok: true, ...status }, null, 2));
-  } else {
-    console.log(c.bold('hackathon guard status \u2014 ' + cwd));
-    console.log('  stopped:  ' + status.stopped);
-    if (status.stopped) console.log('  message:  ' + (status.stop_message ?? ''));
-    console.log('  stop:     ' + stopPath(cwd));
-    console.log(
-      '  steer:    ' + steerPath(cwd) + ' (' + (status.steer_present ? 'pending' : 'empty') + ')',
-    );
+  return commandOk({ ok: true, action: 'status', ...status });
+}
+
+export function guard(opts: GuardOptions): number {
+  const result = guardResult(opts);
+  const payload = result.data;
+  if (!payload.ok) {
+    log.err(payload.error ?? 'guard command failed');
+    if (payload.error?.includes('.hackathon/state/')) log.dim('Run: hackathon init');
+    return result.exitCode;
   }
-  return 0;
+  if (opts.json) {
+    console.log(JSON.stringify(payload, null, 2));
+    return result.exitCode;
+  }
+  const cwd = resolve(opts.cwd);
+  if (payload.action === 'stop') {
+    log.warn(`stop requested; wrote ${payload.path}`);
+    return result.exitCode;
+  }
+  if (payload.action === 'clear') {
+    log.ok('AGENT_STOP and STEER.md cleared');
+    return result.exitCode;
+  }
+  if (payload.action === 'steer') {
+    log.ok(`steer written to ${payload.path}`);
+    return result.exitCode;
+  }
+  console.log(c.bold('hackathon guard status \u2014 ' + cwd));
+  console.log('  stopped:  ' + payload.stopped);
+  if (payload.stopped) console.log('  message:  ' + (payload.stop_message ?? ''));
+  console.log('  stop:     ' + stopPath(cwd));
+  console.log(
+    '  steer:    ' + steerPath(cwd) + ' (' + (payload.steer_present ? 'pending' : 'empty') + ')',
+  );
+  return result.exitCode;
 }

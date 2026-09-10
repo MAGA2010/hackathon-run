@@ -18,12 +18,34 @@ import { join, resolve, basename, extname } from 'node:path';
 import { collectTimeline } from './replay.js';
 import { readTraces } from '../../harness/trace.js';
 import { c } from '../lib/colors.js';
+import { commandFail, commandOk, errorMessage, type CommandResult } from '../lib/command-result.js';
 import { log } from '../lib/logger.js';
 
 export interface ReportOptions {
   cwd?: string;
   out?: string;
   json?: boolean;
+}
+
+interface ReportVerdict {
+  label: string;
+  note: string;
+}
+
+export interface ReportPayload {
+  repo_root: string;
+  state_dir: string;
+  generated_at: string;
+  verdict: ReportVerdict | null;
+  states: Record<string, Record<string, any>>;
+  trace: {
+    count: number;
+    events: ReturnType<typeof readTraces>;
+  };
+}
+
+export interface ReportErrorPayload {
+  error: string;
 }
 
 const PKG_VERSION: string =
@@ -313,7 +335,7 @@ function sectionOf(file: string, json: Record<string, any>): string {
   return bullets.length > 0 ? bullets.join('\n') : '_no details captured_';
 }
 
-function verdictOf(data: Map<string, Record<string, any>>): { label: string; note: string } | null {
+function verdictOf(data: Map<string, Record<string, any>>): ReportVerdict | null {
   const ship = data.get('ship.json');
   const review = data.get('review.json');
   const verify = data.get('verify.json');
@@ -350,15 +372,17 @@ function verdictOf(data: Map<string, Record<string, any>>): { label: string; not
   return null;
 }
 
-export function report(opts: ReportOptions): number {
+function collectReport(
+  opts: ReportOptions,
+):
+  | { payload: ReportPayload; files: string[]; data: Map<string, Record<string, any>> }
+  | { error: string } {
   const cwd = opts.cwd ?? process.cwd();
   let collected: ReturnType<typeof collectTimeline>;
   try {
     collected = collectTimeline(cwd);
   } catch (e) {
-    log.err((e as Error).message);
-    log.dim(`run ${c.cyan('hackathon init')} first`);
-    return 2;
+    return { error: errorMessage(e) };
   }
   const stateDir = collected.stateDir;
   const files = readdirSync(stateDir)
@@ -370,9 +394,8 @@ export function report(opts: ReportOptions): number {
     const json = safeJson(join(stateDir, f));
     if (json) data.set(f, json);
   }
-
-  if (opts.json) {
-    const payload = {
+  return {
+    payload: {
       repo_root: cwd,
       state_dir: stateDir,
       generated_at: new Date().toISOString(),
@@ -382,12 +405,40 @@ export function report(opts: ReportOptions): number {
         count: traceEvents.length,
         events: traceEvents.slice(-100),
       },
-    };
+    },
+    files,
+    data,
+  };
+}
+
+export function reportResult(
+  opts: ReportOptions,
+): CommandResult<ReportPayload | ReportErrorPayload> {
+  const collected = collectReport(opts);
+  if ('error' in collected) return commandFail(collected, 2);
+  return commandOk(collected.payload);
+}
+
+export function report(opts: ReportOptions): number {
+  const collected = collectReport(opts);
+  if ('error' in collected) {
+    log.err(collected.error);
+    log.dim(`run ${c.cyan('hackathon init')} first`);
+    return 2;
+  }
+  const { payload, files, data } = collected;
+  if (opts.json) {
     console.log(JSON.stringify(payload, null, 2));
     return 0;
   }
 
-  const markdown = renderMarkdown(cwd, stateDir, files, data, traceEvents);
+  const markdown = renderMarkdown(
+    payload.repo_root,
+    payload.state_dir,
+    files,
+    data,
+    readTraces(payload.repo_root),
+  );
   if (opts.out) {
     const target = resolve(opts.out);
     writeFileSync(target, markdown, 'utf8');

@@ -7,6 +7,7 @@ import { readSession } from '../../harness/session.js';
 import { readSprint } from '../../harness/sprint.js';
 import { readTraces } from '../../harness/trace.js';
 import { c } from '../lib/colors.js';
+import { commandFail, commandOk, type CommandResult } from '../lib/command-result.js';
 import { log } from '../lib/logger.js';
 
 const STATE_FILES = ['plan.json', 'verify.json', 'demo.json', 'review.json', 'ship.json'] as const;
@@ -21,6 +22,17 @@ export interface StatusSummary {
   warnings: string[];
   runtime: RuntimeSummary;
 }
+
+export interface UninitializedStatusSummary {
+  initialized: false;
+  stateDir: string;
+  lifecycle: 'empty';
+  nextSuggestion: string | null;
+  files: Partial<Record<FileName, FileSummary>>;
+  warnings: string[];
+}
+
+export type StatusPayload = StatusSummary | UninitializedStatusSummary;
 
 interface RuntimeSummary {
   session: {
@@ -240,31 +252,19 @@ function summarizeRuntime(cwd: string, stateDir: string): RuntimeSummary {
   };
 }
 
-export function status(opts: { cwd: string; json?: boolean }): number {
+export function statusResult(opts: { cwd: string }): CommandResult<StatusPayload> {
   const cwd = resolve(opts.cwd);
   const stateDir = join(cwd, '.hackathon', 'state');
   const initialized = existsSync(stateDir);
   if (!initialized) {
-    if (opts.json) {
-      console.log(
-        JSON.stringify(
-          {
-            initialized: false,
-            stateDir,
-            lifecycle: 'empty',
-            nextSuggestion: NEXT_SUGGESTION.empty,
-            files: {},
-            warnings: ['.hackathon/state/ not found'],
-          },
-          null,
-          2,
-        ),
-      );
-    } else {
-      log.warn('.hackathon/state/ not found in ' + cwd);
-      log.dim('Run: hackathon init');
-    }
-    return 1;
+    return commandFail({
+      initialized: false,
+      stateDir,
+      lifecycle: 'empty',
+      nextSuggestion: NEXT_SUGGESTION.empty,
+      files: {},
+      warnings: ['.hackathon/state/ not found'],
+    });
   }
   const warnings: string[] = [];
   const files: Partial<Record<FileName, FileSummary>> = {};
@@ -310,10 +310,28 @@ export function status(opts: { cwd: string; json?: boolean }): number {
     warnings,
     runtime,
   };
+  return commandOk(summary);
+}
+
+export function status(opts: { cwd: string; json?: boolean }): number {
+  const result = statusResult(opts);
+  const summary = result.data;
   if (opts.json) {
     console.log(JSON.stringify(summary, null, 2));
-    return 0;
+    return result.exitCode;
   }
+  if (!summary.initialized) {
+    log.warn('.hackathon/state/ not found in ' + resolve(opts.cwd));
+    log.dim('Run: hackathon init');
+    return result.exitCode;
+  }
+  const cwd = resolve(opts.cwd);
+  const stateDir = summary.stateDir;
+  const lifecycle = summary.lifecycle;
+  const nextSuggestion = summary.nextSuggestion;
+  const files = summary.files;
+  const warnings = summary.warnings;
+  const runtime = summary.runtime;
   console.log(c.bold('\u2708\ufe0f  hackathon status \u2014 ' + cwd));
   console.log(c.dim('state dir: ' + stateDir));
   console.log();

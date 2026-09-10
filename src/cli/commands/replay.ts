@@ -19,6 +19,7 @@ import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import { join, resolve, basename, extname } from 'node:path';
 
 import { c } from '../lib/colors.js';
+import { commandFail, commandOk, errorMessage, type CommandResult } from '../lib/command-result.js';
 import { log } from '../lib/logger.js';
 
 export interface ReplayOptions {
@@ -38,6 +39,16 @@ type TimedTimelineEntry = TimelineEntry & { delta_min: number };
 export interface CollectedTimeline {
   stateDir: string;
   entries: TimedTimelineEntry[];
+}
+
+export interface ReplayPayload {
+  state_dir: string;
+  duration_min: number;
+  entries: TimedTimelineEntry[];
+}
+
+export interface ReplayErrorPayload {
+  error: string;
 }
 
 const STAGE_ORDER: Record<string, number> = {
@@ -133,38 +144,49 @@ export function collectTimeline(cwd: string): CollectedTimeline {
   return { stateDir, entries: timeline };
 }
 
-export function replay(opts: ReplayOptions): number {
+export function replayResult(
+  opts: ReplayOptions,
+): CommandResult<ReplayPayload | ReplayErrorPayload> {
   const cwd = opts.cwd ?? process.cwd();
   let collected: CollectedTimeline;
   try {
     collected = collectTimeline(cwd);
   } catch (e) {
-    log.err((e as Error).message);
-    log.dim(`run ${c.cyan('hackathon init')} first`);
-    return 2;
+    return commandFail({ error: errorMessage(e) }, 2);
   }
   const { stateDir, entries: timeline } = collected;
+  const payload: ReplayPayload = {
+    state_dir: stateDir,
+    duration_min:
+      timeline.length >= 2
+        ? Math.round(
+            (Date.parse(timeline[timeline.length - 1].at) - Date.parse(timeline[0].at)) / 60000,
+          )
+        : 0,
+    entries: timeline,
+  };
+  return commandOk(payload);
+}
+
+export function replay(opts: ReplayOptions): number {
+  const result = replayResult(opts);
+  if ('error' in result.data) {
+    log.err(result.data.error);
+    log.dim(`run ${c.cyan('hackathon init')} first`);
+    return result.exitCode;
+  }
+  const { state_dir: stateDir, entries: timeline } = result.data;
 
   if (opts.json) {
-    const out = {
-      state_dir: stateDir,
-      duration_min:
-        timeline.length >= 2
-          ? Math.round(
-              (Date.parse(timeline[timeline.length - 1].at) - Date.parse(timeline[0].at)) / 60000,
-            )
-          : 0,
-      entries: timeline,
-    };
-    console.log(JSON.stringify(out, null, 2));
-    return 0;
+    console.log(JSON.stringify(result.data, null, 2));
+    return result.exitCode;
   }
 
   console.log(c.bold(`hackathon replay — ${stateDir}`));
   console.log();
   if (timeline.length === 0) {
     log.dim('(no state files yet)');
-    return 0;
+    return result.exitCode;
   }
   const t0 = Date.parse(timeline[0].at);
   for (const e of timeline) {
@@ -177,5 +199,5 @@ export function replay(opts: ReplayOptions): number {
   console.log(
     `  ${c.bold(timeline.length + ' events')}, total span ${timeline[timeline.length - 1].delta_min != null ? 'see T+ above' : ''}`,
   );
-  return 0;
+  return result.exitCode;
 }

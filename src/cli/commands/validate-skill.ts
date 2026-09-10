@@ -33,6 +33,7 @@ import { SKILL_CATEGORIES, isSkillCategory } from '../../harness/types.js';
 import { findSkillDirs } from '../../harness/loader.js';
 import { defaultSchemaPath } from '../../harness/state.js';
 import { c } from '../lib/colors.js';
+import { commandFail, commandOk, errorMessage, type CommandResult } from '../lib/command-result.js';
 import { log } from '../lib/logger.js';
 
 export type Finding = { severity: 'error' | 'warn' | 'info'; message: string };
@@ -281,26 +282,54 @@ export interface ValidateSkillOptions {
   cwd?: string;
 }
 
-export function validateSkill(opts: ValidateSkillOptions): number {
+export interface ValidateSkillPayload {
+  target: string;
+  errors: number;
+  warnings: number;
+  findings: Finding[];
+}
+
+export interface ValidateSkillErrorPayload {
+  target: string;
+  error: string;
+}
+
+export function validateSkillResult(
+  opts: ValidateSkillOptions,
+): CommandResult<ValidateSkillPayload | ValidateSkillErrorPayload> {
   const cwd = opts.cwd ?? process.cwd();
   const skillDir = resolve(opts.target);
   let stat;
   try {
     stat = statSync(skillDir);
   } catch (e) {
-    log.err(`cannot read ${skillDir}: ${(e as Error).message}`);
-    return 2;
+    return commandFail(
+      { target: skillDir, error: `cannot read ${skillDir}: ${errorMessage(e)}` },
+      2,
+    );
   }
   if (!stat.isDirectory()) {
-    log.err(`not a directory: ${skillDir}`);
-    return 2;
+    return commandFail({ target: skillDir, error: `not a directory: ${skillDir}` }, 2);
   }
   const findings = checkSkill(skillDir, cwd);
   const errors = findings.filter((f) => f.severity === 'error').length;
   const warnings = findings.filter((f) => f.severity === 'warn').length;
+  return {
+    exitCode: errors > 0 ? 1 : 0,
+    data: { target: skillDir, errors, warnings, findings },
+  };
+}
+
+export function validateSkill(opts: ValidateSkillOptions): number {
+  const result = validateSkillResult(opts);
+  if ('error' in result.data) {
+    log.err(result.data.error);
+    return result.exitCode;
+  }
+  const { target: skillDir, errors, warnings, findings } = result.data;
   if (opts.json) {
-    console.log(JSON.stringify({ target: skillDir, errors, warnings, findings }, null, 2));
-    return errors > 0 ? 1 : 0;
+    console.log(JSON.stringify(result.data, null, 2));
+    return result.exitCode;
   }
   console.log(c.bold('hackathon validate-skill -- ' + skillDir));
   console.log();
@@ -317,5 +346,5 @@ export function validateSkill(opts: ValidateSkillOptions): number {
   console.log(
     `  ${c.red(errors + ' errors')}, ${c.yellow(warnings + ' warnings')}, ${findings.length} findings total`,
   );
-  return errors > 0 ? 1 : 0;
+  return result.exitCode;
 }

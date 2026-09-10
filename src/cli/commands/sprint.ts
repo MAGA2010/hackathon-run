@@ -27,6 +27,7 @@ import { appendTrace } from '../../harness/trace.js';
 import { readSession, updateSession } from '../../harness/session.js';
 import { syncVerificationToPlan } from '../../harness/verification.js';
 import { c } from '../lib/colors.js';
+import { commandFail, commandOk, type CommandResult } from '../lib/command-result.js';
 import { log } from '../lib/logger.js';
 
 interface PlanLikeForSprint {
@@ -42,6 +43,8 @@ interface PlanLikeForSprint {
     last_verified_at?: string;
   }>;
 }
+
+type PlanFeature = NonNullable<PlanLikeForSprint['features']>[number];
 
 interface EvalResultLike {
   version?: string;
@@ -74,6 +77,45 @@ export interface SprintOptions {
   json?: boolean;
   owner?: string;
 }
+
+export interface SprintErrorPayload {
+  ok: false;
+  action: SprintOptions['subcommand'];
+  error: string;
+  hint?: string;
+}
+
+export type SprintPayload =
+  | SprintErrorPayload
+  | {
+      ok: true;
+      action: 'created' | 'approved' | 'budget';
+      sprint: Sprint;
+    }
+  | {
+      ok: true;
+      action: 'review';
+      sprint: Sprint;
+      eval: ReturnType<typeof buildEvalSkeleton>;
+      verification_sync: ReturnType<typeof syncVerificationToPlan>;
+    }
+  | {
+      ok: true;
+      action: 'accepted';
+      verdict: 'pass';
+      sprint: Sprint;
+      feature: PlanFeature;
+    }
+  | {
+      ok: false;
+      action: 'accepted';
+      verdict: 'fail';
+      strategy: string;
+      sprint: Sprint;
+      feedback: string[];
+      reason: string;
+    }
+  | Sprint;
 
 function readPlan(cwd: string): PlanLikeForSprint | null {
   try {
@@ -114,26 +156,35 @@ function buildEvalSkeleton(sprint: Sprint) {
   };
 }
 
-export function sprint(opts: SprintOptions): number {
+export function sprintResult(opts: SprintOptions): CommandResult<SprintPayload> {
   const cwd = resolve(opts.cwd ?? process.cwd());
   const stateDir = resolve(cwd, '.hackathon', 'state');
 
   if (opts.subcommand === 'new') {
     if (!existsSync(stateDir)) {
-      log.err('.hackathon/state/ not found in ' + cwd);
-      log.dim('Run: hackathon init first');
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'new',
+        error: '.hackathon/state/ not found in ' + cwd,
+        hint: 'Run: hackathon init first',
+      });
     }
     const existing = readSprint(cwd);
     if (existing && !opts.force) {
-      log.err('active sprint already exists: ' + existing.name);
-      log.dim('Use --force to overwrite, or sprint status to inspect it.');
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'new',
+        error: 'active sprint already exists: ' + existing.name,
+        hint: 'Use --force to overwrite, or sprint status to inspect it.',
+      });
     }
     const plan = readPlan(cwd);
     if (!plan) {
-      log.err('plan.json missing or invalid; run scope-knife first');
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'new',
+        error: 'plan.json missing or invalid; run scope-knife first',
+      });
     }
     const sprintData = sprintFromPlan(plan, opts.feature);
     sprintData.name = opts.name ?? sprintData.name;
@@ -149,20 +200,17 @@ export function sprint(opts: SprintOptions): number {
       summary: `Created sprint ${sprintData.name} for ${sprintData.feature}`,
       data: { criteria: sprintData.criteria.length },
     });
-    if (opts.json) {
-      console.log(JSON.stringify({ ok: true, action: 'created', sprint: sprintData }, null, 2));
-    } else {
-      log.ok(`wrote sprint contract ${sprintData.name} for ${sprintData.feature}`);
-      log.dim(`criteria: ${sprintData.criteria.length} (all default-FAIL)`);
-    }
-    return 0;
+    return commandOk({ ok: true, action: 'created', sprint: sprintData });
   }
 
   if (opts.subcommand === 'approve') {
     const current = readSprint(cwd);
     if (!current) {
-      log.err('no active sprint; run hackathon sprint new first');
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'approve',
+        error: 'no active sprint; run hackathon sprint new first',
+      });
     }
     const updated = updateSprint(cwd, {
       status: 'approved',
@@ -175,27 +223,31 @@ export function sprint(opts: SprintOptions): number {
       status: 'ok',
       summary: `Approved sprint ${current.name}`,
     });
-    if (opts.json) {
-      console.log(JSON.stringify({ ok: true, action: 'approved', sprint: updated }, null, 2));
-    } else {
-      log.ok(`approved ${current.name} - generator may start`);
-    }
-    return 0;
+    return commandOk({ ok: true, action: 'approved', sprint: updated });
   }
 
   if (opts.subcommand === 'review') {
     const current = readSprint(cwd);
     if (!current) {
-      log.err('no active sprint; run hackathon sprint new first');
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'review',
+        error: 'no active sprint; run hackathon sprint new first',
+      });
     }
     if (current.status === 'proposed') {
-      log.err('sprint is still proposed; run hackathon sprint approve first');
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'review',
+        error: 'sprint is still proposed; run hackathon sprint approve first',
+      });
     }
     if (['passed', 'failed', 'blocked'].includes(current.status)) {
-      log.err(`sprint is ${current.status}; create a new sprint before reviewing`);
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'review',
+        error: `sprint is ${current.status}; create a new sprint before reviewing`,
+      });
     }
     const budget = enforceSprintBudget(current);
     if (!budget.within) {
@@ -203,8 +255,11 @@ export function sprint(opts: SprintOptions): number {
         status: 'blocked',
         feedback: [...(current.feedback ?? []), budget.reason ?? 'budget exhausted'],
       });
-      log.err(budget.reason ?? 'budget exhausted');
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'review',
+        error: budget.reason ?? 'budget exhausted',
+      });
     }
     const verificationSync = syncVerificationToPlan(cwd);
     const pending = updateSprint(cwd, { status: 'pending_review' });
@@ -221,63 +276,46 @@ export function sprint(opts: SprintOptions): number {
         features_synced: verificationSync.updates.length,
       },
     });
-    if (opts.json) {
-      console.log(
-        JSON.stringify(
-          {
-            ok: true,
-            action: 'review',
-            sprint: pending,
-            eval: evalData,
-            verification_sync: verificationSync,
-          },
-          null,
-          2,
-        ),
-      );
-      return 0;
-    }
-    console.log(c.bold('Evaluator handoff'));
-    console.log();
-    console.log(c.dim('Role: read-only evaluator. Do not edit code or state files.'));
-    console.log(
-      c.dim('Rule: every criterion starts false; PASS requires machine-checkable evidence.'),
-    );
-    console.log(c.dim('Write: update .hackathon/state/eval.json only.'));
-    console.log();
-    for (const criterion of current.criteria) {
-      console.log('  ' + c.cyan(criterion.id) + '  ' + criterion.description);
-    }
-    if (current.budget_minutes != null || current.max_iterations != null) {
-      console.log();
-      console.log(
-        c.dim(
-          `budget: ${current.budget_minutes ?? 'unlimited'}m, iterations ${current.max_iterations ?? 'unlimited'}`,
-        ),
-      );
-    }
-    return 0;
+    return commandOk({
+      ok: true,
+      action: 'review',
+      sprint: pending,
+      eval: evalData,
+      verification_sync: verificationSync,
+    });
   }
 
   if (opts.subcommand === 'accept') {
     const current = readSprint(cwd);
     if (!current) {
-      log.err('no active sprint; run hackathon sprint new first');
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'accept',
+        error: 'no active sprint; run hackathon sprint new first',
+      });
     }
     const evalResult = readEval(cwd);
     if (!evalResult) {
-      log.err('eval.json missing; run hackathon sprint review first');
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'accept',
+        error: 'eval.json missing; run hackathon sprint review first',
+      });
     }
     if (evalResult.sprint && evalResult.sprint !== current.name) {
-      log.err(`eval.json targets ${evalResult.sprint}, not ${current.name}`);
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'accept',
+        error: `eval.json targets ${evalResult.sprint}, not ${current.name}`,
+      });
     }
     const verdict = evalResult.verdict;
     if (verdict !== 'pass' && verdict !== 'fail') {
-      log.err(`eval verdict is ${verdict ?? 'missing'}; only pass/fail can be accepted`);
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'accept',
+        error: `eval verdict is ${verdict ?? 'missing'}; only pass/fail can be accepted`,
+      });
     }
     syncVerificationToPlan(cwd);
 
@@ -288,13 +326,19 @@ export function sprint(opts: SprintOptions): number {
       evalCriteria.every((criterion) => criterion.passes === true);
     const plan = readPlan(cwd);
     if (!plan || !Array.isArray(plan.features)) {
-      log.err('plan.json missing or invalid; cannot update the feature');
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'accept',
+        error: 'plan.json missing or invalid; cannot update the feature',
+      });
     }
     const feature = plan.features.find((f) => f.name === current.feature);
     if (!feature) {
-      log.err(`feature ${current.feature} not found in plan.json`);
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'accept',
+        error: `feature ${current.feature} not found in plan.json`,
+      });
     }
 
     const now = new Date().toISOString();
@@ -349,19 +393,13 @@ export function sprint(opts: SprintOptions): number {
         summary: `Sprint ${current.name} passed: ${current.feature}`,
         data: { evidence_count: feature.evidence.length, iterations },
       });
-      if (opts.json) {
-        console.log(
-          JSON.stringify(
-            { ok: true, action: 'accepted', verdict: 'pass', sprint: updated, feature },
-            null,
-            2,
-          ),
-        );
-      } else {
-        log.ok(`sprint ${current.name} passed - ${current.feature} is now passes=true`);
-        log.dim(`evidence: ${evidence.length} item(s), iterations: ${iterations}`);
-      }
-      return 0;
+      return commandOk({
+        ok: true,
+        action: 'accepted',
+        verdict: 'pass',
+        sprint: updated,
+        feature,
+      });
     }
 
     const budget = enforceSprintBudget({
@@ -404,35 +442,27 @@ export function sprint(opts: SprintOptions): number {
       summary: `Sprint ${current.name} ${nextStatus}: ${current.feature}`,
       data: { feedback_count: feedback.length, iterations },
     });
-    if (opts.json) {
-      console.log(
-        JSON.stringify(
-          {
-            ok: false,
-            action: 'accepted',
-            verdict: 'fail',
-            strategy,
-            sprint: updated,
-            feedback,
-          },
-          null,
-          2,
-        ),
-      );
-    } else {
-      log.err(
-        `sprint ${current.name} ${nextStatus}: ${budget.reason ?? (strategy === 'stop' ? 'evaluator requested stop' : 'criteria not met')}`,
-      );
-      for (const item of feedback.slice(0, 5)) log.dim('  - ' + item);
-    }
-    return nextStatus === 'blocked' ? 1 : 1;
+    const data = {
+      ok: false as const,
+      action: 'accepted' as const,
+      verdict: 'fail' as const,
+      strategy,
+      sprint: updated,
+      feedback,
+      reason:
+        budget.reason ?? (strategy === 'stop' ? 'evaluator requested stop' : 'criteria not met'),
+    };
+    return commandFail(data);
   }
 
   if (opts.subcommand === 'budget') {
     const current = readSprint(cwd);
     if (!current) {
-      log.err('no active sprint; run hackathon sprint new first');
-      return 1;
+      return commandFail({
+        ok: false,
+        action: 'budget',
+        error: 'no active sprint; run hackathon sprint new first',
+      });
     }
     const patch: Partial<Sprint> = {};
     if (opts.minutes != null) patch.budget_minutes = opts.minutes;
@@ -449,39 +479,100 @@ export function sprint(opts: SprintOptions): number {
         max_iterations: next.max_iterations ?? null,
       },
     });
-    if (opts.json) {
-      console.log(JSON.stringify({ ok: true, action: 'budget', sprint: next }, null, 2));
-    } else {
-      log.ok(
-        `budget updated: time=${next.budget_minutes ?? 'unlimited'}m iterations=${next.max_iterations ?? 'unlimited'}`,
-      );
-    }
-    return 0;
+    return commandOk({ ok: true, action: 'budget', sprint: next });
   }
 
   const current = readSprint(cwd);
   if (!current) {
-    log.err('no active sprint; run hackathon sprint new first');
-    return 1;
+    return commandFail({
+      ok: false,
+      action: 'status',
+      error: 'no active sprint; run hackathon sprint new first',
+    });
   }
+  return commandOk(current);
+}
+
+export function sprint(opts: SprintOptions): number {
+  const result = sprintResult(opts);
+  const payload = result.data;
   if (opts.json) {
-    console.log(JSON.stringify(current, null, 2));
-    return 0;
+    console.log(JSON.stringify(payload, null, 2));
+    return result.exitCode;
   }
-  console.log(c.bold('hackathon sprint status \u2014 ' + cwd));
-  console.log();
-  console.log('  name:      ' + current.name);
-  console.log('  feature:   ' + current.feature);
-  console.log('  goal:      ' + current.goal);
-  console.log('  status:    ' + current.status);
-  console.log('  verdict:   ' + (current.verdict ?? 'pending'));
-  console.log('  iterations:' + (current.iterations ?? 0));
-  console.log(
-    '  criteria:  ' +
-      current.criteria.filter((criterion) => criterion.passes).length +
-      '/' +
-      current.criteria.length +
-      ' passing',
-  );
-  return 0;
+  if ('error' in payload) {
+    log.err(payload.error);
+    if (payload.hint) log.dim(payload.hint);
+    if (payload.error.includes('.hackathon/state/')) log.dim('Run: hackathon init first');
+    return result.exitCode;
+  }
+  if (!('action' in payload)) {
+    console.log(c.bold('hackathon sprint status \u2014 ' + resolve(opts.cwd ?? process.cwd())));
+    console.log();
+    console.log('  name:      ' + payload.name);
+    console.log('  feature:   ' + payload.feature);
+    console.log('  goal:      ' + payload.goal);
+    console.log('  status:    ' + payload.status);
+    console.log('  verdict:   ' + (payload.verdict ?? 'pending'));
+    console.log('  iterations:' + (payload.iterations ?? 0));
+    console.log(
+      '  criteria:  ' +
+        payload.criteria.filter((criterion) => criterion.passes).length +
+        '/' +
+        payload.criteria.length +
+        ' passing',
+    );
+    return result.exitCode;
+  }
+  if (payload.action === 'created') {
+    log.ok(`wrote sprint contract ${payload.sprint.name} for ${payload.sprint.feature}`);
+    log.dim(`criteria: ${payload.sprint.criteria.length} (all default-FAIL)`);
+    return result.exitCode;
+  }
+  if (payload.action === 'approved') {
+    log.ok(`approved ${payload.sprint.name} - generator may start`);
+    return result.exitCode;
+  }
+  if (payload.action === 'budget') {
+    log.ok(
+      `budget updated: time=${payload.sprint.budget_minutes ?? 'unlimited'}m iterations=${payload.sprint.max_iterations ?? 'unlimited'}`,
+    );
+    return result.exitCode;
+  }
+  if (payload.action === 'review') {
+    console.log(c.bold('Evaluator handoff'));
+    console.log();
+    console.log(c.dim('Role: read-only evaluator. Do not edit code or state files.'));
+    console.log(
+      c.dim('Rule: every criterion starts false; PASS requires machine-checkable evidence.'),
+    );
+    console.log(c.dim('Write: update .hackathon/state/eval.json only.'));
+    console.log();
+    for (const criterion of payload.sprint.criteria) {
+      console.log('  ' + c.cyan(criterion.id) + '  ' + criterion.description);
+    }
+    if (payload.sprint.budget_minutes != null || payload.sprint.max_iterations != null) {
+      console.log();
+      console.log(
+        c.dim(
+          `budget: ${payload.sprint.budget_minutes ?? 'unlimited'}m, iterations ${payload.sprint.max_iterations ?? 'unlimited'}`,
+        ),
+      );
+    }
+    return result.exitCode;
+  }
+  if (payload.action === 'accepted' && payload.verdict === 'pass') {
+    log.ok(`sprint ${payload.sprint.name} passed - ${payload.feature?.name} is now passes=true`);
+    log.dim(
+      `evidence: ${payload.feature?.evidence?.length ?? 0} item(s), iterations: ${payload.sprint.iterations ?? 0}`,
+    );
+    return result.exitCode;
+  }
+  if (payload.action === 'accepted' && payload.verdict === 'fail') {
+    log.err(`sprint ${payload.sprint.name} ${payload.sprint.status}: ${payload.reason}`);
+    for (const item of payload.feedback.slice(0, 5)) log.dim('  - ' + item);
+    return result.exitCode;
+  }
+  log.err('sprint command failed');
+  return result.exitCode;
 }

@@ -22,6 +22,7 @@ import { join, resolve, dirname } from 'node:path';
 
 import { loadAllSkills } from '../../harness/loader.js';
 import { c } from '../lib/colors.js';
+import { commandFail, commandOk, type CommandResult } from '../lib/command-result.js';
 import { log } from '../lib/logger.js';
 
 const PIN_PATH = '.hackathon/skills.json';
@@ -38,6 +39,32 @@ interface PinFile {
   generated_at: string;
   pack_version: string;
   skills: PinEntry[];
+}
+
+export interface SkillsPinPayload {
+  ok: true;
+  action: 'pin';
+  path: string;
+  pack_version: string;
+  skills: PinEntry[];
+  output: string;
+}
+
+interface SkillDiffChange {
+  kind: 'added' | 'removed' | 'changed' | 'pack-version';
+  name?: string;
+  from?: string | null;
+  to?: string | null;
+}
+
+export interface SkillsDiffPayload {
+  ok: boolean;
+  action: 'diff';
+  changes: SkillDiffChange[];
+  pack_version_before?: string;
+  pack_version_after?: string;
+  output: string;
+  error?: string;
 }
 
 function readPkgVersion(repoRoot: string): string {
@@ -79,6 +106,102 @@ function writePin(cwd: string, pin: PinFile): string {
   return p;
 }
 
+function currentPinEntries(loaded: ReturnType<typeof loadAllSkills>, packVersion: string) {
+  return loaded.map((s) => {
+    const refs =
+      s.body.match(/(?:state|references|templates|scripts|tests)\/[A-Za-z0-9._-]+/g)?.join('\n') ??
+      '';
+    return {
+      name: s.frontmatter.name,
+      version: skillVersion(s.frontmatter, packVersion),
+      checksum: checksumOf(JSON.stringify(s.frontmatter) + s.body, refs),
+    };
+  });
+}
+
+export function skillsPinResult(cwd: string): CommandResult<SkillsPinPayload> {
+  const loaded = loadAllSkills(cwd);
+  const packVersion = readPkgVersion(cwd);
+  const entries = currentPinEntries(loaded, packVersion);
+  const pin: PinFile = {
+    version: '1.1',
+    generated_at: new Date().toISOString(),
+    pack_version: packVersion,
+    skills: entries,
+  };
+  const path = writePin(cwd, pin);
+  return commandOk({
+    ok: true,
+    action: 'pin',
+    path,
+    pack_version: packVersion,
+    skills: entries,
+    output: `pinned ${entries.length} skills at their Format v2 versions (pack v${packVersion})\nwrote ${path}`,
+  });
+}
+
+export function skillsDiffResult(cwd: string): CommandResult<SkillsDiffPayload> {
+  const loaded = loadAllSkills(cwd);
+  const packVersion = readPkgVersion(cwd);
+  const pin = readPin(cwd);
+  if (!pin) {
+    return commandFail({
+      ok: false,
+      action: 'diff',
+      changes: [],
+      output: '',
+      error: `no pin file at ${PIN_PATH}`,
+    });
+  }
+  const current = new Map(
+    currentPinEntries(loaded, packVersion).map((entry) => [entry.name, entry]),
+  );
+  const changes: SkillDiffChange[] = [];
+  const lines: string[] = [];
+  for (const entry of pin.skills) {
+    const now = current.get(entry.name);
+    if (!now) {
+      lines.push(`  - ${entry.name}  (removed from pack)`);
+      changes.push({ kind: 'removed', name: entry.name, from: entry.version, to: null });
+    } else if (now.checksum !== entry.checksum) {
+      lines.push(`  ~ ${entry.name}  ${entry.checksum} -> ${now.checksum}`);
+      if (now.version !== entry.version) {
+        lines.push(`  ^ ${entry.name}  v${entry.version} -> v${now.version}`);
+      }
+      changes.push({
+        kind: 'changed',
+        name: entry.name,
+        from: entry.checksum,
+        to: now.checksum,
+      });
+    }
+  }
+  for (const [name] of current) {
+    if (!pin.skills.find((entry) => entry.name === name)) {
+      lines.push(`  + ${name}  (new in pack)`);
+      changes.push({ kind: 'added', name, from: null, to: current.get(name)?.version ?? null });
+    }
+  }
+  if (pin.pack_version !== packVersion) {
+    lines.push('');
+    lines.push(`  ! pack version: ${pin.pack_version} -> ${packVersion}`);
+    changes.push({
+      kind: 'pack-version',
+      from: pin.pack_version,
+      to: packVersion,
+    });
+  }
+  if (changes.length === 0) lines.push('no changes since pin');
+  return commandOk({
+    ok: true,
+    action: 'diff',
+    changes,
+    pack_version_before: pin.pack_version,
+    pack_version_after: packVersion,
+    output: lines.join('\n'),
+  });
+}
+
 export interface SkillsOptions {
   subcommand: 'list' | 'pin' | 'diff' | 'show';
   cwd?: string;
@@ -116,80 +239,20 @@ export function skills(opts: SkillsOptions): number {
   }
 
   if (opts.subcommand === 'pin') {
-    const entries: PinEntry[] = loaded.map((s) => {
-      const refs =
-        s.body
-          .match(/(?:state|references|templates|scripts|tests)\/[A-Za-z0-9._-]+/g)
-          ?.join('\n') ?? '';
-      return {
-        name: s.frontmatter.name,
-        version: skillVersion(s.frontmatter, packVersion),
-        checksum: checksumOf(JSON.stringify(s.frontmatter) + s.body, refs),
-      };
-    });
-    const pin: PinFile = {
-      version: '1.1',
-      generated_at: new Date().toISOString(),
-      pack_version: packVersion,
-      skills: entries,
-    };
-    const p = writePin(cwd, pin);
-    log.ok(`pinned ${entries.length} skills at their Format v2 versions (pack v${packVersion})`);
-    log.dim(`wrote ${p}`);
-    return 0;
+    const result = skillsPinResult(cwd);
+    for (const line of result.data.output.split('\n')) console.log(line);
+    return result.exitCode;
   }
 
   if (opts.subcommand === 'diff') {
-    const pin = readPin(cwd);
-    if (!pin) {
-      log.err(`no pin file at ${PIN_PATH}`);
+    const result = skillsDiffResult(cwd);
+    if (!result.data.ok) {
+      log.err(result.data.error ?? `no pin file at ${PIN_PATH}`);
       log.dim(`run ${c.cyan('hackathon skills pin --all')} first`);
-      return 1;
+      return result.exitCode;
     }
-    const current = new Map(
-      loaded.map((s) => {
-        const refs =
-          s.body
-            .match(/(?:state|references|templates|scripts|tests)\/[A-Za-z0-9._-]+/g)
-            ?.join('\n') ?? '';
-        return [
-          s.frontmatter.name,
-          {
-            version: skillVersion(s.frontmatter, packVersion),
-            checksum: checksumOf(JSON.stringify(s.frontmatter) + s.body, refs),
-          },
-        ];
-      }),
-    );
-    let changes = 0;
-    for (const entry of pin.skills) {
-      const now = current.get(entry.name);
-      if (!now) {
-        console.log(`  ${c.red('-')} ${entry.name}  (removed from pack)`);
-        changes++;
-      } else if (now.checksum !== entry.checksum) {
-        console.log(`  ${c.yellow('~')} ${entry.name}  ${entry.checksum} -> ${now.checksum}`);
-        if (now.version !== entry.version) {
-          console.log(`  ${c.yellow('^')} ${entry.name}  v${entry.version} -> v${now.version}`);
-        }
-        changes++;
-      }
-    }
-    for (const [name] of current) {
-      if (!pin.skills.find((e) => e.name === name)) {
-        console.log(`  ${c.green('+')} ${name}  (new in pack)`);
-        changes++;
-      }
-    }
-    if (pin.pack_version !== packVersion) {
-      console.log();
-      console.log(`  ${c.yellow('!')} pack version: ${pin.pack_version} -> ${packVersion}`);
-      changes++;
-    }
-    if (changes === 0) {
-      log.ok('no changes since pin');
-    }
-    return 0;
+    if (result.data.output) console.log(result.data.output);
+    return result.exitCode;
   }
 
   log.err(`unknown subcommand: ${opts.subcommand}`);

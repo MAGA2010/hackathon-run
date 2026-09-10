@@ -13,6 +13,7 @@ import { defaultSession, readSession, updateSession } from '../../harness/sessio
 import { readSprint } from '../../harness/sprint.js';
 import { readState } from '../../harness/state.js';
 import { appendTrace, traceStats, traceFile } from '../../harness/trace.js';
+import { commandFail, commandOk, type CommandResult } from '../lib/command-result.js';
 import { log } from '../lib/logger.js';
 
 export interface CheckpointOptions {
@@ -26,6 +27,22 @@ export interface CheckpointOptions {
   json?: boolean;
 }
 
+export interface CheckpointPayload {
+  ok: true;
+  action: 'checkpoint';
+  path: string;
+  stage: string;
+  next_task: string;
+  compressed_session: string | null;
+  compressed_lines: number | null;
+}
+
+export interface CheckpointErrorPayload {
+  ok: false;
+  action: 'checkpoint';
+  error: string;
+}
+
 interface PlanBrief {
   features?: Array<{
     name?: string;
@@ -34,17 +51,24 @@ interface PlanBrief {
   }>;
 }
 
-export function checkpoint(opts: CheckpointOptions): number {
+export function checkpointResult(
+  opts: CheckpointOptions,
+): CommandResult<CheckpointPayload | CheckpointErrorPayload> {
   const cwd = resolve(opts.cwd);
   const stateDir = join(cwd, '.hackathon', 'state');
   if (!existsSync(stateDir)) {
-    log.err('.hackathon/state/ not found in ' + cwd);
-    log.dim('Run: hackathon init');
-    return 1;
+    return commandFail({
+      ok: false,
+      action: 'checkpoint',
+      error: '.hackathon/state/ not found in ' + cwd,
+    });
   }
   if (!opts.summary.trim()) {
-    log.err('checkpoint requires --summary');
-    return 1;
+    return commandFail({
+      ok: false,
+      action: 'checkpoint',
+      error: 'checkpoint requires --summary',
+    });
   }
 
   const session = readSession(cwd) ?? defaultSession(cwd);
@@ -111,30 +135,35 @@ export function checkpoint(opts: CheckpointOptions): number {
     },
   });
 
-  if (opts.json) {
-    console.log(
-      JSON.stringify(
-        {
-          ok: true,
-          action: 'checkpoint',
-          path,
-          stage,
-          next_task: nextTask,
-          compressed_session: compressed?.path ?? null,
-          compressed_lines: compressed?.lineCount ?? null,
-        },
-        null,
-        2,
-      ),
-    );
-  } else {
-    log.ok(`checkpoint appended to ${progressPath(cwd)}`);
-    log.dim(`stage: ${stage}; next: ${nextTask}`);
-    if (compressed) {
-      log.ok(
-        `compressed session brief written to ${compressed.path} (${compressed.lineCount} lines)`,
-      );
-    }
+  return commandOk({
+    ok: true,
+    action: 'checkpoint',
+    path,
+    stage,
+    next_task: nextTask,
+    compressed_session: compressed?.path ?? null,
+    compressed_lines: compressed?.lineCount ?? null,
+  });
+}
+
+export function checkpoint(opts: CheckpointOptions): number {
+  const result = checkpointResult(opts);
+  if (!result.data.ok) {
+    log.err(result.data.error);
+    if (result.data.error.includes('.hackathon/state/')) log.dim('Run: hackathon init');
+    return result.exitCode;
   }
-  return 0;
+  if (opts.json) {
+    console.log(JSON.stringify(result.data, null, 2));
+    return result.exitCode;
+  }
+  const cwd = resolve(opts.cwd);
+  log.ok(`checkpoint appended to ${progressPath(cwd)}`);
+  log.dim(`stage: ${result.data.stage}; next: ${result.data.next_task}`);
+  if (result.data.compressed_session) {
+    log.ok(
+      `compressed session brief written to ${result.data.compressed_session} (${result.data.compressed_lines} lines)`,
+    );
+  }
+  return result.exitCode;
 }

@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { auditSkills } from '../../dist/cli/commands/skills-audit.js';
+import { auditSkills, buildRiskSummary } from '../../dist/cli/commands/skills-audit.js';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const ROOT = HERE.replace(/tests[\\/]unit.*$/, '');
@@ -49,12 +49,27 @@ describe('hackathon skills audit', () => {
       assert.ok(rules.includes('prompt-injection.ignore-system'));
       assert.ok(rules.includes('shell.download-execute'));
 
+      const summary = buildRiskSummary({ cwd: tmp });
+      assert.equal(summary.install, 'no');
+      assert.ok(summary.categories.includes('prompt-injection'));
+      assert.ok(summary.categories.includes('shell'));
+
       const cli = spawnSync(
         process.execPath,
         [join(ROOT, 'dist/cli/index.js'), 'skills', 'audit', '-C', tmp, '--strict'],
         { encoding: 'utf8' },
       );
       assert.equal(cli.status, 1, cli.stdout + cli.stderr);
+
+      const riskCli = spawnSync(
+        process.execPath,
+        [join(ROOT, 'dist/cli/index.js'), 'skills', 'audit', '-C', tmp, '--risk-summary', '--json'],
+        { encoding: 'utf8' },
+      );
+      assert.equal(riskCli.status, 1, riskCli.stdout + riskCli.stderr);
+      const riskJson = JSON.parse(riskCli.stdout);
+      assert.equal(riskJson.install, 'no');
+      assert.equal(riskJson.bySkill[0].install, 'no');
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }
@@ -83,6 +98,38 @@ describe('hackathon skills audit', () => {
       const report = auditSkills({ cwd: tmp, strict: true });
       assert.equal(report.critical, 0);
       assert.equal(report.high, 0);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('does not treat Python built-ins or prose strings as shell commands', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'hs-audit-command-'));
+    try {
+      const dir = writeSkill(
+        tmp,
+        'python-helper',
+        [
+          '---',
+          'name: python-helper',
+          'description: Writes a safe helper output.',
+          'allowed_tools: [Read, Write]',
+          '---',
+        ].join('\n'),
+        '',
+      );
+      writeFileSync(
+        join(dir, 'scripts', 'pick.py'),
+        [
+          'top = "recommended stack"',
+          'pairs = list(zip([1, 2], ["a", "b"]))',
+          'instructions = "curl http://localhost:3000"',
+        ].join('\n'),
+        'utf8',
+      );
+      const report = auditSkills({ cwd: tmp });
+      const rules = report.skills[0].findings.map((finding) => finding.rule);
+      assert.ok(!rules.includes('allowed-tools.command-not-granted'), JSON.stringify(report));
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }

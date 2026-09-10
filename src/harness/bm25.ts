@@ -5,6 +5,11 @@
  * collection statistics on every request without meaningful overhead. This
  * scorer is intended as a lexical ranking layer, not a replacement for an
  * embedding backend.
+ *
+ * `normalizedBm25Score` returns a value in [0, 1] that multiplies the raw
+ * BM25 by a coverage penalty: the ratio of query tokens that actually
+ * matched the document. This prevents a single stopword or one rare-token
+ * hit from saturating the score when most of the query is unrelated.
  */
 
 const TOKEN_RE = /[a-z0-9][a-z0-9_-]*/g;
@@ -88,24 +93,82 @@ export function bm25Score(query: string, stats: CorpusStats, documentIndex: numb
 }
 
 /**
- * Normalize a BM25 score using the query's theoretical sum of IDF. This is
- * corpus-relative and stable enough for routing thresholds on a small skill
- * catalog.
+ * Normalize a BM25 score using the query's theoretical sum of IDF, then
+ * apply a coverage penalty: the ratio of query tokens that actually
+ * matched the document. Without coverage, a single rare-token hit on a
+ * mostly-unrelated query can saturate the score to ~1.0.
  */
 export function normalizedBm25Score(
   query: string,
   stats: CorpusStats,
   documentIndex: number,
 ): number {
-  const raw = bm25Score(query, stats, documentIndex);
-  if (raw <= 0) return 0;
+  const document = stats.documents[documentIndex];
+  if (!document) return 0;
+  const queryTokens = tokenize(query);
+  if (queryTokens.length === 0) return 0;
 
+  const lengthRatio = document.tokens.length / Math.max(stats.averageLength, 1);
+  let raw = 0;
   let max = 0;
-  for (const token of tokenize(query)) {
+  let matchedTokens = 0;
+  for (const token of queryTokens) {
+    const idf = stats.idf.get(token) ?? 0;
+    // The theoretical max contribution for this query token assumes TF=1.
+    max += idf * (K1 + 1);
+    const frequency = document.frequencies.get(token) ?? 0;
+    if (frequency === 0) continue;
+    matchedTokens += 1;
+    const numerator = frequency * (K1 + 1);
+    const denominator = frequency + K1 * (1 - B + B * lengthRatio);
+    raw += idf * (numerator / denominator);
+  }
+  if (raw <= 0 || max <= 0) return 0;
+  const coverage = matchedTokens / queryTokens.length;
+  return (raw / max) * coverage;
+}
+
+/**
+ * Coverage-aware variant: returns both the normalized score and the
+ * matched-token count. Useful for confidence gating downstream.
+ */
+export interface Bm25Match {
+  score: number;
+  coverage: number;
+  matchedTokens: number;
+  queryTokens: number;
+}
+
+export function bm25Match(query: string, stats: CorpusStats, documentIndex: number): Bm25Match {
+  const document = stats.documents[documentIndex];
+  const queryTokens = tokenize(query);
+  if (!document || queryTokens.length === 0) {
+    return { score: 0, coverage: 0, matchedTokens: 0, queryTokens: 0 };
+  }
+  const lengthRatio = document.tokens.length / Math.max(stats.averageLength, 1);
+  let raw = 0;
+  let max = 0;
+  let matchedTokens = 0;
+  for (const token of queryTokens) {
     const idf = stats.idf.get(token) ?? 0;
     max += idf * (K1 + 1);
+    const frequency = document.frequencies.get(token) ?? 0;
+    if (frequency === 0) continue;
+    matchedTokens += 1;
+    const numerator = frequency * (K1 + 1);
+    const denominator = frequency + K1 * (1 - B + B * lengthRatio);
+    raw += idf * (numerator / denominator);
   }
-  return max > 0 ? raw / max : 0;
+  if (raw <= 0 || max <= 0) {
+    return { score: 0, coverage: 0, matchedTokens, queryTokens: queryTokens.length };
+  }
+  const coverage = matchedTokens / queryTokens.length;
+  return {
+    score: (raw / max) * coverage,
+    coverage,
+    matchedTokens,
+    queryTokens: queryTokens.length,
+  };
 }
 
 export function buildBm25Stats(documents: Bm25Document[]): CorpusStats {

@@ -202,6 +202,7 @@ export function parseJudgeV2Response(data: unknown): NormalizedJudgeResponse | n
       score < 0 ||
       score > 5 ||
       !rationale ||
+      evidence.length === 0 ||
       !Number.isFinite(confidence) ||
       confidence < 0 ||
       confidence > 1

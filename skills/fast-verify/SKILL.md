@@ -12,7 +12,7 @@ category: verifying
 tags: ['smoke-test', 'cross-platform', '30-second']
 dependencies: ['scope-knife']
 side_effects: ['verify']
-triggers: ['verify it works', 'smoke test', 'does it run', 'quick check', 'fast verify']
+triggers: ['verify it works', 'smoke test', 'does it run', 'does the demo run', 'quick check', 'fast verify']
 ---
 
 # fast-verify

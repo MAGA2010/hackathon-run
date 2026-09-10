@@ -42,6 +42,462 @@
         "business_value": 1,
         "submission_readiness": 1
       }
+    },
+    {
+      "id": "polished-demo",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "A recruiter screens candidates with cited evidence.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Screen candidates in minutes with cited evidence.",
+          "steps": [{ "name": "screening", "say": "Open the ranked shortlist." }]
+        },
+        "verify": { "status": "pass", "steps": [{ "status": "pass" }] }
+      },
+      "expected": {
+        "problem_clarity": 5,
+        "originality": 4,
+        "completeness": 5,
+        "technical_depth": 4,
+        "demo_quality": 5,
+        "business_value": 4,
+        "submission_readiness": 4
+      }
+    },
+    {
+      "id": "vague-brief",
+      "input": {
+        "verify_was_failing": false,
+        "plan": { "demo_goal": "Use AI to help people", "features": [] },
+        "demo": {},
+        "verify": { "status": "unknown", "steps": [] }
+      },
+      "expected": {
+        "problem_clarity": 1,
+        "originality": 1,
+        "completeness": 2,
+        "technical_depth": 2,
+        "demo_quality": 1,
+        "business_value": 1,
+        "submission_readiness": 1
+      }
+    },
+    {
+      "id": "no-demo",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "Volunteers coordinate food deliveries.",
+          "features": []
+        },
+        "demo": {},
+        "verify": { "status": "pass", "steps": [] }
+      },
+      "expected": {
+        "problem_clarity": 3,
+        "originality": 3,
+        "completeness": 3,
+        "technical_depth": 3,
+        "demo_quality": 1,
+        "business_value": 3,
+        "submission_readiness": 2
+      }
+    },
+    {
+      "id": "manual-verification",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "Teams review pull requests without missing risky changes.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Review risky pull requests before merge.",
+          "steps": [{ "name": "review", "say": "Highlight the risky diff." }]
+        },
+        "verify": {
+          "status": "pass",
+          "steps": [{ "status": "pass", "method": "manual" }]
+        }
+      },
+      "expected": {
+        "problem_clarity": 4,
+        "originality": 3,
+        "completeness": 3,
+        "technical_depth": 3,
+        "demo_quality": 4,
+        "business_value": 3,
+        "submission_readiness": 3
+      }
+    },
+    {
+      "id": "clean-clone-ready",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "A user imports transactions and sees a monthly budget.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Turn messy transactions into a clear monthly budget.",
+          "steps": [{ "name": "import", "say": "Import a sample bank export." }]
+        },
+        "verify": {
+          "status": "pass",
+          "clean_clone": true,
+          "steps": [{ "status": "pass", "command": "npm test" }]
+        }
+      },
+      "expected": {
+        "problem_clarity": 5,
+        "originality": 3,
+        "completeness": 5,
+        "technical_depth": 4,
+        "demo_quality": 4,
+        "business_value": 4,
+        "submission_readiness": 5
+      }
+    },
+    {
+      "id": "scope-too-broad",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "A platform for every small business workflow.",
+          "features": [{ "name": "crm" }, { "name": "payments" }, { "name": "inventory" }]
+        },
+        "demo": {
+          "one_liner": "One platform for every workflow.",
+          "steps": []
+        },
+        "verify": { "status": "pass", "steps": [] }
+      },
+      "expected": {
+        "problem_clarity": 2,
+        "originality": 2,
+        "completeness": 2,
+        "technical_depth": 2,
+        "demo_quality": 2,
+        "business_value": 2,
+        "submission_readiness": 2
+      }
+    },
+    {
+      "id": "strong-technical-story",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "A mobile app diagnoses crop disease offline.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Diagnose crop disease without a network.",
+          "steps": [{ "name": "scan", "say": "Show inference on airplane mode." }]
+        },
+        "verify": { "status": "pass", "steps": [{ "status": "pass" }] }
+      },
+      "expected": {
+        "problem_clarity": 4,
+        "originality": 4,
+        "completeness": 5,
+        "technical_depth": 5,
+        "demo_quality": 4,
+        "business_value": 4,
+        "submission_readiness": 4
+      }
+    },
+    {
+      "id": "weak-business-value",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "A dashboard visualizes public transit data.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Explore transit data on a map.",
+          "steps": [{ "name": "map", "say": "Show the map." }]
+        },
+        "verify": { "status": "pass", "steps": [{ "status": "pass" }] }
+      },
+      "expected": {
+        "problem_clarity": 3,
+        "originality": 3,
+        "completeness": 4,
+        "technical_depth": 3,
+        "demo_quality": 3,
+        "business_value": 1,
+        "submission_readiness": 3
+      }
+    },
+    {
+      "id": "strong-business-case",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "Clinics reduce no-shows with automated reminders.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Cut clinic no-shows with timely reminders.",
+          "steps": [{ "name": "remind", "say": "Send a reminder and show confirmation." }]
+        },
+        "verify": { "status": "pass", "steps": [{ "status": "pass" }] }
+      },
+      "expected": {
+        "problem_clarity": 5,
+        "originality": 3,
+        "completeness": 5,
+        "technical_depth": 3,
+        "demo_quality": 4,
+        "business_value": 5,
+        "submission_readiness": 4
+      }
+    },
+    {
+      "id": "generic-differentiation",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "A chatbot answers questions about company policies.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Ask an AI about company policies.",
+          "steps": [{ "name": "ask", "say": "Ask where to find the leave policy." }]
+        },
+        "verify": { "status": "pass", "steps": [{ "status": "pass" }] }
+      },
+      "expected": {
+        "problem_clarity": 3,
+        "originality": 1,
+        "completeness": 4,
+        "technical_depth": 2,
+        "demo_quality": 3,
+        "business_value": 3,
+        "submission_readiness": 3
+      }
+    },
+    {
+      "id": "pitch-without-evidence",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "Warehouses find misplaced inventory faster.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Find misplaced inventory in seconds.",
+          "steps": [
+            { "name": "scan", "say": "Scan the room." },
+            { "name": "locate", "say": "Show the missing item." }
+          ]
+        },
+        "verify": { "status": "unknown", "steps": [] }
+      },
+      "expected": {
+        "problem_clarity": 4,
+        "originality": 3,
+        "completeness": 2,
+        "technical_depth": 3,
+        "demo_quality": 5,
+        "business_value": 4,
+        "submission_readiness": 2
+      }
+    },
+    {
+      "id": "verified-no-pitch",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "Developers detect dependency license conflicts.",
+          "features": []
+        },
+        "demo": {},
+        "verify": { "status": "pass", "steps": [{ "status": "pass" }] }
+      },
+      "expected": {
+        "problem_clarity": 3,
+        "originality": 3,
+        "completeness": 5,
+        "technical_depth": 4,
+        "demo_quality": 1,
+        "business_value": 2,
+        "submission_readiness": 3
+      }
+    },
+    {
+      "id": "unverified-good-pitch",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "Busy parents plan balanced meals for the week.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Plan a balanced week of meals in five minutes.",
+          "steps": [{ "name": "plan", "say": "Generate the week and replace one meal." }]
+        },
+        "verify": { "status": "unknown", "steps": [] }
+      },
+      "expected": {
+        "problem_clarity": 5,
+        "originality": 3,
+        "completeness": 2,
+        "technical_depth": 2,
+        "demo_quality": 4,
+        "business_value": 4,
+        "submission_readiness": 2
+      }
+    },
+    {
+      "id": "missing-readme",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "Students compare scholarship deadlines.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Compare scholarship deadlines in one view.",
+          "steps": [{ "name": "compare", "say": "Open the deadline board." }]
+        },
+        "verify": {
+          "status": "pass",
+          "clean_clone": true,
+          "readme": false,
+          "steps": [{ "status": "pass" }]
+        }
+      },
+      "expected": {
+        "problem_clarity": 4,
+        "originality": 3,
+        "completeness": 4,
+        "technical_depth": 3,
+        "demo_quality": 4,
+        "business_value": 4,
+        "submission_readiness": 2
+      }
+    },
+    {
+      "id": "secret-hygiene-gap",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "Teams summarize customer calls securely.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Turn call recordings into action items.",
+          "steps": [{ "name": "summarize", "say": "Generate the action list." }]
+        },
+        "verify": {
+          "status": "pass",
+          "secret_scan": false,
+          "steps": [{ "status": "pass" }]
+        }
+      },
+      "expected": {
+        "problem_clarity": 4,
+        "originality": 3,
+        "completeness": 4,
+        "technical_depth": 3,
+        "demo_quality": 4,
+        "business_value": 4,
+        "submission_readiness": 1
+      }
+    },
+    {
+      "id": "fallback-ready",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "Event organizers assign volunteers to shifts.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Fill volunteer shifts without spreadsheet chaos.",
+          "steps": [{ "name": "assign", "say": "Assign a volunteer and open the backup plan." }]
+        },
+        "verify": {
+          "status": "pass",
+          "fallback_ready": true,
+          "steps": [{ "status": "pass" }]
+        }
+      },
+      "expected": {
+        "problem_clarity": 4,
+        "originality": 3,
+        "completeness": 5,
+        "technical_depth": 4,
+        "demo_quality": 4,
+        "business_value": 4,
+        "submission_readiness": 4
+      }
+    },
+    {
+      "id": "benchmark-beats-baseline",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "A model detects equipment failures from sensor data.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Predict equipment failures before downtime.",
+          "steps": [{ "name": "alert", "say": "Show the alert and the evidence." }]
+        },
+        "verify": {
+          "status": "pass",
+          "benchmark": "beats baseline",
+          "steps": [{ "status": "pass", "command": "npm run benchmark" }]
+        }
+      },
+      "expected": {
+        "problem_clarity": 4,
+        "originality": 4,
+        "completeness": 5,
+        "technical_depth": 5,
+        "demo_quality": 4,
+        "business_value": 4,
+        "submission_readiness": 4
+      }
+    },
+    {
+      "id": "final-submission-ready",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "Field workers report incidents from offline locations.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Report field incidents even without a connection.",
+          "steps": [
+            { "name": "offline", "say": "Create a report in airplane mode." },
+            { "name": "sync", "say": "Reconnect and sync the report." }
+          ]
+        },
+        "verify": {
+          "status": "pass",
+          "clean_clone": true,
+          "secret_scan": true,
+          "fallback_ready": true,
+          "steps": [{ "status": "pass", "command": "npm test" }]
+        }
+      },
+      "expected": {
+        "problem_clarity": 5,
+        "originality": 4,
+        "completeness": 5,
+        "technical_depth": 5,
+        "demo_quality": 5,
+        "business_value": 4,
+        "submission_readiness": 5
+      }
     }
   ]
 }

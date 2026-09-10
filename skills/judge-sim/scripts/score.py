@@ -318,7 +318,16 @@ def parse_judge_v2(result: dict) -> dict | None:
         ):
             return None
         evidence = d.get("evidence", [])
-        if not isinstance(evidence, list):
+        if (
+            not isinstance(evidence, list)
+            or not evidence
+            or not all(
+                isinstance(item, dict)
+                and str(item.get("kind") or "").strip()
+                and str(item.get("value") or "").strip()
+                for item in evidence
+            )
+        ):
             return None
         normalized.append({
             "name": name,

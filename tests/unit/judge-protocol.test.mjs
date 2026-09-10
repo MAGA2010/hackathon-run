@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -53,7 +53,7 @@ describe('judge protocol v2', () => {
     assert.equal(parsed.confidenceMean, 0.8);
   });
 
-  it('rejects v2 responses without rationale or confidence', () => {
+  it('rejects v2 responses without rationale, evidence, or confidence', () => {
     const missingRationale = validResponse();
     delete missingRationale.dimensions[0].rationale;
     assert.equal(parseJudgeV2Response(missingRationale), null);
@@ -61,6 +61,10 @@ describe('judge protocol v2', () => {
     const missingConfidence = validResponse();
     delete missingConfidence.dimensions[0].confidence;
     assert.equal(parseJudgeV2Response(missingConfidence), null);
+
+    const missingEvidence = validResponse();
+    missingEvidence.dimensions[0].evidence = [];
+    assert.equal(parseJudgeV2Response(missingEvidence), null);
   });
 
   it('computes judge calibration metrics', () => {
@@ -75,6 +79,13 @@ describe('judge protocol v2', () => {
     assert.equal(report.withinOneAgreement, 1);
     assert.equal(report.meanAbsoluteError, 0.5);
     assert.equal(report.perDimension.originality.bias, -1);
+  });
+
+  it('ships at least 20 golden calibration cases', () => {
+    const golden = JSON.parse(
+      readFileSync(new URL('../../tests/fixtures/judge-golden.json', import.meta.url), 'utf8'),
+    );
+    assert.ok(golden.cases.length >= 20);
   });
 
   it('runs calibration against an injected backend', async () => {

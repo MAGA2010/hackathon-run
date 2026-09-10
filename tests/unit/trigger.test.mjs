@@ -153,6 +153,18 @@ describe('matchSkill', () => {
     assert.ok(r.candidates[0].reasons.some((s) => s.includes('phrase')));
   });
 
+  it('requires a significant token in an exact trigger phrase', () => {
+    const stopwordOnly = mk('a', 'Unrelated capability', '');
+    stopwordOnly.frontmatter.triggers = ['the'];
+    assert.equal(matchSkill('the', [stopwordOnly]).skill, null);
+
+    const oneToken = mk('b', 'Reviews the last sprint', '');
+    oneToken.frontmatter.triggers = ['retrospective'];
+    const result = matchSkill('retrospective', [oneToken]);
+    assert.equal(result.skill?.frontmatter.name, 'b');
+    assert.equal(result.candidates[0].exactPhrase, true);
+  });
+
   it('does not match filler-heavy non-hackathon queries against the real pack', () => {
     const skills = loadAllSkills(ROOT);
     const r = matchSkill('what should we cook for dinner', skills);
@@ -190,7 +202,11 @@ describe('matchSkill', () => {
 
   it('maps paraphrases like "shorten" to scope-knife intent', () => {
     const skills = [
-      mk('scope-knife', 'Force a KEEP, CUT, or DEFER decision', ''),
+      mk(
+        'scope-knife',
+        'Forces a KEEP, CUT, or DEFER decision on every feature when scope is too large, no MVP consensus exists, or time is running out. Use for producing the minimum demo path and a next-steps task list.',
+        '',
+      ),
       mk('unrelated', 'Run image classification', ''),
     ];
     const r = matchSkill('please shorten the roadmap', skills);

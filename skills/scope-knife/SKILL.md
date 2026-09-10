@@ -12,14 +12,7 @@ category: scoping
 tags: ['keep-cut-defer', 'mvp', 'demo-path']
 dependencies: []
 side_effects: ['plan']
-triggers:
-  [
-    'scope is too big',
-    'too many features',
-    'no MVP consensus',
-    'time is running out',
-    'trim the scope',
-  ]
+triggers: ['scope is too big', 'too many features', 'no MVP consensus', 'time is running out', 'trim the scope', 'force a keep cut or defer decision', 'classify the features']
 ---
 
 # scope-knife

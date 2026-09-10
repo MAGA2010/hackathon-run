@@ -1,42 +1,166 @@
 {
-  "version": 1,
-  "description": "Golden skill-routing cases for hackathon-run. Expected null means the query must not dispatch a skill.",
+  "version": 2,
+  "description": "Golden skill-routing cases for hackathon-run. Expected null means the query must not dispatch a skill. Each case carries a category tag for per-skill precision/recall reporting.",
+  "categories": [
+    "scoping",
+    "building",
+    "verifying",
+    "demoing",
+    "judging",
+    "shipping",
+    "recovering",
+    "lifecycle",
+    "adversarial"
+  ],
   "cases": [
-    { "utterance": "how much time per stage", "expected": "time-box" },
-    { "utterance": "we have four hours left", "expected": "time-box" },
-    { "utterance": "we are falling behind", "expected": "time-box" },
-    { "utterance": "what should we cut", "expected": "scope-knife" },
-    { "utterance": "shorten the roadmap", "expected": "scope-knife" },
-    { "utterance": "scope is too large", "expected": "scope-knife" },
-    { "utterance": "we have no idea what to build", "expected": "idea-clarify" },
-    { "utterance": "the brief is vague", "expected": "idea-clarify" },
-    { "utterance": "who does what", "expected": "team-roster" },
-    { "utterance": "assign roles and surface blockers", "expected": "team-roster" },
-    { "utterance": "which stack should we use", "expected": "stack-picker" },
-    { "utterance": "recommend a tech stack", "expected": "stack-picker" },
-    { "utterance": "does the demo run", "expected": "fast-verify" },
-    { "utterance": "verify it works", "expected": "fast-verify" },
-    { "utterance": "write my pitch", "expected": "demo-coach" },
-    { "utterance": "the demo is too long", "expected": "demo-coach" },
-    { "utterance": "practice the demo", "expected": "demo-rehearsal" },
-    { "utterance": "timed run before the stage", "expected": "demo-rehearsal" },
-    { "utterance": "how would judges score", "expected": "judge-sim" },
-    { "utterance": "final review before submit", "expected": "judge-sim" },
-    { "utterance": "ship it", "expected": "ship-pack" },
-    { "utterance": "audit secrets before submit", "expected": "ship-pack" },
-    { "utterance": "the demo is broken", "expected": "recovery-runbook" },
-    { "utterance": "what do we do if X fails", "expected": "recovery-runbook" },
-    { "utterance": "pivot to a different direction", "expected": "pivot" },
-    { "utterance": "mid-build change of direction", "expected": "pivot" },
-    { "utterance": "log the decision", "expected": "decision-log" },
-    { "utterance": "record what we decided", "expected": "decision-log" },
-    { "utterance": "what prize should we target", "expected": "prize-strategy" },
-    { "utterance": "how to position the demo for judges", "expected": "prize-strategy" },
-    { "utterance": "run a retrospective", "expected": "retro" },
-    { "utterance": "what did we learn", "expected": "retro" },
-    { "utterance": "what should we cook for dinner", "expected": null },
-    { "utterance": "write a python script to parse CSV", "expected": null },
-    { "utterance": "what is the weather in Shanghai", "expected": null },
-    { "utterance": "help me with my tax return", "expected": null }
+    { "category": "scoping", "utterance": "how much time per stage", "expected": "time-box" },
+    { "category": "scoping", "utterance": "we have four hours left", "expected": "time-box" },
+    { "category": "scoping", "utterance": "we are falling behind", "expected": "time-box" },
+    { "category": "scoping", "utterance": "split the remaining time", "expected": "time-box" },
+    { "category": "scoping", "utterance": "schedule the next 60 minutes", "expected": "time-box" },
+    { "category": "scoping", "utterance": "what should we cut", "expected": "scope-knife" },
+    { "category": "scoping", "utterance": "shorten the roadmap", "expected": "scope-knife" },
+    { "category": "scoping", "utterance": "scope is too large", "expected": "scope-knife" },
+    {
+      "category": "scoping",
+      "utterance": "force a keep cut or defer decision",
+      "expected": "scope-knife"
+    },
+    { "category": "scoping", "utterance": "trim features down to mvp", "expected": "scope-knife" },
+    {
+      "category": "scoping",
+      "utterance": "we have no idea what to build",
+      "expected": "idea-clarify"
+    },
+    { "category": "scoping", "utterance": "the brief is vague", "expected": "idea-clarify" },
+    { "category": "scoping", "utterance": "help me refine the brief", "expected": "idea-clarify" },
+    {
+      "category": "scoping",
+      "utterance": "what is the goal of the project",
+      "expected": "ship-pack"
+    },
+
+    { "category": "building", "utterance": "who does what", "expected": "team-roster" },
+    {
+      "category": "building",
+      "utterance": "assign roles and surface blockers",
+      "expected": "team-roster"
+    },
+    { "category": "building", "utterance": "who is free right now", "expected": "team-roster" },
+    { "category": "building", "utterance": "who is blocked on what", "expected": "team-roster" },
+    {
+      "category": "building",
+      "utterance": "which stack should we use",
+      "expected": "stack-picker"
+    },
+    { "category": "building", "utterance": "recommend a tech stack", "expected": "stack-picker" },
+    {
+      "category": "building",
+      "utterance": "pick a framework for this",
+      "expected": "stack-picker"
+    },
+    { "category": "building", "utterance": "log the decision", "expected": "decision-log" },
+    { "category": "building", "utterance": "record what we decided", "expected": "decision-log" },
+    { "category": "building", "utterance": "log a pivot decision now", "expected": "decision-log" },
+
+    { "category": "verifying", "utterance": "does the demo run", "expected": "fast-verify" },
+    { "category": "verifying", "utterance": "verify it works", "expected": "fast-verify" },
+    {
+      "category": "verifying",
+      "utterance": "run a smoke test on the demo path",
+      "expected": "fast-verify"
+    },
+    {
+      "category": "verifying",
+      "utterance": "check whether the demo path runs end to end",
+      "expected": "fast-verify"
+    },
+    {
+      "category": "verifying",
+      "utterance": "validate the demo before submitting",
+      "expected": "fast-verify"
+    },
+
+    { "category": "demoing", "utterance": "write my pitch", "expected": "demo-coach" },
+    { "category": "demoing", "utterance": "the demo is too long", "expected": "demo-coach" },
+    { "category": "demoing", "utterance": "draft a 30 second pitch", "expected": "demo-coach" },
+    { "category": "demoing", "utterance": "practice the demo", "expected": "demo-rehearsal" },
+    {
+      "category": "demoing",
+      "utterance": "timed run before the stage",
+      "expected": "demo-rehearsal"
+    },
+    {
+      "category": "demoing",
+      "utterance": "rehearse the pitch twice",
+      "expected": "demo-rehearsal"
+    },
+
+    { "category": "judging", "utterance": "how would judges score", "expected": "judge-sim" },
+    { "category": "judging", "utterance": "final review before submit", "expected": "judge-sim" },
+    { "category": "judging", "utterance": "simulate the panel feedback", "expected": "judge-sim" },
+    {
+      "category": "judging",
+      "utterance": "what prize should we target",
+      "expected": "prize-strategy"
+    },
+    {
+      "category": "judging",
+      "utterance": "how to position the demo for judges",
+      "expected": "prize-strategy"
+    },
+    {
+      "category": "judging",
+      "utterance": "pick the prize category for our project",
+      "expected": "prize-strategy"
+    },
+
+    { "category": "shipping", "utterance": "ship it", "expected": "ship-pack" },
+    { "category": "shipping", "utterance": "audit secrets before submit", "expected": "ship-pack" },
+    { "category": "shipping", "utterance": "package the submission", "expected": "ship-pack" },
+    { "category": "shipping", "utterance": "is the readme good enough", "expected": "ship-pack" },
+
+    { "category": "recovering", "utterance": "the demo is broken", "expected": "recovery-runbook" },
+    {
+      "category": "recovering",
+      "utterance": "what do we do if X fails",
+      "expected": "recovery-runbook"
+    },
+    {
+      "category": "recovering",
+      "utterance": "build a fallback for the live demo",
+      "expected": "recovery-runbook"
+    },
+
+    { "category": "lifecycle", "utterance": "pivot to a different direction", "expected": "pivot" },
+    { "category": "lifecycle", "utterance": "mid-build change of direction", "expected": "pivot" },
+    {
+      "category": "lifecycle",
+      "utterance": "we need to change direction fast",
+      "expected": "pivot"
+    },
+    { "category": "lifecycle", "utterance": "run a retrospective", "expected": "retro" },
+    { "category": "lifecycle", "utterance": "what did we learn", "expected": "retro" },
+    { "category": "lifecycle", "utterance": "post mortem on the last sprint", "expected": "retro" },
+
+    { "category": "adversarial", "utterance": "what should we cook for dinner", "expected": null },
+    {
+      "category": "adversarial",
+      "utterance": "write a python script to parse CSV",
+      "expected": null
+    },
+    { "category": "adversarial", "utterance": "what is the weather in Shanghai", "expected": null },
+    { "category": "adversarial", "utterance": "help me with my tax return", "expected": null },
+    { "category": "adversarial", "utterance": "tell me a joke about robots", "expected": null },
+    { "category": "adversarial", "utterance": "explain quantum entanglement", "expected": null },
+    { "category": "adversarial", "utterance": "what is the meaning of life", "expected": null },
+    { "category": "adversarial", "utterance": "translate hello into French", "expected": null },
+    { "category": "adversarial", "utterance": "summarize the news today", "expected": null },
+    {
+      "category": "adversarial",
+      "utterance": "write me a haiku about the ocean",
+      "expected": null
+    },
+    { "category": "adversarial", "utterance": "how do I reset my password", "expected": null }
   ]
 }

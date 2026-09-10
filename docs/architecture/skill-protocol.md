@@ -78,6 +78,8 @@ reranking, but the offline matcher remains the fallback.
 - `allowed_tools` and script capability mismatches
 
 Critical findings fail by default. Pass `--strict` to fail on high findings.
+Use `--risk-summary` for a compact install decision (`yes`, `no`, or
+`with-caveats`) with per-skill categories.
 
 ## SKILL.md body
 

@@ -16,7 +16,7 @@
       "maxItems": 7,
       "items": {
         "type": "object",
-        "required": ["name", "score", "rationale", "confidence"],
+        "required": ["name", "score", "rationale", "evidence", "confidence"],
         "additionalProperties": false,
         "properties": {
           "name": {
@@ -34,6 +34,7 @@
           "rationale": { "type": "string", "minLength": 1 },
           "evidence": {
             "type": "array",
+            "minItems": 1,
             "items": {
               "type": "object",
               "required": ["kind", "value"],

@@ -492,6 +492,7 @@ hybrid by default, with an optional semantic matcher behind
 
 ```bash
 hackathon skills audit --json
+hackathon skills audit --risk-summary --json
 npm run test:routing
 ```
 

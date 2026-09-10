@@ -25,7 +25,8 @@ Repeat after each `fix_now` item is closed.
 
 Requests include an explicit per-dimension rubric, machine evidence, and
 constraints. Responses must provide a rationale, confidence, and evidence per
-dimension. Older order-based v1 responses remain accepted.
+dimension. Use a judge model that is separate from the implementation model.
+Older order-based v1 responses remain accepted.
 
 ```bash
 hackathon judge-calibrate \

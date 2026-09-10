@@ -13,19 +13,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   triggers with a zero-dependency BM25 ranking over description,
   `when_to_use`, tags, and trigger phrases. The embedding backend remains an
   optional reranker.
-- **Routing golden set** — 36 positive and adversarial cases run through
-  `npm run test:routing` in CI with precision, recall, and false-positive
-  gates.
+- **Routing golden set** — 65 cases (54 positive and 11 adversarial) run
+  through `npm run test:routing` in CI with precision, recall, and
+  false-positive gates.
 - **`hackathon skills audit`** — static security review for prompt
   injection, shell and network exfiltration, embedded credentials,
   destructive paths, and `allowed_tools` mismatches. Critical findings fail
-  by default; `--strict` also fails on high findings.
+  by default; `--strict` also fails on high findings. `--risk-summary`
+  emits an install decision and per-skill risk categories.
 - **Judge protocol v2** — `HACKATHON_JUDGE_BACKEND` now receives an explicit
   rubric and evidence payload. v2 responses require per-dimension rationale,
-  confidence, and evidence; older v1 responses remain accepted.
+  confidence, and at least one evidence item; older v1 responses remain
+  accepted.
 - **`hackathon judge-calibrate`** — compares an LLM judge against a golden
   set and reports MAE, exact agreement, within-one agreement, and
-  per-dimension bias.
+  per-dimension bias. The bundled golden set contains 20 labeled cases.
 - Judge request/response/calibration JSON schemas and a v2 mock acceptance
   test.
 
@@ -34,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `review.json` now optionally records `judge_protocol`, `judge_model`, and
   `judge_confidence`.
 - `hackathon match --debug --json` reports hybrid BM25 relevance and source.
+- The optional embedding backend now reranks only non-zero local
+  candidates; it can no longer replace the local candidate set.
 
 ## [1.2.5] - 2026-09-08
 

@@ -34,8 +34,11 @@ describe('embedding matcher backend', () => {
         res.setHeader('content-type', 'application/json');
         res.end(
           JSON.stringify({
-            best: 'fast-verify',
-            candidates: [{ name: 'fast-verify', score: 0.98 }],
+            best: 'scope-knife',
+            candidates: [
+              { name: 'scope-knife', score: 0.98 },
+              { name: 'fast-verify', score: 0.72 },
+            ],
           }),
         );
       });
@@ -55,15 +58,24 @@ describe('embedding matcher backend', () => {
   });
 
   it('uses the embedding backend ranking when configured', async () => {
-    const outcome = await matchSkillWithBackend('anything', SKILLS, {
+    const outcome = await matchSkillWithBackend('scope the verify demo', SKILLS, {
       HACKATHON_EMBED_BACKEND: baseUrl,
     });
     assert.equal(outcome.source, 'embedding');
-    assert.equal(outcome.result.skill?.frontmatter.name, 'fast-verify');
-    assert.equal(outcome.result.candidates[0].name, 'fast-verify');
+    assert.equal(outcome.result.skill?.frontmatter.name, 'scope-knife');
+    assert.equal(outcome.result.candidates[0].name, 'scope-knife');
+    assert.equal(outcome.result.trace?.embeddingUsed, true);
     assert.ok(requestBodies.length >= 1);
-    assert.equal(requestBodies[requestBodies.length - 1].utterance, 'anything');
+    assert.equal(requestBodies[requestBodies.length - 1].utterance, 'scope the verify demo');
     assert.equal(requestBodies[requestBodies.length - 1].skills.length, 2);
+  });
+
+  it('does not let the backend invent a match with no local candidates', async () => {
+    const outcome = await matchSkillWithBackend('anything', SKILLS, {
+      HACKATHON_EMBED_BACKEND: baseUrl,
+    });
+    assert.notEqual(outcome.source, 'embedding');
+    assert.equal(outcome.result.skill, null);
   });
 
   it('falls back to the local matcher when the backend is unreachable', async () => {

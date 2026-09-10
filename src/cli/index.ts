@@ -540,11 +540,18 @@ skillsCmd
   .option('--json', 'emit JSON instead of a table')
   .option('--verbose', 'print every finding, not just critical/high')
   .option('--strict', 'treat high-severity findings as failures too')
+  .option('--risk-summary', 'emit an install decision and per-skill risk categories')
   .option('-C, --cwd <path>', 'repo root', process.cwd())
   .action(
     (
       dir: string | undefined,
-      opts: { json?: boolean; verbose?: boolean; strict?: boolean; cwd?: string },
+      opts: {
+        json?: boolean;
+        verbose?: boolean;
+        strict?: boolean;
+        riskSummary?: boolean;
+        cwd?: string;
+      },
     ) =>
       process.exit(
         skillsAudit({
@@ -553,6 +560,7 @@ skillsCmd
           json: Boolean(opts.json),
           verbose: Boolean(opts.verbose),
           strict: Boolean(opts.strict),
+          riskSummary: Boolean(opts.riskSummary),
         }),
       ),
   );

@@ -50,7 +50,7 @@ describe('embedding matcher backend', () => {
 
   it('uses the local matcher when no backend is configured', async () => {
     const outcome = await matchSkillWithBackend('verify the demo', SKILLS, {});
-    assert.equal(outcome.source, 'token');
+    assert.ok(['token', 'hybrid'].includes(outcome.source));
     assert.equal(outcome.result.skill?.frontmatter.name, 'fast-verify');
   });
 
@@ -71,7 +71,7 @@ describe('embedding matcher backend', () => {
       HACKATHON_EMBED_BACKEND: 'http://127.0.0.1:1',
       HACKATHON_EMBED_TIMEOUT_SECONDS: '1',
     });
-    assert.ok(['token', 'synonym'].includes(outcome.source));
+    assert.ok(['token', 'synonym', 'hybrid'].includes(outcome.source));
     assert.equal(outcome.result.skill?.frontmatter.name, 'fast-verify');
   });
 });

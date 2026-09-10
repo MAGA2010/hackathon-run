@@ -5,7 +5,7 @@
 A decision-making and execution system for hackathon teams operating under time pressure. Fifteen skills, one workflow: **clarify, prize-target, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro, decide-log.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
-[![Version](https://img.shields.io/badge/version-1.2.5-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
 [![npm version](https://img.shields.io/npm/v/@hackathon-run/hackathon-run.svg)](https://www.npmjs.com/package/@hackathon-run/hackathon-run)
@@ -484,7 +484,27 @@ State is saved to .hackathon/state/ and is never required by the next step.
 
 After install, the CLI command is hackathon (not hackathon-run). The package is @hackathon-run/hackathon-run; the binary is hackathon.
 
-For CI, run hackathon skills lint to validate every bundled skill in one shot. Pin the team's skill versions for reproducibility with hackathon skills pin --all. Opt into a semantic matcher by setting HACKATHON_EMBED_BACKEND to an HTTP ranking endpoint.
+For CI, run `hackathon skills lint` to validate every bundled skill and
+`hackathon skills audit` to statically review skill security. Pin the team's
+skill versions with `hackathon skills pin --all`. Routing uses a local BM25
+hybrid by default, with an optional semantic matcher behind
+`HACKATHON_EMBED_BACKEND`.
+
+```bash
+hackathon skills audit --json
+npm run test:routing
+```
+
+`judge-sim` sends protocol v2 requests to `HACKATHON_JUDGE_BACKEND`, requiring
+per-dimension rationale, evidence, and confidence while still accepting older
+v1 responses. Calibrate a backend against a golden set with:
+
+```bash
+hackathon judge-calibrate \
+  --backend https://judge.example.test \
+  --golden tests/fixtures/judge-golden.json \
+  --max-mae 1
+```
 
 Third-party skills can ship a full manifest (`license`, `author`, `homepage`, `repository`, `compatibility`) that `hackathon skills search --json` and the `find_skills` MCP tool surface.
 

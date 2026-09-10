@@ -59,6 +59,26 @@ compatibility: 'Requires Node 20+' # max 500 chars
 See [ADR-0009](adr/0009-skill-format-v2.md) for Format v2 rationale and
 [ADR-0011](adr/0011-v120-skill-manifest.md) for the manifest design.
 
+## Routing
+
+The default matcher combines explicit triggers with a local BM25 ranking over
+description, `when_to_use`, tags, and trigger phrases. Exact trigger phrases
+remain the strongest signal. `HACKATHON_EMBED_BACKEND` can opt in to semantic
+reranking, but the offline matcher remains the fallback.
+
+## Security audit
+
+`hackathon skills audit` statically reviews bundled and third-party skills for:
+
+- prompt injection instructions
+- shell and network exfiltration patterns
+- embedded credentials and private keys
+- destructive filesystem operations
+- sensitive out-of-project paths
+- `allowed_tools` and script capability mismatches
+
+Critical findings fail by default. Pass `--strict` to fail on high findings.
+
 ## SKILL.md body
 
 The body contains execution logic only. **No backstory, no marketing, no

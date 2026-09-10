@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "running-demo",
+      "input": {
+        "verify_was_failing": false,
+        "plan": {
+          "demo_goal": "A user signs in and saves a note.",
+          "features": []
+        },
+        "demo": {
+          "one_liner": "Notes that save themselves for busy founders.",
+          "steps": [{ "name": "opening", "say": "Open with the problem." }]
+        },
+        "verify": { "status": "pass", "steps": [] }
+      },
+      "expected": {
+        "problem_clarity": 4,
+        "originality": 3,
+        "completeness": 4,
+        "technical_depth": 3,
+        "demo_quality": 4,
+        "business_value": 3,
+        "submission_readiness": 3
+      }
+    },
+    {
+      "id": "broken-demo",
+      "input": {
+        "verify_was_failing": true,
+        "plan": {},
+        "demo": {},
+        "verify": { "status": "fail", "steps": [] }
+      },
+      "expected": {
+        "problem_clarity": 1,
+        "originality": 1,
+        "completeness": 1,
+        "technical_depth": 1,
+        "demo_quality": 1,
+        "business_value": 1,
+        "submission_readiness": 1
+      }
+    }
+  ]
+}

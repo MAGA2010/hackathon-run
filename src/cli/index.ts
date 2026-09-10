@@ -38,11 +38,13 @@ import { sprint } from './commands/sprint.js';
 import { checkpoint } from './commands/checkpoint.js';
 import { guard } from './commands/guard.js';
 import { evalStatus } from './commands/eval.js';
+import { judgeCalibrate } from './commands/judge-calibrate.js';
 import { trace } from './commands/trace.js';
 import { skills } from './commands/skills.js';
 import { search as skillsSearch } from './commands/skills-search.js';
 import { graph as skillsGraph } from './commands/skills-graph.js';
 import { skillsLint } from './commands/skills-lint.js';
+import { skillsAudit } from './commands/skills-audit.js';
 import { matchSkill } from '../harness/trigger.js';
 import { startMcpServer } from '../mcp/server.js';
 
@@ -187,6 +189,28 @@ program
   .option('--json', 'machine-readable JSON output')
   .option('-C, --cwd <path>', 'repo root', process.cwd())
   .action((opts) => process.exit(evalStatus({ cwd: opts.cwd, json: Boolean(opts.json) })));
+
+program
+  .command('judge-calibrate')
+  .description('Measure an LLM judge backend against a golden scoring set')
+  .requiredOption('--golden <file>', 'golden cases JSON file')
+  .requiredOption('--backend <url>', 'HACKATHON_JUDGE_BACKEND-compatible URL')
+  .option('--timeout <seconds>', 'request timeout in seconds', Number, 10)
+  .option('--max-mae <n>', 'fail when mean absolute error exceeds this value', Number, 1)
+  .option('--json', 'machine-readable JSON output')
+  .option('--out <path>', 'write the calibration report to a file')
+  .action(async (opts) =>
+    process.exit(
+      await judgeCalibrate({
+        golden: opts.golden,
+        backend: opts.backend,
+        timeoutSeconds: opts.timeout,
+        maxMae: opts.maxMae,
+        json: Boolean(opts.json),
+        out: opts.out,
+      }),
+    ),
+  );
 
 const guardCmd = program
   .command('guard')
@@ -508,6 +532,29 @@ skillsCmd
         category: opts.category,
       }),
     ),
+  );
+
+skillsCmd
+  .command('audit [dir]')
+  .description('Static security review for bundled and third-party skills')
+  .option('--json', 'emit JSON instead of a table')
+  .option('--verbose', 'print every finding, not just critical/high')
+  .option('--strict', 'treat high-severity findings as failures too')
+  .option('-C, --cwd <path>', 'repo root', process.cwd())
+  .action(
+    (
+      dir: string | undefined,
+      opts: { json?: boolean; verbose?: boolean; strict?: boolean; cwd?: string },
+    ) =>
+      process.exit(
+        skillsAudit({
+          cwd: opts.cwd,
+          target: dir,
+          json: Boolean(opts.json),
+          verbose: Boolean(opts.verbose),
+          strict: Boolean(opts.strict),
+        }),
+      ),
   );
 
 program

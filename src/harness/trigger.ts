@@ -19,6 +19,7 @@
  * based fallback would be added behind a flag.
  */
 
+import { buildBm25Stats, normalizedBm25Score, type Bm25Document } from './bm25.js';
 import type { SkillManifest } from './types.js';
 
 const TOKEN_RE = /[a-z][a-z0-9_-]+/g;
@@ -165,6 +166,21 @@ function buildBag(skill: SkillManifest): Bag {
   };
 }
 
+function buildBm25Document(skill: SkillManifest): Bm25Document {
+  const text = [
+    skill.frontmatter.description.repeat(4),
+    (skill.frontmatter.when_to_use ?? '').repeat(3),
+    [...(skill.frontmatter.triggers ?? []), ...extractTriggerPhrases(skill.body)]
+      .join('\n')
+      .repeat(3),
+    (skill.frontmatter.tags ?? []).join(' '),
+    skill.frontmatter.name.replace(/-/g, ' '),
+  ]
+    .filter((part) => part.trim())
+    .join('\n');
+  return { name: skill.frontmatter.name, text };
+}
+
 function score(utteranceWords: string[], bag: Bag): { score: number; reasons: string[] } {
   const rawSet = new Set(utteranceWords);
   const signalWords = significantWords(utteranceWords);
@@ -225,11 +241,15 @@ export interface MatchCandidate {
   name: string;
   score: number;
   reasons: string[];
+  /** Score produced by the legacy exact/phrase/token matcher. */
+  legacyScore?: number;
+  /** Corpus-normalized BM25 score in [0, 1]. */
+  bm25Score?: number;
 }
 
 export interface MatchResult {
   /** How the match was produced: token overlap, synonym rescue, or an embedding backend. */
-  source?: 'token' | 'synonym' | 'embedding';
+  source?: 'token' | 'synonym' | 'embedding' | 'hybrid';
   skill: SkillManifest | null;
   score: number;
   candidates: MatchCandidate[];
@@ -290,34 +310,57 @@ function hasExplicitSignal(reasons: string[]): boolean {
   return reasons.some((reason) => reason.includes('phrase:') || reason.includes('action verb:'));
 }
 
+function hasDomainSignal(words: string[]): boolean {
+  return words.some((word) => TOKEN_TO_GROUPS.has(word));
+}
+
 /**
  * Reject filler-heavy false positives. A match is only confident when it
  * carries an explicit phrase/action signal, reaches a small absolute score, or
  * covers most of the domain-bearing utterance tokens.
  */
-function isConfidentMatch(candidate: MatchCandidate, significantCount: number): boolean {
+function isConfidentMatch(
+  candidate: MatchCandidate,
+  significantCount: number,
+  domainSignal: boolean,
+): boolean {
   if (significantCount <= 0) return false;
   if (hasExplicitSignal(candidate.reasons)) return true;
-  if (candidate.score >= 4) return true;
-  return candidate.score / significantCount >= 0.8;
+  const legacy = candidate.legacyScore ?? candidate.score;
+  if (legacy >= 4) return true;
+  if ((candidate.bm25Score ?? 0) >= 0.35 && legacy >= 2 && domainSignal) return true;
+  return legacy / significantCount >= 0.8;
 }
 
 export function matchSkill(utterance: string, skills: SkillManifest[]): MatchResult {
   const utteranceWords = tokens(utterance);
   const significantCount = significantWords(utteranceWords).length;
+  const domainSignal = hasDomainSignal(utteranceWords);
   const byName = new Map(skills.map((s) => [s.frontmatter.name, s]));
 
-  const candidates: MatchCandidate[] = skills.map((s) => {
+  const bm25Stats = buildBm25Stats(skills.map(buildBm25Document));
+  const useBm25 = significantCount > 1;
+  const candidates: MatchCandidate[] = skills.map((s, index) => {
     const bag = buildBag(s);
     const r = score(utteranceWords, bag);
-    return { name: s.frontmatter.name, score: r.score, reasons: r.reasons };
+    const bm25 = useBm25 ? normalizedBm25Score(utteranceWords.join(' '), bm25Stats, index) : 0;
+    const bm25Points = bm25 >= 0.2 ? Math.round(bm25 * 8) : 0;
+    const reasons = bm25Points > 0 ? [...r.reasons, `+${bm25Points} bm25 relevance`] : r.reasons;
+    return {
+      name: s.frontmatter.name,
+      score: r.score + bm25Points,
+      reasons,
+      legacyScore: r.score,
+      bm25Score: bm25,
+    };
   });
 
   rankCandidates(candidates, byName);
 
   const top = candidates[0];
-  const directNoMatch = !top || top.score <= 0;
-  const directLowConfidence = !!top && !isConfidentMatch(top, significantCount);
+  const directNoMatch =
+    !top || ((top.legacyScore ?? 0) <= 0 && ((top.bm25Score ?? 0) < 0.35 || !domainSignal));
+  const directLowConfidence = !!top && !isConfidentMatch(top, significantCount, domainSignal);
   if (directNoMatch || directLowConfidence) {
     // Expand only domain-bearing words. Question filler such as "what" must not
     // trigger idea-clarify, while "who" (kept as a domain word for roster
@@ -346,5 +389,13 @@ export function matchSkill(utterance: string, skills: SkillManifest[]): MatchRes
     return { skill: null, score: 0, candidates };
   }
   const skill = byName.get(top.name) ?? null;
-  return { skill, score: top.score, candidates, source: 'token' };
+  return {
+    skill,
+    score: top.score,
+    candidates,
+    source:
+      (top.bm25Score ?? 0) >= 0.2 && (top.legacyScore ?? 0) > 0 && domainSignal
+        ? 'hybrid'
+        : 'token',
+  };
 }

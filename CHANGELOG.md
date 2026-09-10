@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-09-10
+
+### Added
+
+- **BM25 hybrid skill routing** — the local matcher now combines exact
+  triggers with a zero-dependency BM25 ranking over description,
+  `when_to_use`, tags, and trigger phrases. The embedding backend remains an
+  optional reranker.
+- **Routing golden set** — 36 positive and adversarial cases run through
+  `npm run test:routing` in CI with precision, recall, and false-positive
+  gates.
+- **`hackathon skills audit`** — static security review for prompt
+  injection, shell and network exfiltration, embedded credentials,
+  destructive paths, and `allowed_tools` mismatches. Critical findings fail
+  by default; `--strict` also fails on high findings.
+- **Judge protocol v2** — `HACKATHON_JUDGE_BACKEND` now receives an explicit
+  rubric and evidence payload. v2 responses require per-dimension rationale,
+  confidence, and evidence; older v1 responses remain accepted.
+- **`hackathon judge-calibrate`** — compares an LLM judge against a golden
+  set and reports MAE, exact agreement, within-one agreement, and
+  per-dimension bias.
+- Judge request/response/calibration JSON schemas and a v2 mock acceptance
+  test.
+
+### Changed
+
+- `review.json` now optionally records `judge_protocol`, `judge_model`, and
+  `judge_confidence`.
+- `hackathon match --debug --json` reports hybrid BM25 relevance and source.
+
 ## [1.2.5] - 2026-09-08
 
 ### Fixed

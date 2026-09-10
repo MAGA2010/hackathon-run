@@ -20,6 +20,7 @@ import os
 import sys
 import urllib.error
 import urllib.request
+import uuid
 from datetime import datetime, timezone
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -35,6 +36,67 @@ DIMENSIONS = [
     "business_value",
     "submission_readiness",
 ]
+
+JUDGE_PROTOCOL_V2 = "hackathon-run.judge.v2"
+
+DIMENSION_RUBRICS = {
+    "problem_clarity": {
+        "description": "Is the pain obvious in 10 seconds, and is the target user clear?",
+        "anchors": {
+            "0": "The problem and target user are not stated.",
+            "3": "The problem is understandable but the user or urgency is vague.",
+            "5": "A stranger immediately understands the pain, user, and why it matters.",
+        },
+    },
+    "originality": {
+        "description": "Is this novel or differentiated against existing solutions?",
+        "anchors": {
+            "0": "No comparison or differentiation is supplied.",
+            "3": "The idea differs somewhat but the comparison is generic.",
+            "5": "A specific existing alternative and a concrete difference are supplied.",
+        },
+    },
+    "completeness": {
+        "description": "Does the demo path actually run end-to-end with evidence?",
+        "anchors": {
+            "0": "No verification evidence exists.",
+            "3": "The path partially runs or only manual evidence exists.",
+            "5": "Machine-checkable evidence confirms the whole demo path.",
+        },
+    },
+    "technical_depth": {
+        "description": "Is there at least one non-obvious technical decision?",
+        "anchors": {
+            "0": "No engineering decision or tradeoff is explained.",
+            "3": "A decision is named but the tradeoff is shallow.",
+            "5": "A hard decision, tradeoff, and fallback are clearly explained.",
+        },
+    },
+    "demo_quality": {
+        "description": "Is the pitch tight, sequenced, and rehearsed?",
+        "anchors": {
+            "0": "No pitch or timing evidence exists.",
+            "3": "A pitch exists but lacks a timed or rehearsed run.",
+            "5": "A timed script and rehearsal evidence are present.",
+        },
+    },
+    "business_value": {
+        "description": "Would a beachhead user pay or use this?",
+        "anchors": {
+            "0": "No user or willingness-to-pay claim is supplied.",
+            "3": "A user segment is named but value evidence is weak.",
+            "5": "The beachhead user, use case, and value are concrete.",
+        },
+    },
+    "submission_readiness": {
+        "description": "Can a stranger clone, run, and review the submission safely?",
+        "anchors": {
+            "0": "README, run steps, or secret hygiene are missing.",
+            "3": "The submission is mostly runnable but has known gaps.",
+            "5": "Clean-clone evidence, documentation, and secret scan are supplied.",
+        },
+    },
+}
 
 DEFAULT_QUESTIONS = {
     "problem_clarity": [
@@ -200,41 +262,89 @@ def build_fix_priorities(scores: list[dict]) -> dict:
     }
 
 
-def remote_judge(backend: str, plan: dict | None, demo: dict | None,
-                 verify: dict | None, failing: bool) -> dict | None:
-    """Ask an HTTP LLM judge for scores; return None on any failure.
-
-    The backend contract is intentionally small: POST the state inputs and
-    expect a JSON object with a `dimensions` list matching DIMENSIONS order,
-    each item carrying `score` (0..5) plus optional rationale fields.
-    `overall` is computed from the returned dimensions when omitted.
-    """
-    payload = {
-        "plan": plan,
-        "demo": demo,
-        "verify": verify,
-        "verify_was_failing": failing,
-        "dimensions": DIMENSIONS,
+def judge_request_v2(plan: dict | None, demo: dict | None,
+                     verify: dict | None, failing: bool) -> dict:
+    """Build the typed request expected by HACKATHON_JUDGE_BACKEND v2."""
+    return {
+        "protocol": JUDGE_PROTOCOL_V2,
+        "request_id": str(uuid.uuid4()),
+        "task": "judge-sim",
+        "rubric": {
+            "scale": {"min": 0, "max": 5},
+            "dimensions": [
+                {
+                    "name": name,
+                    "description": DIMENSION_RUBRICS[name]["description"],
+                    "anchors": DIMENSION_RUBRICS[name]["anchors"],
+                }
+                for name in DIMENSIONS
+            ],
+        },
+        "evidence": {
+            "plan": plan,
+            "demo": demo,
+            "verify": verify,
+            "verify_was_failing": failing,
+        },
+        "constraints": {
+            "require_evidence": True,
+            "require_rationale": True,
+            "require_confidence": True,
+            "cap_on_verify_failure": True,
+        },
     }
-    try:
-        timeout = float(os.environ.get(JUDGE_TIMEOUT_ENV, "3") or "3")
-    except ValueError:
-        timeout = 3.0
-    request = urllib.request.Request(
-        backend,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(request, timeout=timeout) as resp:
-            body = resp.read().decode("utf-8")
-            if resp.status < 200 or resp.status >= 300:
-                return None
-            result = json.loads(body)
-    except (urllib.error.URLError, TimeoutError, OSError, ValueError):
-        return None
 
+
+def parse_judge_v2(result: dict) -> dict | None:
+    """Strictly normalize a protocol v2 response."""
+    dims = result.get("dimensions")
+    if not isinstance(dims, list) or len(dims) != len(DIMENSIONS):
+        return None
+    by_name = {str(d.get("name")): d for d in dims if isinstance(d, dict)}
+    normalized = []
+    for name in DIMENSIONS:
+        d = by_name.get(name)
+        if not d:
+            return None
+        score = d.get("score")
+        confidence = d.get("confidence")
+        rationale = str(d.get("rationale") or d.get("deduction_reason") or "").strip()
+        if (
+            not isinstance(score, (int, float))
+            or not 0 <= score <= 5
+            or not isinstance(confidence, (int, float))
+            or not 0 <= confidence <= 1
+            or not rationale
+        ):
+            return None
+        evidence = d.get("evidence", [])
+        if not isinstance(evidence, list):
+            return None
+        normalized.append({
+            "name": name,
+            "score": int(score),
+            "deduction_reason": rationale,
+            "judge_questions": pad_questions(
+                name,
+                [str(q) for q in d.get("judge_questions", [])],
+            ),
+            "improvements": [str(i) for i in d.get("improvements", [])],
+            "confidence": round(float(confidence), 3),
+            "evidence": evidence,
+        })
+    overall = result.get("overall")
+    if not isinstance(overall, (int, float)):
+        overall = round(sum(x["score"] for x in normalized) / len(normalized), 2)
+    return {
+        "dimensions": normalized,
+        "overall": round(float(overall), 2),
+        "protocol": "v2",
+        "model": str(result.get("model") or "").strip() or None,
+    }
+
+
+def parse_judge_v1(result: dict) -> dict | None:
+    """Normalize the original order-based response shape."""
     dims = result.get("dimensions")
     if not isinstance(dims, list) or len(dims) != len(DIMENSIONS):
         return None
@@ -258,7 +368,40 @@ def remote_judge(backend: str, plan: dict | None, demo: dict | None,
     overall = result.get("overall")
     if not isinstance(overall, (int, float)):
         overall = round(sum(x["score"] for x in normalized) / len(normalized), 2)
-    return {"dimensions": normalized, "overall": round(float(overall), 2)}
+    return {
+        "dimensions": normalized,
+        "overall": round(float(overall), 2),
+        "protocol": "v1",
+        "model": None,
+    }
+
+
+def remote_judge(backend: str, plan: dict | None, demo: dict | None,
+                 verify: dict | None, failing: bool) -> dict | None:
+    """Ask an HTTP LLM judge using protocol v2; accept v1 responses too."""
+    payload = judge_request_v2(plan, demo, verify, failing)
+    try:
+        timeout = float(os.environ.get(JUDGE_TIMEOUT_ENV, "3") or "3")
+    except ValueError:
+        timeout = 3.0
+    request = urllib.request.Request(
+        backend,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as resp:
+            body = resp.read().decode("utf-8")
+            if resp.status < 200 or resp.status >= 300:
+                return None
+            result = json.loads(body)
+    except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+        return None
+
+    if result.get("protocol") == JUDGE_PROTOCOL_V2:
+        return parse_judge_v2(result)
+    return parse_judge_v1(result)
 
 
 def main() -> int:
@@ -292,13 +435,21 @@ def main() -> int:
     judge_backend = os.environ.get(JUDGE_BACKEND_ENV, "").strip()
     judge_source = "heuristic"
     judge_url = None
+    judge_protocol = None
+    judge_model = None
+    judge_confidence = None
     if judge_backend:
         remote = remote_judge(judge_backend, plan, demo, verify, failing)
         if remote is not None:
             dimensions = cap_on_failure(remote["dimensions"], failing)
             overall = remote["overall"]
-            judge_source = "llm"
+            judge_source = "llm-v2" if remote["protocol"] == "v2" else "llm-v1"
             judge_url = judge_backend
+            judge_protocol = remote["protocol"]
+            judge_model = remote.get("model")
+            confidence_values = [d.get("confidence") for d in remote["dimensions"]]
+            if all(isinstance(v, (int, float)) for v in confidence_values):
+                judge_confidence = round(sum(confidence_values) / len(confidence_values), 3)
         else:
             print(
                 f"warn: LLM judge backend unreachable; using heuristic scores "
@@ -318,6 +469,12 @@ def main() -> int:
     }
     if judge_url:
         result["judge_backend"] = judge_url
+    if judge_protocol:
+        result["judge_protocol"] = judge_protocol
+    if judge_model:
+        result["judge_model"] = judge_model
+    if judge_confidence is not None:
+        result["judge_confidence"] = judge_confidence
 
     os.makedirs(state_dir, exist_ok=True)
     artifact_dir = os.path.join(args.out_dir, "artifacts")

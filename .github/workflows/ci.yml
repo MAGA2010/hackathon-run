@@ -45,6 +45,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Routing golden set
+        run: npm run test:routing
+
+      - name: Skill security audit
+        run: node dist/cli/index.js skills audit --json
+
       - name: Unit tests
         run: npm run test:unit
 

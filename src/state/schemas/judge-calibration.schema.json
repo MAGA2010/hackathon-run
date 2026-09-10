@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maga2010.github.io/hackathon-run/schemas/judge-calibration.schema.json",
+  "title": "Judge Calibration Golden Set",
+  "type": "object",
+  "required": ["cases"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "type": "number" },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["input", "expected"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string" },
+          "input": {
+            "type": "object",
+            "required": ["verify_was_failing"],
+            "properties": {
+              "plan": {},
+              "demo": {},
+              "verify": {},
+              "verify_was_failing": { "type": "boolean" }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5
+            }
+          }
+        }
+      }
+    }
+  }
+}

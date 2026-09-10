@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maga2010.github.io/hackathon-run/schemas/judge-request-v2.schema.json",
+  "title": "Judge Request v2",
+  "type": "object",
+  "required": ["protocol", "request_id", "task", "rubric", "evidence", "constraints"],
+  "additionalProperties": false,
+  "properties": {
+    "protocol": { "const": "hackathon-run.judge.v2" },
+    "request_id": { "type": "string" },
+    "task": { "const": "judge-sim" },
+    "rubric": {
+      "type": "object",
+      "required": ["scale", "dimensions"],
+      "additionalProperties": false,
+      "properties": {
+        "scale": {
+          "type": "object",
+          "required": ["min", "max"],
+          "additionalProperties": false,
+          "properties": {
+            "min": { "const": 0 },
+            "max": { "const": 5 }
+          }
+        },
+        "dimensions": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "object",
+            "required": ["name", "description", "anchors"],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "enum": [
+                  "problem_clarity",
+                  "originality",
+                  "completeness",
+                  "technical_depth",
+                  "demo_quality",
+                  "business_value",
+                  "submission_readiness"
+                ]
+              },
+              "description": { "type": "string" },
+              "anchors": {
+                "type": "object",
+                "required": ["0", "3", "5"],
+                "additionalProperties": false,
+                "properties": {
+                  "0": { "type": "string" },
+                  "3": { "type": "string" },
+                  "5": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": ["verify_was_failing"],
+      "properties": {
+        "plan": {},
+        "demo": {},
+        "verify": {},
+        "verify_was_failing": { "type": "boolean" }
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "required": [
+        "require_evidence",
+        "require_rationale",
+        "require_confidence",
+        "cap_on_verify_failure"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "require_evidence": { "const": true },
+        "require_rationale": { "const": true },
+        "require_confidence": { "const": true },
+        "cap_on_verify_failure": { "const": true }
+      }
+    }
+  }
+}

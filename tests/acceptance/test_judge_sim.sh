@@ -105,6 +105,34 @@ for x in d['dimensions']:
 "
 pass "unreachable backend yields heuristic-fallback with valid question counts"
 
+section "Acceptance: LLM judge backend accepts protocol v2"
+PORT_FILE="$BASH_TMP/judge-port"
+"$PY" "$ROOT/tests/fixtures/judge-v2-server.py" "$PORT_FILE" &
+JUDGE_PID=$!
+for _ in $(seq 1 50); do
+    [ -s "$PORT_FILE" ] && break
+    sleep 0.1
+done
+if [ ! -s "$PORT_FILE" ]; then
+    kill "$JUDGE_PID" 2>/dev/null || true
+    fail "protocol v2 mock server did not start"
+fi
+PORT="$(cat "$PORT_FILE")"
+HACKATHON_JUDGE_BACKEND="http://127.0.0.1:$PORT" \
+    "$PY" "$ROOT/skills/judge-sim/scripts/score.py" --repo-root "$REPO" --out-dir "$OUT" >/dev/null
+kill "$JUDGE_PID" 2>/dev/null || true
+wait "$JUDGE_PID" 2>/dev/null || true
+"$PY" -c "
+import json
+d = json.load(open(r'$REVIEW_WIN'))
+assert d['judge_source'] == 'llm-v2', d['judge_source']
+assert d['judge_protocol'] == 'v2', d['judge_protocol']
+assert d['judge_model'] == 'acceptance-mock-judge', d['judge_model']
+assert d['judge_confidence'] == 0.85, d['judge_confidence']
+assert len(d['dimensions']) == 7
+"
+pass "protocol v2 response is parsed with rationale, confidence, and model"
+
 section "Acceptance: review.json validates against schema"
 node "$ROOT/dist/cli/index.js" validate "$OUT/state" >/dev/null
 pass "schema validation passes"

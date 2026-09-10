@@ -46,6 +46,9 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [x] **121/121 unit tests passing** after v0.7.0 (was 118 after v0.6.0)
 - [x] **LLM judge backend** — `HACKATHON_JUDGE_BACKEND` in judge-sim with heuristic fallback (v0.8.0)
 - [x] **Ship webhook** — `HACKATHON_SHIP_WEBHOOK` in ship-pack, non-fatal delivery (v0.8.0)
+- [x] **BM25 hybrid skill routing** — local zero-dependency BM25 ranking plus a 36-case golden set in CI (v1.3.0)
+- [x] **Skill security audit** — `hackathon skills audit` for prompt injection, shell risk, credentials, and dangerous paths (v1.3.0)
+- [x] **Typed LLM judge protocol v2** — per-dimension rationale, evidence, confidence, and `hackathon judge-calibrate` (v1.3.0)
 - [x] **Validation no-op fix** — `validate` now routes through the real CLI; `judge_questions` minItems fixed (v0.8.0)
 - [x] **Skill Format v2** — `version` / `category` / `tags` / `dependencies` / `side_effects` / `triggers` in YAML frontmatter, validated by `validate-skill`, surfaced by new `skills search` subcommand + `find_skills` MCP tool (v0.9.0)
 - [x] **All 14 skills carry Format v2 metadata** — v0.9.0
@@ -71,14 +74,12 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 ## Later (1.3.x)
 
 - [ ] Wire sprint review into `fast-verify` so evaluator evidence can automatically update `plan.features[].passes` after a hard pass.
-- [ ] Add a typed LLM judge protocol for `HACKATHON_JUDGE_BACKEND` and use it for evaluator scoring.
 
 ## Later (0.7+)
 
 - [ ] **Typed CLI options** — replace `any` args in `run` with per-skill option specs derived from the skill's input contract section.
 - [ ] **VS Code extension** that surfaces the `hackathon status` lifecycle in the status bar.
 - [ ] **Discord / Slack webhook** that posts `ship-pack` results to a team channel.
-- [ ] **Typed LLM judge protocol** — document a stricter request/response schema for `HACKATHON_JUDGE_BACKEND` providers and add an example adapter.
 
 ## Won't do (out of scope)
 

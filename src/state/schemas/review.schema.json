@@ -11,9 +11,18 @@
     "generated_at": { "type": "string", "format": "date-time" },
     "verify_was_failing": { "type": "boolean" },
     "judge_source": {
-      "enum": ["heuristic", "llm", "heuristic-fallback"]
+      "enum": ["heuristic", "llm", "llm-v1", "llm-v2", "heuristic-fallback"]
     },
     "judge_backend": { "type": "string" },
+    "judge_protocol": {
+      "enum": ["v1", "v2"]
+    },
+    "judge_model": { "type": "string" },
+    "judge_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
     "dimensions": {
       "type": "array",
       "minItems": 7,
@@ -45,6 +54,25 @@
           "improvements": {
             "type": "array",
             "items": { "type": "string" }
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["kind", "value"],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "enum": ["command", "url", "test", "browser", "manual", "log"]
+                },
+                "value": { "type": "string", "minLength": 1 }
+              }
+            }
           }
         }
       }

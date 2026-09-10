@@ -26,7 +26,7 @@ export const EMBED_TIMEOUT_ENV = 'HACKATHON_EMBED_TIMEOUT_SECONDS';
 
 export interface EmbedMatchOutcome {
   result: MatchResult;
-  source: 'embedding' | 'token' | 'synonym';
+  source: 'embedding' | 'token' | 'synonym' | 'hybrid';
 }
 
 interface RemoteSkill {

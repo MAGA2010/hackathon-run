@@ -1,6 +1,6 @@
 {
   "name": "@hackathon-run/hackathon-run",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "A decision-making and execution system for hackathon teams operating under time pressure.",
   "type": "module",
   "main": "dist/index.js",
@@ -29,6 +29,7 @@
     "test:integration": "npm run build --silent && node scripts/run-sh.mjs tests/run-integration.sh",
     "test:unit": "npm run build --silent && node scripts/run-unit-tests.mjs",
     "test:routing": "npm run build --silent && node scripts/run-routing-tests.mjs",
+    "test:skill-eval": "npm run build --silent && node skill-eval-lab/harness.mjs --runs 1 --judge skill-eval-lab/judge.json --min-grade A --fail-on-p1",
     "test:all": "npm run test:unit --silent && npm run test:acceptance --silent && npm run test:integration --silent",
     "test:coverage": "npm run build --silent && node scripts/run-unit-tests.mjs --coverage",
     "validate": "npm run build --silent && node dist/cli/index.js validate",

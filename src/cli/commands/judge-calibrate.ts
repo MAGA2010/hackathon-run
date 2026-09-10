@@ -53,12 +53,19 @@ export async function calibrateJudge(
 
   for (const testCase of golden.cases) {
     const request = buildJudgeV2Request(testCase.input);
-    const response = await fetchImpl(opts.backend, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(request),
-      signal: AbortSignal.timeout(timeout),
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+    let response: Response;
+    try {
+      response = await fetchImpl(opts.backend, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(request),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
     if (!response.ok) throw new Error(`judge backend returned ${response.status}`);
     const parsed = parseJudgeV2Response(await response.json());
     if (!parsed) throw new Error('judge backend returned an invalid v2 response');

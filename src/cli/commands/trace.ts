@@ -4,7 +4,7 @@
 
 import { resolve } from 'node:path';
 
-import { readTraces, traceFile } from '../../harness/trace.js';
+import { readTraces, traceFile, verifyTraceChain } from '../../harness/trace.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
 
@@ -12,6 +12,7 @@ export interface TraceOptions {
   cwd?: string;
   json?: boolean;
   last?: number;
+  verify?: boolean;
 }
 
 export function trace(opts: TraceOptions): number {
@@ -19,6 +20,7 @@ export function trace(opts: TraceOptions): number {
   const events = readTraces(cwd);
   const selected = opts.last ? events.slice(-opts.last) : events;
   const target = traceFile(cwd);
+  const verification = opts.verify ? verifyTraceChain(cwd) : null;
 
   if (opts.json) {
     console.log(
@@ -26,20 +28,33 @@ export function trace(opts: TraceOptions): number {
         {
           trace_file: target,
           total: events.length,
+          ...(verification ? { verification } : {}),
           events: selected,
         },
         null,
         2,
       ),
     );
-    return 0;
+    return verification && !verification.ok ? 1 : 0;
   }
 
   console.log(c.bold('hackathon trace \u2014 ' + target));
+  if (verification) {
+    const status = verification.ok ? c.green('valid') : c.red('BROKEN');
+    console.log(
+      c.dim(`chain: ${status}  events=${verification.events} legacy=${verification.legacy_events}`),
+    );
+    if (!verification.ok) {
+      console.log(c.red(`first broken event: ${verification.broken_at ?? 'unknown'}`));
+      for (const error of verification.errors.slice(0, 5)) {
+        console.log(c.red('  ' + error));
+      }
+    }
+  }
   console.log();
   if (selected.length === 0) {
     log.dim('(no events yet)');
-    return 0;
+    return verification && !verification.ok ? 1 : 0;
   }
   for (const [i, e] of selected.entries()) {
     const color = e.status === 'error' ? c.red : e.status === 'warn' ? c.yellow : c.green;
@@ -51,5 +66,5 @@ export function trace(opts: TraceOptions): number {
   }
   console.log();
   console.log(c.dim(`${selected.length}/${events.length} events shown`));
-  return 0;
+  return verification && !verification.ok ? 1 : 0;
 }

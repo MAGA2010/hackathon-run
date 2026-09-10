@@ -1,0 +1,161 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://example.com/schemas/skill-eval-rubric.json",
+  "title": "AI Skill Evaluation Rubric",
+  "description": "Machine-readable scoring standard for AI Skill evaluations.",
+  "type": "object",
+  "required": ["version", "evalSet", "graderDefaults", "dimensions"],
+  "properties": {
+    "version": {
+      "const": "2.0"
+    },
+    "evalSet": {
+      "type": "object",
+      "required": ["id", "samples"],
+      "properties": {
+        "id": { "type": "string" },
+        "samples": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/sample" }
+        }
+      }
+    },
+    "graderDefaults": {
+      "type": "object",
+      "required": ["string_check", "text_similarity", "python", "score_model", "label_model"],
+      "properties": {
+        "string_check": { "$ref": "#/definitions/grader" },
+        "text_similarity": { "$ref": "#/definitions/grader" },
+        "python": { "$ref": "#/definitions/grader" },
+        "score_model": { "$ref": "#/definitions/grader" },
+        "label_model": { "$ref": "#/definitions/grader" }
+      }
+    },
+    "dimensions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "weight", "min", "max"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+          "min": { "type": "number" },
+          "max": { "type": "number" },
+          "description": { "type": "string" }
+        }
+      }
+    },
+    "gradeBands": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["grade", "min", "max"],
+        "properties": {
+          "grade": { "type": "string", "enum": ["A", "B", "C", "D", "F"] },
+          "min": { "type": "number" },
+          "max": { "type": "number" }
+        }
+      }
+    },
+    "p1Cap": {
+      "type": "object",
+      "properties": {
+        "maxGrade": { "type": "string", "const": "B" },
+        "triggers": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "sample": {
+      "type": "object",
+      "required": ["id", "bucket", "steps", "criteria"],
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "bucket": {
+          "type": "string",
+          "enum": ["happy-path", "edge-case", "adversarial", "contract"]
+        },
+        "expected_skills": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "steps": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/step" }
+        },
+        "criteria": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/criterion" }
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["id", "kind"],
+      "properties": {
+        "id": { "type": "string" },
+        "kind": {
+          "type": "string",
+          "enum": ["cli", "python", "node", "shell", "write"]
+        },
+        "args": { "type": "array", "items": { "type": "string" } },
+        "script": { "type": "string" },
+        "expect_exit": { "type": "integer" },
+        "capture": { "type": "string" }
+      }
+    },
+    "criterion": {
+      "type": "object",
+      "required": ["id", "description", "grader"],
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string" },
+        "severity": {
+          "type": "string",
+          "enum": ["P0", "P1", "P2", "P3"]
+        },
+        "critical": { "type": "boolean" },
+        "grader": { "$ref": "#/definitions/grader" }
+      }
+    },
+    "grader": {
+      "type": "object",
+      "required": ["type", "threshold"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "string_check",
+            "text_similarity",
+            "python",
+            "score_model",
+            "label_model",
+            "multi"
+          ]
+        },
+        "threshold": { "type": "number" },
+        "operation": { "type": "string" },
+        "field": { "type": "string" },
+        "path": { "type": "string" },
+        "labels": { "type": "array", "items": { "type": "string" } },
+        "passing_labels": { "type": "array", "items": { "type": "string" } },
+        "range": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "weight": { "type": "number" },
+        "subGraders": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/grader" }
+        }
+      }
+    }
+  }
+}

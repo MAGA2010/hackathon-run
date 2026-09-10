@@ -71,9 +71,14 @@ The harness layer adds five state artifacts and two operator-control files:
 - `STEER.md` — one-shot operator redirect, surfaced once by the next resume.
 
 `plan.json` is the default-FAIL contract: every KEEP feature starts with
-`passes: false`, and only evidence-backed evaluation can flip it. All
-harness actions are appended to `.hackathon/traces/events.jsonl` for replay,
-report, and retrospective analysis.
+`passes: false`. Evidence-backed verification or evaluation can flip it;
+the generator cannot. `fast-verify` maps executable `demo_path` steps to
+`plan.features[].passes` using the optional `feature` field. Verification
+records a workspace digest; changing the source after a run marks evidence
+stale and resets the affected feature. All harness actions are appended to
+`.hackathon/traces/events.jsonl`; new events carry an `event_id`, sequence
+number, predecessor hash, and SHA-256 `hash`, so `hackathon trace --verify`
+detects edits, reordering, and deletion.
 
 The first context window uses `agents/initializer.md` to set up the
 environment: `hackathon init`, `scope-knife`, `PROGRESS.md`, smoke test, and a
@@ -87,10 +92,11 @@ When a user says "what should we cut", the agent should reach for
 `scope-knife`. The match logic lives in `src/harness/trigger.ts`:
 
 1. Tokenize the utterance.
-2. Compare against each skill's description + when_to_use + trigger phrases.
-3. Score by token overlap.
-4. Break ties by trigger budget (more focused wins).
-5. Final tie-break by alphabetical order (stable, predictable).
+2. Give exact trigger phrases highest priority.
+3. Rank descriptions, `when_to_use`, tags, and triggers with local BM25.
+4. Optionally rerank the non-zero local candidates through
+   `HACKATHON_EMBED_BACKEND`.
+5. Break ties by trigger budget, then alphabetically for stable output.
 
 For semantic matching, set `HACKATHON_EMBED_BACKEND` to an HTTP ranking
 endpoint; any transport or schema failure falls back to the local matcher.
@@ -109,7 +115,8 @@ commands:
 - `hackathon sprint new|approve|review|accept|status|budget` — contract lifecycle
 - `hackathon eval` — evaluator dashboard with verdict, strategy, pass rate,
   and weighted rubric score
-- `hackathon checkpoint` — append an agent-maintained progress entry
+- `hackathon checkpoint` — append an agent-maintained progress entry;
+  `--compress` also writes a bounded `SESSION.md` handoff
 - `hackathon guard stop|clear|steer|status` — operator controls
 - `hackathon trace` — inspect the append-only harness event log
 - `hackathon doctor`, `hackathon validate`, `hackathon validate-skill`

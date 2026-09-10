@@ -52,6 +52,7 @@ venv/
 .env
 .env.local
 .env.*.local
+.review/
 
 # Secrets (NEVER commit these — see ship-pack)
 *.pem
@@ -79,7 +80,7 @@ docs/research/
 AI-Time-Run-keynote/
 情投音合路演/
 ai-time-run-eval/
-skill-eval-lab/
+skill-eval-lab/results/
 .npm-cache/
 SKILL.md
 AI-Time-Run-tech-speech.md

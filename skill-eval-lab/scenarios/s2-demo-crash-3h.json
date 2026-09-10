@@ -1,0 +1,303 @@
+{
+  "id": "s2-demo-crash-3h",
+  "title": "3 小时 Demo 崩盘",
+  "brief": "距上台还有 3 小时，Auth API 返回 500，仓库里疑似泄漏 API key，README 缺失，现场需要 30 秒 fallback 和可执行的演练。",
+  "expected_skills": [
+    "recovery-runbook",
+    "fast-verify",
+    "demo-coach",
+    "demo-rehearsal",
+    "ship-pack"
+  ],
+  "project": {
+    "name": "Lunch Rescue",
+    "files": {
+      "README.md": "# Lunch Rescue\n## Auth Sign In\n## Today's Menu\n## Order Pickup\n## Push Alerts\n",
+      "package.json": "{\n  \"name\": \"lunch-rescue\",\n  \"version\": \"0.2.0\",\n  \"scripts\": {\n    \"start\": \"node src/server.js\"\n  }\n}\n",
+      "src/auth.ts": "export const API_KEY = \"sk-deadbeef0123456789abcdef\";\nexport function signIn(user: string) { return true; }\n",
+      "src/menu.ts": "export function getMenu() { return []; }\n",
+      "src/order.ts": "export function reserve() { return true; }\n",
+      ".env.example": "PORT=3000\n"
+    }
+  },
+  "steps": [
+    { "id": "init", "kind": "cli", "args": ["init", "-y"], "expect_exit": 0 },
+    {
+      "id": "scan",
+      "kind": "python",
+      "script": "skills/scope-knife/scripts/scan_repo.py",
+      "args": ["{cwd}"],
+      "capture": "inventory.json",
+      "expect_exit": 0
+    },
+    {
+      "id": "scope",
+      "kind": "python",
+      "script": "skills/scope-knife/scripts/classify.py",
+      "args": [
+        "--inventory",
+        "{cwd}/inventory.json",
+        "--demo-goal",
+        "A user signs in and sees today's menu.",
+        "--time-remaining",
+        "180",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "fallback",
+      "kind": "python",
+      "script": "skills/recovery-runbook/scripts/fallback.py",
+      "args": [
+        "--failure",
+        "Auth API returns HTTP 500 during sign-in",
+        "--severity",
+        "P1",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "recovery",
+      "kind": "python",
+      "script": "skills/recovery-runbook/scripts/build_recovery.py",
+      "args": [
+        "--failure",
+        "Auth API returns HTTP 500 during sign-in",
+        "--severity",
+        "P0",
+        "--repo-root",
+        "{cwd}"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "verify",
+      "kind": "python",
+      "script": "skills/fast-verify/scripts/verify_step.py",
+      "args": ["--command", "node --version", "--expected-outcome", "v", "--timeout", "10"],
+      "capture": "verify-result.json",
+      "expect_exit": 0
+    },
+    {
+      "id": "diagnose",
+      "kind": "python",
+      "script": "skills/fast-verify/scripts/diagnose.py",
+      "args": ["--signature", "curl: (7) Failed to connect to localhost port 3000"],
+      "expect_exit": 0
+    },
+    {
+      "id": "demo",
+      "kind": "python",
+      "script": "skills/demo-coach/scripts/coach.py",
+      "args": [
+        "--demo-goal",
+        "A user signs in and sees today's menu.",
+        "--duration",
+        "30",
+        "--audience",
+        "hackathon judges",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "rehearse",
+      "kind": "python",
+      "script": "skills/demo-rehearsal/scripts/rehearse.py",
+      "args": ["--cwd", "{cwd}", "--target-total-seconds", "180", "--dry-run"],
+      "expect_exit": 0
+    },
+    {
+      "id": "ship",
+      "kind": "python",
+      "script": "skills/ship-pack/scripts/audit.py",
+      "args": ["--repo-root", "{cwd}", "--out-dir", "{cwd}/.hackathon"],
+      "expect_exit": 1
+    },
+    {
+      "id": "decision",
+      "kind": "python",
+      "script": "skills/decision-log/scripts/log_decision.py",
+      "args": [
+        "--feature",
+        "Auth",
+        "--classification",
+        "KEEP",
+        "--rationale",
+        "Core demo path; fix the API, do not cut.",
+        "--author",
+        "bob",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "status",
+      "kind": "cli",
+      "args": ["status", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "resume",
+      "kind": "cli",
+      "args": ["resume", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    { "id": "trace", "kind": "cli", "args": ["trace", "--json", "-C", "{cwd}"], "expect_exit": 0 },
+    {
+      "id": "report",
+      "kind": "cli",
+      "args": ["report", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "validate",
+      "kind": "cli",
+      "args": ["validate", "{cwd}/.hackathon/state"],
+      "expect_exit": 0
+    }
+  ],
+  "assertions": [
+    {
+      "id": "recovery-created",
+      "description": "recovery.json 生成",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/recovery.json"
+    },
+    {
+      "id": "recovery-severity",
+      "description": "严重度正确为 P0",
+      "type": "json",
+      "file": ".hackathon/state/recovery.json",
+      "path": "severity",
+      "op": "equals",
+      "value": "P0"
+    },
+    {
+      "id": "recovery-script",
+      "description": "30 秒脚本至少 4 段",
+      "type": "json",
+      "file": ".hackathon/state/recovery.json",
+      "path": "script",
+      "op": "length_gte",
+      "value": 4
+    },
+    {
+      "id": "recovery-script-budget",
+      "description": "30 秒脚本总时长不超过 30 秒",
+      "type": "json",
+      "file": ".hackathon/state/recovery.json",
+      "path": "script",
+      "op": "sum_field_lte",
+      "field": "max_seconds",
+      "value": 30
+    },
+    {
+      "id": "recovery-fallback-do",
+      "description": "fallback 给出具体行动",
+      "type": "json",
+      "file": ".hackathon/state/recovery.json",
+      "path": "fallback.do",
+      "op": "not_equals",
+      "value": ""
+    },
+    {
+      "id": "recovery-fallback-not",
+      "description": "fallback 明确不要做什么",
+      "type": "json",
+      "file": ".hackathon/state/recovery.json",
+      "path": "fallback.not",
+      "op": "not_equals",
+      "value": ""
+    },
+    {
+      "id": "ship-created",
+      "description": "ship.json 生成",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/ship.json"
+    },
+    {
+      "id": "ship-not-clean",
+      "description": "密钥扫描发现泄露",
+      "type": "json",
+      "file": ".hackathon/state/ship.json",
+      "path": "secret_scan.clean",
+      "op": "is_false",
+      "value": false
+    },
+    {
+      "id": "ship-findings",
+      "description": "至少 1 条密钥发现",
+      "type": "json",
+      "file": ".hackathon/state/ship.json",
+      "path": "secret_scan.findings",
+      "op": "length_gte",
+      "value": 1
+    },
+    {
+      "id": "verify-result",
+      "description": "verify_step 输出可解析且通过",
+      "type": "json_valid",
+      "file": "verify-result.json"
+    },
+    {
+      "id": "verify-status",
+      "description": "verify_step 判定 pass",
+      "type": "json",
+      "file": "verify-result.json",
+      "path": "status",
+      "op": "equals",
+      "value": "pass"
+    },
+    {
+      "id": "rehearsal-created",
+      "description": "rehearsal.json 生成",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/rehearsal.json"
+    },
+    {
+      "id": "rehearsal-segments",
+      "description": "rehearsal 有演练分段",
+      "type": "json",
+      "file": ".hackathon/state/rehearsal.json",
+      "path": "segments",
+      "op": "length_gte",
+      "value": 1
+    },
+    {
+      "id": "rehearsal-budget",
+      "description": "演练时长在预算 +/-15% 内",
+      "type": "json",
+      "file": ".hackathon/state/rehearsal.json",
+      "path": "within_budget",
+      "op": "is_true",
+      "value": true
+    },
+    {
+      "id": "demo-duration",
+      "description": "30 秒 demo 脚本",
+      "type": "json",
+      "file": ".hackathon/state/demo.json",
+      "path": "duration_seconds",
+      "op": "equals",
+      "value": 30
+    },
+    {
+      "id": "decision-entry",
+      "description": "decision-log 记录 Auth KEEP",
+      "type": "text",
+      "file": ".hackathon/state/decision-log.json",
+      "op": "contains",
+      "value": "\"KEEP\""
+    }
+  ]
+}

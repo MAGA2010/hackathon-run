@@ -65,6 +65,10 @@ hackathon checkpoint --summary "what this session changed"
 git commit -m "clean state after <feature>"
 ```
 
+Add `--compress` before a long pause to rewrite `SESSION.md` as a bounded
+handoff of 150 lines or fewer. The full `PROGRESS.md` history and raw
+`events.jsonl` trace are not modified.
+
 An operator can stop or redirect a long run without restarting it:
 
 ```bash
@@ -111,7 +115,9 @@ hackathon run fast-verify
 ```
 
 This walks the demo path from `plan.json`, runs each step, and stops at the
-first failure.
+first failure. Demo steps with a `feature` owner are synchronized back to
+`plan.features[].passes`; every owned executable step must pass, otherwise
+the feature returns to `passes: false`.
 
 ## 4. Draft your pitch
 

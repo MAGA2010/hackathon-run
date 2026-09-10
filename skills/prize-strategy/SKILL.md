@@ -15,6 +15,8 @@ triggers:
   - 'how do we position for X prize'
   - 'what do judges want'
   - 'which prize category'
+allowed_tools: [Read, Write]
+capabilities: [fs_read, fs_write]
 ---
 
 # prize-strategy

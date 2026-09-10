@@ -5,7 +5,7 @@
 A decision-making and execution system for hackathon teams operating under time pressure. Fifteen skills, one workflow: **clarify, prize-target, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro, decide-log.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
-[![Version](https://img.shields.io/badge/version-1.3.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.4.0-blue)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
 [![npm version](https://img.shields.io/npm/v/@hackathon-run/hackathon-run.svg)](https://www.npmjs.com/package/@hackathon-run/hackathon-run)
@@ -363,7 +363,7 @@ sequenceDiagram
 | Init       | `hackathon init`                                            | `.hackathon/`, `session.json`, `SESSION.md`, `PROGRESS.md` |
 | Plan       | `hackathon run scope-knife --apply`                         | `plan.json` with `passes: false`                           |
 | Resume     | `hackathon resume`                                          | `session.json` + `PROGRESS.md` handoff                     |
-| Checkpoint | `hackathon checkpoint --summary`                            | `PROGRESS.md`, `session.json`                              |
+| Checkpoint | `hackathon checkpoint --summary [--compress]`               | `PROGRESS.md`, `session.json`, bounded `SESSION.md`        |
 | Contract   | `hackathon sprint new` + `hackathon sprint approve`         | `sprint.json`                                              |
 | Review     | `hackathon sprint review`                                   | `eval.json` with default-FAIL criteria                     |
 | Accept     | `hackathon sprint accept`                                   | `plan.json`, `sprint.json`, `session.json`                 |
@@ -418,6 +418,29 @@ count as a verified demo, and the pipeline will not report ready to ship.
 `sprint accept` applies the evaluator verdict: a passing eval flips the
 feature to `passes: true` and records evidence; a failing eval writes feedback
 back to `session.json` for the next generator iteration.
+
+`scope-knife` assigns `demo_path[].feature` to the core product steps.
+Fast-verify synchronizes those steps back to `plan.features[].passes`: every
+owned executable step must pass, while a failure or skip resets the feature
+to false. Auto-generated evidence is tagged `source: fast-verify`; evaluator
+and manual evidence are preserved.
+
+To keep a fresh session small without losing raw history, run:
+
+```bash
+hackathon checkpoint --summary "what changed" --compress
+```
+
+This rewrites `.hackathon/SESSION.md` to 150 lines or fewer. The full
+`PROGRESS.md` log and append-only `events.jsonl` trace remain intact.
+
+Every new trace event carries a sequence number and SHA-256 hash chain.
+`verify.json` also records a workspace digest, so source edits mark prior
+evidence stale instead of leaving a false `passes: true`.
+
+```bash
+hackathon trace --verify
+```
 
 Cost and time are first-class gates. Set them when creating a sprint:
 
@@ -493,8 +516,14 @@ hybrid by default, with an optional semantic matcher behind
 ```bash
 hackathon skills audit --json
 hackathon skills audit --risk-summary --json
+hackathon skills audit --strict --policy .hackathon/skills-policy.json
+hackathon skills audit --sarif > skills-audit.sarif
 npm run test:routing
 ```
+
+The audit compares declared `capabilities` (`fs_read`, `fs_write`, `net`,
+`exec`, `env`, `mcp`) against scripts, supports deny-policies, and emits
+SARIF 2.1.0 for code-scanning integrations.
 
 `judge-sim` sends protocol v2 requests to `HACKATHON_JUDGE_BACKEND`, requiring
 per-dimension rationale, evidence, and confidence while still accepting older
@@ -505,6 +534,20 @@ hackathon judge-calibrate \
   --backend https://judge.example.test \
   --golden tests/fixtures/judge-golden.json \
   --max-mae 1
+```
+
+The deterministic evaluation gate remains offline. A manual or scheduled
+model-backed evaluation can run Codex, Claude Code, or any command template:
+
+```bash
+node skill-eval-lab/harness.mjs \
+  --runner command \
+  --runner-preset codex \
+  --runs 3 \
+  --ab \
+  --control-command "your-baseline-agent --prompt-file {prompt_file}" \
+  --min-grade A \
+  --fail-on-p1
 ```
 
 Third-party skills can ship a full manifest (`license`, `author`, `homepage`, `repository`, `compatibility`) that `hackathon skills search --json` and the `find_skills` MCP tool surface.

@@ -79,7 +79,33 @@
                   "description": "How the evidence was produced."
                 },
                 "value": { "type": "string", "minLength": 1 },
-                "at": { "type": "string", "format": "date-time" }
+                "at": { "type": "string", "format": "date-time" },
+                "source": {
+                  "enum": ["fast-verify", "evaluator", "manual"],
+                  "description": "Producer of this evidence item."
+                },
+                "status": {
+                  "enum": ["pass", "fail", "stale"],
+                  "description": "Result attached to this evidence item."
+                },
+                "exit_code": {
+                  "type": "integer",
+                  "description": "Exit code from the verified command, when available."
+                },
+                "source_digest": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$",
+                  "description": "Source workspace digest that this evidence applies to."
+                },
+                "output_digest": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$",
+                  "description": "SHA-256 digest of command stdout, when available."
+                },
+                "stale": {
+                  "type": "boolean",
+                  "description": "True when the source changed after verification."
+                }
               }
             }
           },
@@ -111,6 +137,11 @@
           "step": { "type": "integer", "minimum": 1 },
           "action": { "type": "string", "minLength": 1 },
           "expected_outcome": { "type": "string", "minLength": 1 },
+          "feature": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Optional KEEP feature owned by this demo step."
+          },
           "command": {
             "type": "string",
             "minLength": 1,
@@ -187,8 +218,18 @@
       ],
       "demo_path": [
         { "step": 1, "action": "Open the app URL.", "expected_outcome": "Landing page renders." },
-        { "step": 2, "action": "Click Sign Up.", "expected_outcome": "Auth modal opens." },
-        { "step": 3, "action": "Save a note.", "expected_outcome": "Note appears in list." }
+        {
+          "step": 2,
+          "action": "Click Sign Up.",
+          "expected_outcome": "Auth modal opens.",
+          "feature": "Auth"
+        },
+        {
+          "step": 3,
+          "action": "Save a note.",
+          "expected_outcome": "Note appears in list.",
+          "feature": "Notes CRUD"
+        }
       ],
       "next_tasks": [
         { "priority": "P0", "task": "Finish Notes CRUD.", "estimate_minutes": 90 },

@@ -14,6 +14,7 @@ import { parseFrontmatter } from '../../harness/frontmatter.js';
 import { c } from '../lib/colors.js';
 
 export type AuditSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
+export type SkillCapability = 'fs_read' | 'fs_write' | 'net' | 'exec' | 'env' | 'mcp';
 
 export interface AuditFinding {
   severity: AuditSeverity;
@@ -33,6 +34,11 @@ export interface SkillAuditResult {
   low: number;
   info: number;
   findings: AuditFinding[];
+  capabilities: {
+    declared: SkillCapability[];
+    observed: SkillCapability[];
+    undeclared: SkillCapability[];
+  };
 }
 
 export interface SkillsAuditReport {
@@ -45,6 +51,7 @@ export interface SkillsAuditReport {
   low: number;
   info: number;
   skills: SkillAuditResult[];
+  policy?: string;
 }
 
 export interface SkillsAuditOptions {
@@ -54,6 +61,8 @@ export interface SkillsAuditOptions {
   verbose?: boolean;
   strict?: boolean;
   riskSummary?: boolean;
+  sarif?: boolean;
+  policy?: string;
 }
 
 export interface SkillRiskSummary {
@@ -63,6 +72,7 @@ export interface SkillRiskSummary {
   high: number;
   medium: number;
   categories: string[];
+  capabilities: SkillCapability[];
 }
 
 export interface SkillsRiskSummary {
@@ -74,6 +84,11 @@ export interface SkillsRiskSummary {
   install: 'yes' | 'no' | 'with-caveats';
   bySkill: SkillRiskSummary[];
   categories: string[];
+}
+
+export interface SkillAuditPolicy {
+  deny_capabilities?: SkillCapability[];
+  deny_rules?: string[];
 }
 
 function decideInstall(critical: number, high: number): 'yes' | 'no' | 'with-caveats' {
@@ -100,6 +115,7 @@ export function buildRiskSummary(opts: SkillsAuditOptions): SkillsRiskSummary {
       high: s.high,
       medium: s.medium,
       categories: [...cats],
+      capabilities: s.capabilities.observed,
     };
   });
   return {
@@ -156,10 +172,16 @@ const SHELL_RULES: Array<{ rule: string; re: RegExp; severity: AuditSeverity; me
     message: 'remote content is downloaded and piped into a shell',
   },
   {
-    rule: 'shell.remote-exec',
-    re: /(?:os\.system\s*\(|subprocess\.(?:run|call|check_output|Popen)\s*\(|child_process|shell_exec\s*\(|popen\s*\(|invoke-expression\b|iex\s+)/i,
+    rule: 'shell.dynamic-execution',
+    re: /(?:shell_exec\s*\(|popen\s*\(|invoke-expression\b|\biex\s+|\beval\s*\()/i,
     severity: 'high',
-    message: 'code executes a child process or dynamic expression',
+    message: 'code dynamically executes a command or expression',
+  },
+  {
+    rule: 'shell.child-process',
+    re: /(?:os\.system\s*\(|subprocess\.(?:run|call|check_output|Popen)\s*\(|child_process)/i,
+    severity: 'medium',
+    message: 'code executes a child process',
   },
   {
     rule: 'shell.destructive-outside-project',
@@ -248,6 +270,152 @@ const ENV_RULES: Array<{ rule: string; re: RegExp; severity: AuditSeverity; mess
     message: 'script reads a credential-shaped env variable',
   },
 ];
+
+const CAPABILITY_ORDER: SkillCapability[] = ['fs_read', 'fs_write', 'net', 'exec', 'env', 'mcp'];
+
+const CAPABILITY_SUFFIXES: Record<string, SkillCapability> = {
+  read: 'fs_read',
+  readfile: 'fs_read',
+  glob: 'fs_read',
+  grep: 'fs_read',
+  list: 'fs_read',
+  write: 'fs_write',
+  edit: 'fs_write',
+  patch: 'fs_write',
+  applypatch: 'fs_write',
+  bash: 'exec',
+  shell: 'exec',
+  powershell: 'exec',
+  exec: 'exec',
+  process: 'exec',
+  webfetch: 'net',
+  websearch: 'net',
+  browser: 'net',
+  curl: 'net',
+  wget: 'net',
+  net: 'net',
+  env: 'env',
+  secret: 'env',
+  credential: 'env',
+  mcp: 'mcp',
+  modelcontextprotocol: 'mcp',
+};
+
+function capabilityOf(value: string): SkillCapability | null {
+  const normalized = value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if ((CAPABILITY_ORDER as string[]).includes(normalized)) return normalized as SkillCapability;
+  for (const [suffix, capability] of Object.entries(CAPABILITY_SUFFIXES)) {
+    if (normalized === suffix || normalized.endsWith(suffix)) return capability;
+  }
+  return null;
+}
+
+function declaredCapabilities(
+  frontmatter: ReturnType<typeof parseFrontmatter>['frontmatter'] | null,
+): SkillCapability[] {
+  if (!frontmatter) return [];
+  const observed = new Set<SkillCapability>();
+  for (const value of [...(frontmatter.capabilities ?? []), ...(frontmatter.allowed_tools ?? [])]) {
+    const capability = capabilityOf(value);
+    if (capability) observed.add(capability);
+  }
+  return CAPABILITY_ORDER.filter((capability) => observed.has(capability));
+}
+
+function stripStringLiterals(raw: string): string {
+  return raw
+    .replace(/"""[\s\S]*?"""/gs, '""')
+    .replace(/'''[\s\S]*?'''/gs, '""')
+    .replace(/`(?:\\.|[^`\\])*`/gs, '""')
+    .replace(/"(?:\\.|[^"\\])*"/gs, '""')
+    .replace(/'(?:\\.|[^'\\])*'/gs, '""');
+}
+
+function normalizedBypassText(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/\\\r?\n/g, '')
+    .replace(/["'`+\s]/g, '')
+    .replace(/\\x[0-9a-f]{2}/g, '')
+    .replace(/\\u[0-9a-f]{4}/g, '');
+}
+
+const CAPABILITY_PATTERNS: Record<SkillCapability, RegExp[]> = {
+  fs_read: [
+    /\b(?:readFileSync|readFile|createReadStream)\s*\(/,
+    /\bopen\s*\([^)]*['"]r['"]/,
+    /\bPath\([^)]*\)\.read_text\s*\(/,
+    /\b(?:os\.listdir|os\.walk|glob\.(?:glob|iglob))\s*\(/,
+  ],
+  fs_write: [
+    /\b(?:writeFileSync|writeFile|appendFile|createWriteStream)\s*\(/,
+    /\bPath\([^)]*\)\.write_text\s*\(/,
+    /\b(?:os\.(?:remove|unlink|rmdir|mkdir|rename)|shutil\.(?:rmtree|move|copy))\s*\(/,
+    /\b(?:rmtree|unlinkSync|renameSync|mkdirSync|chmodSync)\s*\(/,
+  ],
+  net: [
+    /\b(?:fetch|axios\.(?:get|post|put|delete)|requests\.(?:get|post|put|delete)|urllib\.request|http\.client)\b/,
+    /\b(?:socket\.(?:socket|create_connection)|WebSocket)\b/,
+  ],
+  exec: [
+    /\b(?:subprocess\.(?:run|call|check_output|Popen)|os\.system|child_process\.(?:spawn|exec)|shell_exec|popen)\s*\(/,
+    /\b(?:execSync|spawnSync|execFileSync|eval)\s*\(/,
+    /\b(?:Invoke-Expression|iex)\b/,
+  ],
+  env: [
+    /\b(?:process\.env|os\.environ|os\.getenv|Deno\.env\.get|ENV\.fetch)\b/,
+    /\b(?:load_dotenv|dotenv)\b/,
+    /\$(?:env|Env):[A-Za-z_]/,
+  ],
+  mcp: [/\b(?:modelcontextprotocol|mcp\.(?:call|invoke|tool)|McpServer)\b/i],
+};
+
+const SHELL_CAPABILITY_PATTERNS: Partial<Record<SkillCapability, RegExp>> = {
+  fs_read: /^\s*(?:cat|head|tail|less|grep|rg|find|ls)\b/m,
+  fs_write: /^\s*(?:rm|mv|cp|chmod|chown|touch|mkdir|rmdir)\b/m,
+  net: /^\s*(?:curl|wget|ssh|scp|rsync|nc|netcat|socat)\b/m,
+  exec: /^\s*(?:bash|sh|zsh|powershell|cmd|eval|source)\b/m,
+  env: /(?:^|[;&|]\s*)(?:env|printenv|set)\b/m,
+};
+
+function detectObservedCapabilities(raw: string, file: string): Set<SkillCapability> {
+  const capabilities = new Set<SkillCapability>();
+  const isShell = /\.(?:sh|ps1)$/i.test(file);
+  const candidate = isShell ? raw : stripStringLiterals(raw);
+  for (const capability of CAPABILITY_ORDER) {
+    if (CAPABILITY_PATTERNS[capability].some((pattern) => pattern.test(candidate))) {
+      capabilities.add(capability);
+    }
+  }
+  if (isShell) {
+    for (const [capability, pattern] of Object.entries(SHELL_CAPABILITY_PATTERNS)) {
+      if (pattern?.test(candidate)) capabilities.add(capability as SkillCapability);
+    }
+  }
+
+  const normalized = normalizedBypassText(candidate);
+  if (/(?:childprocess|subprocess|ossystem|popen|invokeexpression|iex|execSync)/.test(normalized)) {
+    capabilities.add('exec');
+  }
+  if (/(?:fetch\(|requests\.|urllib|curl|wget|invokewebrequest)/.test(normalized)) {
+    capabilities.add('net');
+  }
+  return capabilities;
+}
+
+function decodedRiskText(raw: string): string[] {
+  const decoded: string[] = [];
+  const matches = raw.match(/[A-Za-z0-9+/]{32,}={0,2}/g) ?? [];
+  for (const candidate of matches.slice(0, 8)) {
+    try {
+      const text = Buffer.from(candidate, 'base64').toString('utf8');
+      if (/[\x20-\x7e\r\n\t]{16,}/.test(text)) decoded.push(text);
+    } catch {
+      // Ignore non-base64-looking source tokens.
+    }
+  }
+  return decoded;
+}
 
 /**
  * Pull out top-level command names invoked from a script. Lightweight
@@ -339,7 +507,14 @@ function excerpt(raw: string, match: RegExp): string | undefined {
 function walk(dir: string): string[] {
   const out: string[] = [];
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (entry.name === 'node_modules' || entry.name === '.git') continue;
+    if (
+      entry.name === 'node_modules' ||
+      entry.name === '.git' ||
+      entry.name === '__pycache__' ||
+      /\.(?:pyc|pyo|so|dll|dylib|exe|bin)$/i.test(entry.name)
+    ) {
+      continue;
+    }
     const full = join(dir, entry.name);
     if (entry.isDirectory()) {
       out.push(...walk(full));
@@ -377,6 +552,7 @@ function auditFile(file: string, root: string, raw: string, findings: AuditFindi
 function auditSkill(dir: string, root: string): SkillAuditResult {
   const findings: AuditFinding[] = [];
   const files = walk(dir);
+  const observedCapabilities = new Set<SkillCapability>();
   const skillMd = join(dir, 'SKILL.md');
   let frontmatter: ReturnType<typeof parseFrontmatter>['frontmatter'] | null = null;
 
@@ -402,7 +578,44 @@ function auditSkill(dir: string, root: string): SkillAuditResult {
     } catch {
       continue;
     }
+    if (raw.includes('\0')) continue;
     auditFile(file, root, raw, findings);
+    if (/\.(?:py|js|mjs|cjs|ts|tsx|jsx|sh|ps1)$/.test(file)) {
+      for (const capability of detectObservedCapabilities(raw, file)) {
+        observedCapabilities.add(capability);
+      }
+      for (const decoded of decodedRiskText(raw)) {
+        const decodedCapabilities = detectObservedCapabilities(decoded, file);
+        if (
+          decodedCapabilities.has('exec') ||
+          decodedCapabilities.has('net') ||
+          /(?:api[_-]?key|password|secret|token)/i.test(decoded)
+        ) {
+          findings.push({
+            severity: 'high',
+            rule: 'obfuscation.base64-risk',
+            file: relative(root, file),
+            line: 1,
+            message: 'base64 payload decodes to an execution, network, or credential pattern',
+            excerpt: decoded.slice(0, 120).replace(/\s+/g, ' ').trim(),
+          });
+        }
+      }
+      const normalized = normalizedBypassText(raw);
+      const looksConcatenated = /["'`]\s*\+\s*["'`]/.test(raw) || /\\x[0-9a-f]{2}/i.test(raw);
+      if (
+        looksConcatenated &&
+        /(?:childprocess|subprocess|ossystem|popen|invokeexpression|iex)/.test(normalized)
+      ) {
+        findings.push({
+          severity: 'medium',
+          rule: 'obfuscation.string-splitting',
+          file: relative(root, file),
+          line: 1,
+          message: 'execution primitives appear in concatenated or escaped source',
+        });
+      }
+    }
   }
 
   const hasScripts = files.some((file) => /\.(?:py|js|mjs|ts|sh|ps1)$/.test(file));
@@ -462,6 +675,28 @@ function auditSkill(dir: string, root: string): SkillAuditResult {
     });
   }
 
+  const declared = declaredCapabilities(frontmatter);
+  const declaredSet = new Set(declared);
+  const observed = CAPABILITY_ORDER.filter((capability) => observedCapabilities.has(capability));
+  const undeclared = observed.filter((capability) => !declaredSet.has(capability));
+  const capabilitySeverity: Record<SkillCapability, AuditSeverity> = {
+    fs_read: 'low',
+    fs_write: 'medium',
+    net: 'high',
+    exec: 'high',
+    env: 'medium',
+    mcp: 'medium',
+  };
+  for (const capability of undeclared) {
+    findings.push({
+      severity: capabilitySeverity[capability],
+      rule: `capability.undeclared-${capability}`,
+      file: relative(root, skillMd),
+      line: 1,
+      message: `script uses ${capability} but the skill does not declare this capability`,
+    });
+  }
+
   const counts = (severity: AuditSeverity) =>
     findings.filter((finding) => finding.severity === severity).length;
   return {
@@ -473,6 +708,11 @@ function auditSkill(dir: string, root: string): SkillAuditResult {
     low: counts('low'),
     info: counts('info'),
     findings,
+    capabilities: {
+      declared,
+      observed,
+      undeclared,
+    },
   };
 }
 
@@ -481,6 +721,9 @@ export function auditSkills(opts: SkillsAuditOptions): SkillsAuditReport {
   const dirs = opts.target ? [resolve(opts.target)] : findSkillDirs(cwd);
   const skillsRoot = dirs.length > 0 ? dirnameOfSkillRoot(dirs[0]) : join(cwd, 'skills');
   const skills = dirs.map((dir) => auditSkill(dir, cwd));
+  if (opts.policy) {
+    applyAuditPolicy(skills, loadAuditPolicy(opts.policy));
+  }
   const sum = (field: 'critical' | 'high' | 'medium' | 'low' | 'info') =>
     skills.reduce((total, skill) => total + skill[field], 0);
   return {
@@ -493,6 +736,103 @@ export function auditSkills(opts: SkillsAuditOptions): SkillsAuditReport {
     low: sum('low'),
     info: sum('info'),
     skills,
+    policy: opts.policy ? resolve(opts.policy) : undefined,
+  };
+}
+
+export function loadAuditPolicy(path: string): SkillAuditPolicy {
+  const raw = JSON.parse(readFileSync(resolve(path), 'utf8')) as SkillAuditPolicy;
+  for (const capability of raw.deny_capabilities ?? []) {
+    if (!(CAPABILITY_ORDER as string[]).includes(capability)) {
+      throw new Error(`policy contains unknown capability: ${String(capability)}`);
+    }
+  }
+  return raw;
+}
+
+function applyAuditPolicy(skills: SkillAuditResult[], policy: SkillAuditPolicy): void {
+  const deniedCapabilities = new Set(policy.deny_capabilities ?? []);
+  const deniedRules = new Set(policy.deny_rules ?? []);
+  for (const skill of skills) {
+    for (const capability of skill.capabilities.observed) {
+      if (!deniedCapabilities.has(capability)) continue;
+      skill.findings.push({
+        severity: 'critical',
+        rule: `policy.denied-capability-${capability}`,
+        file: 'SKILL.md',
+        line: 1,
+        message: `installed policy denies capability ${capability}`,
+      });
+      skill.critical += 1;
+    }
+    for (const finding of skill.findings) {
+      if (!deniedRules.has(finding.rule)) continue;
+      const duplicate = skill.findings.some(
+        (entry) => entry.rule === `policy.denied-rule-${finding.rule}`,
+      );
+      if (duplicate) continue;
+      skill.findings.push({
+        severity: 'critical',
+        rule: `policy.denied-rule-${finding.rule}`,
+        file: finding.file,
+        line: finding.line,
+        message: `installed policy denies rule ${finding.rule}`,
+      });
+      skill.critical += 1;
+    }
+  }
+}
+
+function sarifLevel(severity: AuditSeverity): 'error' | 'warning' | 'note' {
+  if (severity === 'critical' || severity === 'high') return 'error';
+  if (severity === 'medium') return 'warning';
+  return 'note';
+}
+
+export function toSarif(report: SkillsAuditReport): Record<string, unknown> {
+  const rules = new Map<string, { id: string; name: string; shortDescription: string }>();
+  const results: Array<Record<string, unknown>> = [];
+  for (const skill of report.skills) {
+    for (const finding of skill.findings) {
+      rules.set(finding.rule, {
+        id: finding.rule,
+        name: finding.rule,
+        shortDescription: finding.message,
+      });
+      results.push({
+        ruleId: finding.rule,
+        level: sarifLevel(finding.severity),
+        message: { text: `${skill.name}: ${finding.message}` },
+        locations: [
+          {
+            physicalLocation: {
+              artifactLocation: { uri: finding.file.replace(/\\/g, '/') },
+              region: { startLine: Math.max(1, finding.line) },
+            },
+          },
+        ],
+        properties: {
+          severity: finding.severity,
+          skill: skill.name,
+        },
+      });
+    }
+  }
+  return {
+    version: '2.1.0',
+    $schema: 'https://json.schemastore.org/sarif-2.1.0.json',
+    runs: [
+      {
+        tool: {
+          driver: {
+            name: 'hackathon-run-skills-audit',
+            informationUri: 'https://github.com/MAGA2010/hackathon-run',
+            rules: [...rules.values()],
+          },
+        },
+        results,
+      },
+    ],
   };
 }
 
@@ -528,14 +868,22 @@ export function skillsAudit(opts: SkillsAuditOptions): number {
                 ? c.red('no')
                 : c.yellow('with-caveats');
           const categories = skill.categories.length > 0 ? skill.categories.join(', ') : 'none';
+          const capabilities =
+            skill.capabilities.length > 0 ? skill.capabilities.join(', ') : 'none';
           console.log(
-            `  ${skill.name.padEnd(24)} install=${decision} critical=${skill.critical} high=${skill.high} medium=${skill.medium} categories=${categories}`,
+            `  ${skill.name.padEnd(24)} install=${decision} critical=${skill.critical} high=${skill.high} medium=${skill.medium} capabilities=${capabilities} categories=${categories}`,
           );
         }
       }
     }
     const blocked = summary.install === 'no' || (opts.strict && summary.install === 'with-caveats');
     return blocked ? 1 : 0;
+  }
+
+  if (opts.sarif) {
+    const report = auditSkills(opts);
+    process.stdout.write(JSON.stringify(toSarif(report), null, 2) + '\n');
+    return report.critical + (opts.strict ? report.high : 0) > 0 ? 1 : 0;
   }
 
   const report = auditSkills(opts);

@@ -32,8 +32,10 @@ Run the resume ritual before any work. This is not optional:
   `refine` keeps the current approach, `pivot` changes direction, `replan`
   returns to the planner, `stop` halts work.
 - End the sprint by updating the session, running
-  `hackathon checkpoint --summary "<what changed>"`, and committing the
-  clean state with a descriptive message.
+  `hackathon checkpoint --summary "<what changed>" --compress`, and
+  committing the clean state with a descriptive message. The compressed
+  `SESSION.md` is a bounded view; keep `PROGRESS.md` and `events.jsonl`
+  complete.
 
 ## Guardrails
 

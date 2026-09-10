@@ -48,8 +48,11 @@ jobs:
       - name: Routing golden set
         run: npm run test:routing
 
+      - name: Skill evaluation lab
+        run: npm run test:skill-eval
+
       - name: Skill security audit
-        run: node dist/cli/index.js skills audit --json
+        run: node dist/cli/index.js skills audit --strict --json
 
       - name: Unit tests
         run: npm run test:unit

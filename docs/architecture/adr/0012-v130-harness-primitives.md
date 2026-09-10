@@ -62,6 +62,8 @@ MCP tools expose the same primitives: `resume`, `sprint_new`,
 
 ## Follow-ups (planned)
 
-- Wire `fast-verify` output back into `plan.features[].passes`.
-- Add a typed evaluator protocol for `HACKATHON_JUDGE_BACKEND`.
+- ~~Wire `fast-verify` output back into `plan.features[].passes`.~~ Completed
+  in ADR-0014.
+- ~~Add a typed evaluator protocol for `HACKATHON_JUDGE_BACKEND`.~~ Completed
+  in ADR-0013.
 - Add a full browser-based evaluator example.

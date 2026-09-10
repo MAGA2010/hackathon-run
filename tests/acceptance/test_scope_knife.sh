@@ -144,6 +144,8 @@ mkdir -p "$CORE_OUT"
 CORE_PLAN="$CORE_OUT/state/plan.json"
 grep -A2 '"name": "Order Prebooking"' "$CORE_PLAN" | grep -q '"classification": "KEEP"' \
     || fail "Order Prebooking must be KEEP when demo_goal says prebook"
+grep -q '"feature": "Order Prebooking"' "$CORE_PLAN" \
+    || fail "core demo steps must map to the KEEP feature"
 pass "core demo verb/noun kept on the demo path"
 
 section "Acceptance: plan.json validates against plan.schema.json"

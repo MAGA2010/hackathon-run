@@ -167,6 +167,7 @@ program
   .option('--next-task <text>', 'next task for the next session')
   .option('--feature <name>', 'feature worked on')
   .option('--actor <name>', 'actor writing the checkpoint', 'agent')
+  .option('--compress', 'write a bounded SESSION.md handoff summary (<=150 lines)')
   .option('--json', 'machine-readable JSON output')
   .option('-C, --cwd <path>', 'repo root', process.cwd())
   .action((opts) =>
@@ -178,6 +179,7 @@ program
         nextTask: opts.nextTask,
         feature: opts.feature,
         actor: opts.actor,
+        compress: Boolean(opts.compress),
         json: Boolean(opts.json),
       }),
     ),
@@ -351,9 +353,17 @@ program
   .description('Inspect the append-only harness event log')
   .option('--json', 'machine-readable JSON output')
   .option('--last <n>', 'only show the last N events', parseInt)
+  .option('--verify', 'verify the trace hash chain')
   .option('-C, --cwd <path>', 'repo root', process.cwd())
   .action((opts) =>
-    process.exit(trace({ cwd: opts.cwd, json: Boolean(opts.json), last: opts.last })),
+    process.exit(
+      trace({
+        cwd: opts.cwd,
+        json: Boolean(opts.json),
+        last: opts.last,
+        verify: Boolean(opts.verify),
+      }),
+    ),
   );
 
 program
@@ -541,6 +551,8 @@ skillsCmd
   .option('--verbose', 'print every finding, not just critical/high')
   .option('--strict', 'treat high-severity findings as failures too')
   .option('--risk-summary', 'emit an install decision and per-skill risk categories')
+  .option('--sarif', 'emit SARIF 2.1.0 for code-scanning integrations')
+  .option('--policy <file>', 'capability policy JSON to enforce during the audit')
   .option('-C, --cwd <path>', 'repo root', process.cwd())
   .action(
     (
@@ -550,6 +562,8 @@ skillsCmd
         verbose?: boolean;
         strict?: boolean;
         riskSummary?: boolean;
+        sarif?: boolean;
+        policy?: string;
         cwd?: string;
       },
     ) =>
@@ -561,6 +575,8 @@ skillsCmd
           verbose: Boolean(opts.verbose),
           strict: Boolean(opts.strict),
           riskSummary: Boolean(opts.riskSummary),
+          sarif: Boolean(opts.sarif),
+          policy: opts.policy,
         }),
       ),
   );

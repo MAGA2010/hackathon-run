@@ -28,6 +28,8 @@ export interface SkillFrontmatter {
   paths?: string[];
   /** Optional: explicitly declare which tools the skill needs. */
   allowed_tools?: string[];
+  /** Optional: declared runtime capabilities (fs_read, fs_write, net, exec, env, mcp). */
+  capabilities?: string[];
   /** Optional: pin a specific model. */
   model?: string;
   /** Optional: semver of the skill itself (e.g. "1.0"). Required by Format v2. */

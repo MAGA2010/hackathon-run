@@ -1,0 +1,420 @@
+{
+  "id": "s1-green-tech-48h",
+  "title": "GreenTech 48h: 食堂浪费 AI",
+  "brief": "4 人团队，还剩 14 小时。要做「用 AI 预测校园食堂剩余餐食，让学生预购减少浪费」。评委关注可持续、AI 使用和落地完整性。",
+  "expected_skills": [
+    "idea-clarify",
+    "scope-knife",
+    "time-box",
+    "stack-picker",
+    "prize-strategy",
+    "demo-coach",
+    "judge-sim",
+    "ship-pack"
+  ],
+  "project": {
+    "name": "GreenFork",
+    "files": {
+      "README.md": "# GreenFork\n## AI Meal Prediction\n## Canteen Menu Sync\n## User Allergen Profile\n## Order Prebooking\n## Analytics Dashboard\n## Admin Controls\n## Notifications\n\n## Run\nnpm run dev\n\n## Demo\nOpen the app and prebook one meal.\n",
+      "package.json": "{\n  \"name\": \"green-fork\",\n  \"version\": \"0.1.0\",\n  \"scripts\": {\n    \"dev\": \"vite\"\n  }\n}\n",
+      "src/predict.py": "def predict_surplus(menu, weather):\n    return []\n",
+      "src/menu.py": "def fetch_menu():\n    return []\n",
+      "src/user.py": "def get_profile(user_id):\n    return {}\n",
+      "src/prebook.py": "def prebook_meal(user_id, meal_id):\n    return True\n",
+      ".env.example": "DATABASE_URL=postgres://localhost/greenfork\n",
+      "prizes.json": "[\n  {\n    \"name\": \"Best Sustainability\",\n    \"criteria\": \"reduce waste sustainability impact circular measurable\",\n    \"weight\": 3\n  },\n  {\n    \"name\": \"Best AI Use\",\n    \"criteria\": \"ai machine learning generative useful model\",\n    \"weight\": 2\n  },\n  {\n    \"name\": \"Best UX\",\n    \"criteria\": \"design usability delight accessibility\",\n    \"weight\": 1\n  }\n]\n"
+    }
+  },
+  "steps": [
+    { "id": "init", "kind": "cli", "args": ["init", "-y"], "expect_exit": 0 },
+    {
+      "id": "scan",
+      "kind": "python",
+      "script": "skills/scope-knife/scripts/scan_repo.py",
+      "args": ["{cwd}"],
+      "capture": "inventory.json",
+      "expect_exit": 0
+    },
+    {
+      "id": "scope",
+      "kind": "python",
+      "script": "skills/scope-knife/scripts/classify.py",
+      "args": [
+        "--inventory",
+        "{cwd}/inventory.json",
+        "--demo-goal",
+        "A student sees tomorrow's predicted surplus and prebooks one meal to reduce waste.",
+        "--time-remaining",
+        "840",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "timebox",
+      "kind": "python",
+      "script": "skills/time-box/scripts/compute.py",
+      "args": [
+        "--time-remaining",
+        "840",
+        "--team-size",
+        "4",
+        "--current-stage",
+        "build",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "stack",
+      "kind": "python",
+      "script": "skills/stack-picker/scripts/pick.py",
+      "args": [
+        "--team-skills",
+        "python,javascript,typescript,react,llm",
+        "--time-remaining",
+        "840",
+        "--demo-format",
+        "web",
+        "--prize-category",
+        "sustainability",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "prize",
+      "kind": "python",
+      "script": "skills/prize-strategy/scripts/target.py",
+      "args": [
+        "--prizes",
+        "{cwd}/prizes.json",
+        "--project",
+        "{cwd}/.hackathon/state/plan.json",
+        "--team-skills",
+        "python,javascript,react,llm",
+        "--time-remaining",
+        "840",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "demo",
+      "kind": "python",
+      "script": "skills/demo-coach/scripts/coach.py",
+      "args": [
+        "--demo-goal",
+        "A student sees tomorrow's predicted surplus and prebooks one meal to reduce waste.",
+        "--duration",
+        "60",
+        "--audience",
+        "hackathon judges",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "judge",
+      "kind": "python",
+      "script": "skills/judge-sim/scripts/score.py",
+      "args": ["--repo-root", "{cwd}", "--out-dir", "{cwd}/.hackathon"],
+      "expect_exit": 0
+    },
+    {
+      "id": "ship",
+      "kind": "python",
+      "script": "skills/ship-pack/scripts/audit.py",
+      "args": ["--repo-root", "{cwd}", "--out-dir", "{cwd}/.hackathon"],
+      "expect_exit": 0
+    },
+    {
+      "id": "decision",
+      "kind": "python",
+      "script": "skills/decision-log/scripts/log_decision.py",
+      "args": [
+        "--feature",
+        "Notifications",
+        "--classification",
+        "CUT",
+        "--rationale",
+        "Off demo path; removed for time.",
+        "--author",
+        "alice",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "verify",
+      "kind": "cli",
+      "args": ["run", "fast-verify", "--apply", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "flow-json",
+      "kind": "cli",
+      "args": ["flow", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "status",
+      "kind": "cli",
+      "args": ["status", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "resume",
+      "kind": "cli",
+      "args": ["resume", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    { "id": "trace", "kind": "cli", "args": ["trace", "--json", "-C", "{cwd}"], "expect_exit": 0 },
+    {
+      "id": "report",
+      "kind": "cli",
+      "args": ["report", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "validate",
+      "kind": "cli",
+      "args": ["validate", "{cwd}/.hackathon/state"],
+      "expect_exit": 0
+    }
+  ],
+  "assertions": [
+    {
+      "id": "plan-created",
+      "description": "scope-knife 生成 plan.json",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/plan.json"
+    },
+    {
+      "id": "plan-goal",
+      "description": "plan 包含预购目标",
+      "type": "text",
+      "file": ".hackathon/state/plan.json",
+      "op": "contains",
+      "value": "prebooks"
+    },
+    {
+      "id": "plan-features",
+      "description": "plan 至少 4 个功能",
+      "type": "json",
+      "file": ".hackathon/state/plan.json",
+      "path": "features",
+      "op": "length_gte",
+      "value": 4
+    },
+    {
+      "id": "plan-demo-path",
+      "description": "demo path 不超过 5 步",
+      "type": "json",
+      "file": ".hackathon/state/plan.json",
+      "path": "demo_path",
+      "op": "length_lte",
+      "value": 5
+    },
+    {
+      "id": "plan-tasks",
+      "description": "plan 有优先级任务",
+      "type": "json",
+      "file": ".hackathon/state/plan.json",
+      "path": "next_tasks",
+      "op": "length_gte",
+      "value": 1
+    },
+    {
+      "id": "plan-cut",
+      "description": "plan 中存在 CUT 决策",
+      "type": "text",
+      "file": ".hackathon/state/plan.json",
+      "op": "contains",
+      "value": "\"CUT\""
+    },
+    {
+      "id": "plan-core-keep",
+      "description": "核心功能 Order Prebooking 必须 KEEP",
+      "severity": "P1",
+      "type": "json",
+      "file": ".hackathon/state/plan.json",
+      "path": "features",
+      "op": "some_where",
+      "value": { "name": "Order Prebooking", "classification": "KEEP" }
+    },
+    {
+      "id": "timebox-created",
+      "description": "time-box.json 生成且 schedule 非空",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/time-box.json"
+    },
+    {
+      "id": "timebox-schedule",
+      "description": "time-box 有排期",
+      "type": "json",
+      "file": ".hackathon/state/time-box.json",
+      "path": "schedule",
+      "op": "length_gte",
+      "value": 1
+    },
+    {
+      "id": "timebox-remaining",
+      "description": "time-box 保留剩余时间 840",
+      "type": "json",
+      "file": ".hackathon/state/time-box.json",
+      "path": "time_remaining_minutes",
+      "op": "equals",
+      "value": 840
+    },
+    {
+      "id": "stack-created",
+      "description": "stack.json 生成且推荐栈非空",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/stack.json"
+    },
+    {
+      "id": "stack-recommendation",
+      "description": "stack 有推荐栈",
+      "type": "json",
+      "file": ".hackathon/state/stack.json",
+      "path": "recommendation.stack",
+      "op": "not_equals",
+      "value": ""
+    },
+    {
+      "id": "stack-bootstrap",
+      "description": "stack 有启动步骤",
+      "type": "json",
+      "file": ".hackathon/state/stack.json",
+      "path": "bootstrap.steps",
+      "op": "length_gte",
+      "value": 1
+    },
+    {
+      "id": "prize-created",
+      "description": "prize.json 生成且目标明确",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/prize.json"
+    },
+    {
+      "id": "prize-target",
+      "description": "prize 指定唯一目标",
+      "type": "json",
+      "file": ".hackathon/state/prize.json",
+      "path": "target_prize.name",
+      "op": "not_equals",
+      "value": ""
+    },
+    {
+      "id": "prize-target-sustainability",
+      "description": "绿色主题项目应命中可持续赛道",
+      "severity": "P2",
+      "type": "json",
+      "file": ".hackathon/state/prize.json",
+      "path": "target_prize.name",
+      "op": "equals",
+      "value": "Best Sustainability"
+    },
+    {
+      "id": "prize-positioning",
+      "description": "prize 定位动作 >= 3",
+      "type": "json",
+      "file": ".hackathon/state/prize.json",
+      "path": "positioning",
+      "op": "length_gte",
+      "value": 3
+    },
+    {
+      "id": "demo-created",
+      "description": "demo.json 生成且时长 60",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/demo.json"
+    },
+    {
+      "id": "demo-duration",
+      "description": "demo 时长为 60 秒",
+      "type": "json",
+      "file": ".hackathon/state/demo.json",
+      "path": "duration_seconds",
+      "op": "equals",
+      "value": 60
+    },
+    {
+      "id": "demo-steps",
+      "description": "demo 有 6 个规范步骤",
+      "type": "json",
+      "file": ".hackathon/state/demo.json",
+      "path": "steps",
+      "op": "length_gte",
+      "value": 6
+    },
+    {
+      "id": "review-created",
+      "description": "review.json 生成且 7 个维度",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/review.json"
+    },
+    {
+      "id": "review-dimensions",
+      "description": "review 有 7 个评分维度",
+      "type": "json",
+      "file": ".hackathon/state/review.json",
+      "path": "dimensions",
+      "op": "length_gte",
+      "value": 7
+    },
+    {
+      "id": "ship-created",
+      "description": "ship.json 生成且无密钥泄露",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/ship.json"
+    },
+    {
+      "id": "ship-clean",
+      "description": "ship 扫描 clean=true",
+      "type": "json",
+      "file": ".hackathon/state/ship.json",
+      "path": "secret_scan.clean",
+      "op": "is_true",
+      "value": true
+    },
+    {
+      "id": "decision-created",
+      "description": "decision-log.json 生成且可追加",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/decision-log.json"
+    },
+    {
+      "id": "decision-entry",
+      "description": "decision-log 至少 1 条 CUT",
+      "type": "json",
+      "file": ".hackathon/state/decision-log.json",
+      "path": "entries",
+      "op": "length_gte",
+      "value": 1
+    },
+    {
+      "id": "flow-complete",
+      "description": "flow 检测到 5 个阶段全部完成",
+      "type": "cli_result",
+      "step": "flow-json",
+      "op": "exit_equals",
+      "value": 0
+    }
+  ]
+}

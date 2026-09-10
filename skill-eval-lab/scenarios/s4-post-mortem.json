@@ -1,0 +1,226 @@
+{
+  "id": "s4-post-mortem",
+  "title": "赛后复盘与提交审计",
+  "brief": "黑客松已提交，团队想做 retro、生成报告、复盘 scope/time/verify/judge 四个比例，并确认提交物完整。",
+  "expected_skills": ["retro", "report", "replay", "decision-log"],
+  "project": {
+    "name": "CompostMate",
+    "files": {
+      "README.md": "# CompostMate\n## Waste Scanner\n## Compost Guide\n## Community Map\n## Gamification\n",
+      "package.json": "{\n  \"name\": \"compostmate\",\n  \"version\": \"1.0.0\"\n}\n",
+      "src/scan.py": "def scan_waste():\n    return []\n",
+      "src/guide.py": "def guide(item):\n    return \"compost\"\n"
+    }
+  },
+  "steps": [
+    { "id": "init", "kind": "cli", "args": ["init", "-y"], "expect_exit": 0 },
+    {
+      "id": "scan",
+      "kind": "python",
+      "script": "skills/scope-knife/scripts/scan_repo.py",
+      "args": ["{cwd}"],
+      "capture": "inventory.json",
+      "expect_exit": 0
+    },
+    {
+      "id": "scope",
+      "kind": "python",
+      "script": "skills/scope-knife/scripts/classify.py",
+      "args": [
+        "--inventory",
+        "{cwd}/inventory.json",
+        "--demo-goal",
+        "A user scans leftover food and gets a compost recommendation.",
+        "--time-remaining",
+        "1440",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "timebox",
+      "kind": "python",
+      "script": "skills/time-box/scripts/compute.py",
+      "args": [
+        "--time-remaining",
+        "1440",
+        "--team-size",
+        "3",
+        "--current-stage",
+        "build",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "demo",
+      "kind": "python",
+      "script": "skills/demo-coach/scripts/coach.py",
+      "args": [
+        "--demo-goal",
+        "A user scans leftover food and gets a compost recommendation.",
+        "--duration",
+        "60",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "judge",
+      "kind": "python",
+      "script": "skills/judge-sim/scripts/score.py",
+      "args": ["--repo-root", "{cwd}", "--out-dir", "{cwd}/.hackathon"],
+      "expect_exit": 0
+    },
+    {
+      "id": "ship",
+      "kind": "python",
+      "script": "skills/ship-pack/scripts/audit.py",
+      "args": ["--repo-root", "{cwd}", "--out-dir", "{cwd}/.hackathon"],
+      "expect_exit": 0
+    },
+    {
+      "id": "decision",
+      "kind": "python",
+      "script": "skills/decision-log/scripts/log_decision.py",
+      "args": [
+        "--feature",
+        "Gamification",
+        "--classification",
+        "CUT",
+        "--rationale",
+        "Delight was not required for the demo.",
+        "--author",
+        "carol",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "write-retro",
+      "kind": "write",
+      "file": ".hackathon/state/retro.json",
+      "content": "{\n  \"version\": \"1.0\",\n  \"generated_at\": \"2026-08-24T12:00:00Z\",\n  \"event_name\": \"CompostMate HackDay\",\n  \"ratios\": {\n    \"scope_accuracy\": 0.6,\n    \"time_accuracy\": 1.1,\n    \"verify_pass_rate\": 0.8,\n    \"judge_score_avg\": 3.8\n  },\n  \"surprises\": [\"Gamification was cut but took only 20 minutes to build.\"],\n  \"keep_doing\": [\n    { \"behavior\": \"Verify the demo path two hours before showtime.\", \"evidence\": \"verify.json\", \"owner_hint\": \"QA\" }\n  ],\n  \"stop_doing\": [\n    { \"behavior\": \"Polish README before the core demo works.\", \"evidence\": \"ship.json\", \"owner_hint\": \"PM\" }\n  ],\n  \"try_next_time\": [\n    { \"behavior\": \"Run a full rehearsal with the actual projector.\", \"evidence\": \"rehearsal.json\", \"owner_hint\": \"Demo lead\" }\n  ]\n}\n",
+      "expect_exit": 0
+    },
+    {
+      "id": "write-retro-md",
+      "kind": "write",
+      "file": ".hackathon/artifacts/retro.md",
+      "content": "# Retro - CompostMate HackDay\n\n## Four ratios\n- scope_accuracy: 0.6\n- time_accuracy: 1.1\n- verify_pass_rate: 0.8\n- judge_score_avg: 3.8\n\n## Surprises\n- Gamification was cut but trivial.\n\n## Keep doing\n- Verify the demo path two hours before showtime.\n\n## Stop doing\n- Polish README before the core demo works.\n\n## Try next time\n- Run a full rehearsal with the actual projector.\n",
+      "expect_exit": 0
+    },
+    {
+      "id": "report",
+      "kind": "cli",
+      "args": ["report", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "replay",
+      "kind": "cli",
+      "args": ["replay", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "status",
+      "kind": "cli",
+      "args": ["status", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "validate",
+      "kind": "cli",
+      "args": ["validate", "{cwd}/.hackathon/state"],
+      "expect_exit": 0
+    }
+  ],
+  "assertions": [
+    {
+      "id": "retro-created",
+      "description": "retro.json 生成且合法",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/retro.json"
+    },
+    {
+      "id": "retro-ratios",
+      "description": "retro 四个比例齐全",
+      "type": "json",
+      "file": ".hackathon/state/retro.json",
+      "path": "ratios",
+      "op": "each_has_fields",
+      "value": ["scope_accuracy", "time_accuracy", "verify_pass_rate", "judge_score_avg"]
+    },
+    {
+      "id": "retro-surprises",
+      "description": "retro 至少 1 条 surprise",
+      "type": "json",
+      "file": ".hackathon/state/retro.json",
+      "path": "surprises",
+      "op": "length_gte",
+      "value": 1
+    },
+    {
+      "id": "retro-keep",
+      "description": "keep_doing 不超过 3 条",
+      "type": "json",
+      "file": ".hackathon/state/retro.json",
+      "path": "keep_doing",
+      "op": "length_lte",
+      "value": 3
+    },
+    {
+      "id": "retro-stop",
+      "description": "stop_doing 不超过 3 条",
+      "type": "json",
+      "file": ".hackathon/state/retro.json",
+      "path": "stop_doing",
+      "op": "length_lte",
+      "value": 3
+    },
+    {
+      "id": "retro-try",
+      "description": "try_next_time 不超过 3 条",
+      "type": "json",
+      "file": ".hackathon/state/retro.json",
+      "path": "try_next_time",
+      "op": "length_lte",
+      "value": 3
+    },
+    {
+      "id": "retro-md",
+      "description": "retro.md 可独立阅读",
+      "type": "text",
+      "file": ".hackathon/artifacts/retro.md",
+      "op": "contains",
+      "value": "Four ratios"
+    },
+    {
+      "id": "plan-created",
+      "description": "plan 可用于复盘",
+      "type": "json_valid",
+      "file": ".hackathon/state/plan.json"
+    },
+    {
+      "id": "report-ok",
+      "description": "report --json 成功生成",
+      "type": "cli_result",
+      "step": "report",
+      "op": "exit_equals",
+      "value": 0
+    },
+    {
+      "id": "replay-ok",
+      "description": "replay --json 成功回放",
+      "type": "cli_result",
+      "step": "replay",
+      "op": "exit_equals",
+      "value": 0
+    }
+  ]
+}

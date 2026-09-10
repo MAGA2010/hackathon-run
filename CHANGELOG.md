@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-09-10
+
+### Added
+
+- **Tamper-evident evidence chain** — state writes now use cross-process
+  locks and atomic renames. New trace events carry `event_id`, `seq`,
+  `prev_hash`, and SHA-256 `hash`; `hackathon trace --verify` validates the
+  chain and reports legacy events separately.
+- **Workspace-bound verification** — `verify.json` records a deterministic
+  workspace digest and command evidence. Source changes mark prior evidence
+  stale and reset affected `plan.features[].passes` values.
+- **Command-backed agent evaluation** — `skill-eval-lab` can run Codex,
+  Claude Code, or a custom command template with repeated runs, A/B
+  variants, pass@k, 95% confidence intervals, reliability, latency, token,
+  and cost metrics.
+- **Skill capability policy** — `capabilities` frontmatter plus
+  `hackathon skills audit --policy` and `--sarif` compare declared and
+  observed access, enforce deny-policies, and emit SARIF 2.1.0.
+- **Scheduled agent evaluation workflow** — a manual or weekly GitHub
+  Actions workflow runs model-backed evaluation when an agent-command secret
+  is configured; ordinary CI remains deterministic.
+
+### Changed
+
+- Bundled command-executing skills now declare their capabilities and
+  allowed tools explicitly.
+- The evaluation runner reads the package version from `package.json`
+  instead of carrying a second hardcoded version.
+- The architecture overview and skill protocol document the BM25 routing,
+  capability audit, workspace digest, and hash-chain semantics.
+
 ## [1.3.0] - 2026-09-10
 
 ### Added
@@ -30,14 +61,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   per-dimension bias. The bundled golden set contains 20 labeled cases.
 - Judge request/response/calibration JSON schemas and a v2 mock acceptance
   test.
+- **Skill evaluation lab CI gate** — `skill-eval-lab` is now tracked and runs
+  in CI with `--min-grade A --fail-on-p1`. The current deterministic suite
+  scores 95.5/100 grade A with zero critical or P1 findings.
+- **Judge calibration E2E** — `hackathon judge-calibrate` now has an
+  in-process HTTP backend test over all 20 golden cases and enforces zero
+  MAE.
 
 ### Changed
 
 - `review.json` now optionally records `judge_protocol`, `judge_model`, and
   `judge_confidence`.
+- `fast-verify` now synchronizes executable demo-step outcomes into
+  `plan.features[].passes` and replaces only its own evidence entries.
+- `scope-knife` assigns `demo_path[].feature` ownership to the most
+  demo-relevant KEEP feature so verification does not require hand-written
+  mapping.
+- `hackathon checkpoint --compress` writes a bounded `SESSION.md` handoff
+  (150 lines or fewer) while leaving `PROGRESS.md` and the raw append-only
+  `events.jsonl` trace intact.
 - `hackathon match --debug --json` reports hybrid BM25 relevance and source.
 - The optional embedding backend now reranks only non-zero local
   candidates; it can no longer replace the local candidate set.
+- Judge calibration now clears its request timeout deterministically instead
+  of retaining `AbortSignal.timeout` handles on Windows.
 
 ## [1.2.5] - 2026-09-08
 

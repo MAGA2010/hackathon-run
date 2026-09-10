@@ -1,0 +1,158 @@
+{
+  "id": "s5-adversarial-boundary",
+  "title": "对抗性：错误触发与故障处理",
+  "brief": "用非 hackathon 任务、错误 skill 名、缺失 init、损坏状态文件测试触发边界和失败模式。",
+  "expected_skills": [],
+  "project": {
+    "name": "ordinary-tool",
+    "files": {
+      "README.md": "# Ordinary Tool\nProcesses CSV files.\n",
+      "src/parser.py": "def parse_csv(path):\n    return []\n",
+      "data/sample.csv": "name,value\nalpha,1\nbeta,2\n"
+    }
+  },
+  "steps": [
+    {
+      "id": "doctor-before-init",
+      "kind": "cli",
+      "args": ["doctor", "--json", "-C", "{cwd}"],
+      "expect_exit": 1
+    },
+    { "id": "init-gate", "kind": "cli", "args": ["init"], "expect_exit": 2 },
+    { "id": "init", "kind": "cli", "args": ["init", "-y"], "expect_exit": 0 },
+    {
+      "id": "run-unknown",
+      "kind": "cli",
+      "args": ["run", "unknown-skill", "--apply", "-C", "{cwd}"],
+      "expect_exit": 2
+    },
+    {
+      "id": "match-csv",
+      "kind": "cli",
+      "args": ["match", "write a python script to parse CSV", "--json", "-C", "{cwd}"],
+      "capture": "match-csv.json",
+      "expect_exit": 0
+    },
+    {
+      "id": "match-cut",
+      "kind": "cli",
+      "args": ["match", "what should we cut before demo", "--json", "-C", "{cwd}"],
+      "capture": "match-cut.json",
+      "expect_exit": 0
+    },
+    {
+      "id": "match-recovery",
+      "kind": "cli",
+      "args": ["match", "the demo just died", "--json", "-C", "{cwd}"],
+      "capture": "match-recovery.json",
+      "expect_exit": 0
+    },
+    {
+      "id": "match-time",
+      "kind": "cli",
+      "args": ["match", "how much time per stage", "--json", "-C", "{cwd}"],
+      "capture": "match-time.json",
+      "expect_exit": 0
+    },
+    {
+      "id": "corrupt-plan",
+      "kind": "write",
+      "file": ".hackathon/state/plan.json",
+      "content": "{ this is not valid json",
+      "expect_exit": 0
+    },
+    {
+      "id": "validate-corrupt",
+      "kind": "cli",
+      "args": ["validate", "{cwd}/.hackathon/state"],
+      "expect_exit": 1
+    },
+    {
+      "id": "doctor-corrupt",
+      "kind": "cli",
+      "args": ["doctor", "--json", "-C", "{cwd}"],
+      "expect_exit": 1
+    }
+  ],
+  "assertions": [
+    {
+      "id": "no-init-doctor",
+      "description": "未 init 时 doctor 应失败并提示",
+      "type": "cli_result",
+      "step": "doctor-before-init",
+      "op": "exit_equals",
+      "value": 1
+    },
+    {
+      "id": "init-gate",
+      "description": "非交互模式未加 --yes 必须拒绝",
+      "type": "cli_result",
+      "step": "init-gate",
+      "op": "exit_equals",
+      "value": 2
+    },
+    {
+      "id": "unknown-skill",
+      "description": "未知 skill 返回错误码 2",
+      "type": "cli_result",
+      "step": "run-unknown",
+      "op": "exit_equals",
+      "value": 2
+    },
+    {
+      "id": "match-cut",
+      "description": "裁剪意图正确分派 scope-knife",
+      "type": "json",
+      "file": "match-cut.json",
+      "path": "best.name",
+      "op": "equals",
+      "value": "scope-knife"
+    },
+    {
+      "id": "match-recovery",
+      "description": "现场崩盘正确分派 recovery-runbook",
+      "type": "json",
+      "file": "match-recovery.json",
+      "path": "best.name",
+      "op": "equals",
+      "value": "recovery-runbook"
+    },
+    {
+      "id": "match-time",
+      "description": "排期意图应分派 time-box",
+      "severity": "P1",
+      "type": "json",
+      "file": "match-time.json",
+      "path": "best.name",
+      "op": "equals",
+      "value": "time-box"
+    },
+    {
+      "id": "no-false-positive",
+      "description": "非 hackathon 任务不应误触发 hackathon skill",
+      "critical": true,
+      "severity": "P1",
+      "type": "json",
+      "file": "match-csv.json",
+      "path": "best",
+      "op": "is_null",
+      "value": null
+    },
+    {
+      "id": "validate-corrupt",
+      "description": "损坏状态文件必须被校验拦截",
+      "type": "cli_result",
+      "step": "validate-corrupt",
+      "op": "exit_equals",
+      "value": 1
+    },
+    {
+      "id": "doctor-corrupt",
+      "description": "损坏状态后 doctor 必须报警",
+      "type": "cli_result",
+      "step": "doctor-corrupt",
+      "op": "exit_equals",
+      "value": 1
+    }
+  ]
+}

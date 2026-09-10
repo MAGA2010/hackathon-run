@@ -8,11 +8,13 @@
  *   - schema invalid -> throw with diff
  *   - file unreadable -> throw
  */
-import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { dirname, join, resolve, basename, extname } from 'node:path';
+import { createHash } from 'node:crypto';
+import { readFileSync, existsSync } from 'node:fs';
+import { join, resolve, basename, extname } from 'node:path';
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
+import { atomicWriteFileSync, withFileLockSync } from './atomic.js';
 import { findPackageRoot } from './package-root.js';
 
 const ajv = new Ajv({ allErrors: true, strict: false });
@@ -60,6 +62,26 @@ export interface StateWriteOptions {
   schema?: string;
 }
 
+/**
+ * Deterministic digest for a state payload. The digest is over compact JSON
+ * with sorted object keys, so semantically identical objects produce the
+ * same value regardless of parser insertion order.
+ */
+export function stateChecksum(data: unknown): string {
+  const stable = canonicalJson(data);
+  return createHash('sha256').update(stable).digest('hex');
+}
+
+function canonicalJson(value: unknown): string {
+  if (value === null || typeof value !== 'object') return JSON.stringify(value);
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
+  const record = value as Record<string, unknown>;
+  return `{${Object.keys(record)
+    .sort()
+    .map((key) => `${JSON.stringify(key)}:${canonicalJson(record[key])}`)
+    .join(',')}}`;
+}
+
 export function writeState(opts: StateWriteOptions): string {
   const schemaPath = opts.schema ?? defaultSchemaPath(opts.repoRoot, opts.file);
   const validate = validatorFor(schemaPath);
@@ -70,8 +92,9 @@ export function writeState(opts: StateWriteOptions): string {
     throw new Error(`state validation failed for ${opts.file}:\n${errs}`);
   }
   const target = resolve(opts.repoRoot, '.hackathon/state', opts.file);
-  mkdirSync(dirname(target), { recursive: true });
-  writeFileSync(target, JSON.stringify(opts.data, null, 2));
+  withFileLockSync(target, () => {
+    atomicWriteFileSync(target, JSON.stringify(opts.data, null, 2));
+  });
   return target;
 }
 

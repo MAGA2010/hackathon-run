@@ -10,7 +10,7 @@ export * from './harness/types.js';
 export { loadAllSkills, loadSkill, findSkillDirs } from './harness/loader.js';
 export { parseFrontmatter, enforceTriggerBudget, TRIGGER_BUDGET } from './harness/frontmatter.js';
 export { matchSkill } from './harness/trigger.js';
-export { readState, writeState } from './harness/state.js';
+export { readState, writeState, stateChecksum } from './harness/state.js';
 export {
   defaultSession,
   readSession,
@@ -27,7 +27,16 @@ export {
   nextUnpassedFeature,
   enforceSprintBudget,
 } from './harness/sprint.js';
-export { appendTrace, readTraces, traceStats, traceFile, traceEnabled } from './harness/trace.js';
+export {
+  appendTrace,
+  readTraces,
+  traceStats,
+  traceFile,
+  traceEnabled,
+  traceEventHash,
+  verifyTraceChain,
+} from './harness/trace.js';
+export { computeWorkspaceDigest } from './harness/workspace.js';
 export {
   progressPath,
   progressExists,

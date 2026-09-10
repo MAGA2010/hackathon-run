@@ -25,6 +25,7 @@ import {
 import { readState, writeState } from '../../harness/state.js';
 import { appendTrace } from '../../harness/trace.js';
 import { readSession, updateSession } from '../../harness/session.js';
+import { syncVerificationToPlan } from '../../harness/verification.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
 
@@ -205,6 +206,7 @@ export function sprint(opts: SprintOptions): number {
       log.err(budget.reason ?? 'budget exhausted');
       return 1;
     }
+    const verificationSync = syncVerificationToPlan(cwd);
     const pending = updateSprint(cwd, { status: 'pending_review' });
     const evalData = buildEvalSkeleton(current);
     writeState({ repoRoot: cwd, file: 'eval.json', data: evalData });
@@ -214,11 +216,24 @@ export function sprint(opts: SprintOptions): number {
       skill: 'sprint',
       status: 'ok',
       summary: `Emitted evaluator handoff for ${current.name}`,
-      data: { verdict: 'pending' },
+      data: {
+        verdict: 'pending',
+        features_synced: verificationSync.updates.length,
+      },
     });
     if (opts.json) {
       console.log(
-        JSON.stringify({ ok: true, action: 'review', sprint: pending, eval: evalData }, null, 2),
+        JSON.stringify(
+          {
+            ok: true,
+            action: 'review',
+            sprint: pending,
+            eval: evalData,
+            verification_sync: verificationSync,
+          },
+          null,
+          2,
+        ),
       );
       return 0;
     }
@@ -264,6 +279,7 @@ export function sprint(opts: SprintOptions): number {
       log.err(`eval verdict is ${verdict ?? 'missing'}; only pass/fail can be accepted`);
       return 1;
     }
+    syncVerificationToPlan(cwd);
 
     const evalCriteria = evalResult.criteria ?? [];
     const allPass =
@@ -300,7 +316,7 @@ export function sprint(opts: SprintOptions): number {
 
     if (allPass) {
       feature.passes = true;
-      feature.evidence = evidence;
+      feature.evidence = [...(feature.evidence ?? []), ...evidence];
       feature.sprint = current.name;
       feature.last_verified_at = now;
       if (opts.owner) feature.owner = opts.owner;
@@ -331,7 +347,7 @@ export function sprint(opts: SprintOptions): number {
         skill: 'sprint',
         status: 'ok',
         summary: `Sprint ${current.name} passed: ${current.feature}`,
-        data: { evidence_count: evidence.length, iterations },
+        data: { evidence_count: feature.evidence.length, iterations },
       });
       if (opts.json) {
         console.log(

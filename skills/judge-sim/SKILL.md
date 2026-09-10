@@ -19,6 +19,8 @@ triggers:
     'what would judges say',
     'review my submission',
   ]
+allowed_tools: [Read, Write, WebFetch]
+capabilities: [fs_read, fs_write, net, env]
 ---
 
 # judge-sim

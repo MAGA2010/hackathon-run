@@ -27,6 +27,8 @@ import { findSkillDirs } from '../../harness/loader.js';
 import { readState, writeState } from '../../harness/state.js';
 import { appendTrace, readTraces } from '../../harness/trace.js';
 import { readSession, updateSession } from '../../harness/session.js';
+import { syncVerificationToPlan } from '../../harness/verification.js';
+import { computeWorkspaceDigest } from '../../harness/workspace.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
 
@@ -252,6 +254,7 @@ interface PlanSnapshot {
     step?: number;
     action: string;
     expected_outcome?: string;
+    feature?: string;
     command?: string;
     timeout_seconds?: number;
   }>;
@@ -355,6 +358,7 @@ function executeScopeKnife(
 function executeFastVerify(python: string, stage: ResolvedStage, cwd: string): number {
   const plan = readFlowPlan(cwd);
   const startedAt = new Date().toISOString();
+  const workspaceDigest = computeWorkspaceDigest(cwd);
   const demoSteps = plan?.demo_path ?? [];
   if (demoSteps.length === 0) {
     return failStage(stage, 'plan.demo_path is empty; run scope-knife first');
@@ -411,6 +415,12 @@ function executeFastVerify(python: string, stage: ResolvedStage, cwd: string): n
       status: passed ? 'pass' : 'fail',
       actual_outcome: parsed?.actual_outcome ?? 'Verification command produced no JSON result.',
       duration_seconds: parsed?.duration_seconds ?? 0,
+      ...(parsed?.exit_code != null ? { exit_code: parsed.exit_code } : {}),
+      ...(parsed?.stdout_sha256 ? { stdout_sha256: parsed.stdout_sha256 } : {}),
+      ...(parsed?.stderr_sha256 ? { stderr_sha256: parsed.stderr_sha256 } : {}),
+      ...(parsed?.cwd ? { cwd: parsed.cwd } : {}),
+      ...(parsed?.started_at ? { started_at: parsed.started_at } : {}),
+      ...(parsed?.finished_at ? { finished_at: parsed.finished_at } : {}),
       ...(parsed?.error_signature ? { error_signature: parsed.error_signature } : {}),
     });
 
@@ -451,10 +461,18 @@ function executeFastVerify(python: string, stage: ResolvedStage, cwd: string): n
       version: '1.0',
       started_at: startedAt,
       finished_at: new Date().toISOString(),
+      workspace_digest: workspaceDigest,
       status: overall,
       steps,
     },
   });
+  const sync = syncVerificationToPlan(cwd);
+  if (sync.updates.length > 0) {
+    const passed = sync.updates.filter((update) => update.passes).length;
+    log.info(
+      `synced fast-verify to plan.json: ${passed}/${sync.updates.length} feature(s) passing`,
+    );
+  }
 
   const artifactDir = join(cwd, '.hackathon', 'artifacts');
   mkdirSync(artifactDir, { recursive: true });

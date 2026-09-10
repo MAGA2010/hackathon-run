@@ -21,9 +21,10 @@ function writeSkill(root, name, body, script) {
 
 describe('hackathon skills audit', () => {
   it('audits the bundled pack without critical findings', () => {
-    const report = auditSkills({ cwd: ROOT });
+    const report = auditSkills({ cwd: ROOT, strict: true });
     assert.equal(report.scanned, 15);
     assert.equal(report.critical, 0);
+    assert.equal(report.high, 0);
     assert.ok(report.skills.every((skill) => Array.isArray(skill.findings)));
   });
 
@@ -130,6 +131,99 @@ describe('hackathon skills audit', () => {
       const report = auditSkills({ cwd: tmp });
       const rules = report.skills[0].findings.map((finding) => finding.rule);
       assert.ok(!rules.includes('allowed-tools.command-not-granted'), JSON.stringify(report));
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('compares observed capabilities with the declared capability set', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'hs-audit-capability-'));
+    try {
+      const dir = writeSkill(
+        tmp,
+        'network-helper',
+        [
+          '---',
+          'name: network-helper',
+          'description: Fetches a remote status document.',
+          'allowed_tools: [Read]',
+          'capabilities: [fs_read]',
+          '---',
+        ].join('\n'),
+        '',
+      );
+      writeFileSync(
+        join(dir, 'scripts', 'fetch.py'),
+        ['import requests', 'def fetch(url):', '    return requests.get(url).text'].join('\n'),
+        'utf8',
+      );
+      const report = auditSkills({ cwd: tmp, strict: true });
+      const skill = report.skills[0];
+      assert.deepEqual(skill.capabilities.declared, ['fs_read']);
+      assert.ok(skill.capabilities.observed.includes('net'));
+      assert.ok(skill.capabilities.undeclared.includes('net'));
+      assert.ok(
+        skill.findings.some((finding) => finding.rule === 'capability.undeclared-net'),
+        JSON.stringify(skill),
+      );
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it('enforces a capability policy and emits SARIF', () => {
+    const tmp = mkdtempSync(join(tmpdir(), 'hs-audit-policy-'));
+    try {
+      const dir = writeSkill(
+        tmp,
+        'network-helper',
+        [
+          '---',
+          'name: network-helper',
+          'description: Fetches a remote status document.',
+          'capabilities: [net]',
+          '---',
+        ].join('\n'),
+        '',
+      );
+      writeFileSync(
+        join(dir, 'scripts', 'fetch.py'),
+        ['import requests', 'def fetch(url):', '    return requests.get(url).text'].join('\n'),
+        'utf8',
+      );
+      const policy = join(tmp, 'policy.json');
+      writeFileSync(policy, JSON.stringify({ deny_capabilities: ['net'] }), 'utf8');
+      const report = auditSkills({ cwd: tmp, policy, strict: true });
+      assert.equal(report.critical, 1);
+      assert.ok(
+        report.skills[0].findings.some(
+          (finding) => finding.rule === 'policy.denied-capability-net',
+        ),
+      );
+
+      const cli = spawnSync(
+        process.execPath,
+        [
+          join(ROOT, 'dist/cli/index.js'),
+          'skills',
+          'audit',
+          '-C',
+          tmp,
+          '--policy',
+          policy,
+          '--sarif',
+        ],
+        { encoding: 'utf8' },
+      );
+      assert.equal(cli.status, 1, cli.stdout + cli.stderr);
+      const sarif = JSON.parse(cli.stdout);
+      assert.equal(sarif.version, '2.1.0');
+      assert.ok(Array.isArray(sarif.runs[0].results));
+      assert.ok(
+        sarif.runs[0].results.some(
+          (result) => result.ruleId === 'policy.denied-capability-net',
+        ),
+      );
     } finally {
       rmSync(tmp, { recursive: true, force: true });
     }

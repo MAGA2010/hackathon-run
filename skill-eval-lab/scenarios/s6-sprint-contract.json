@@ -1,0 +1,184 @@
+{
+  "id": "s6-sprint-contract",
+  "title": "Sprint 契约：default-FAIL 到 evaluator accept",
+  "brief": "验证一个功能从 default-FAIL 契约、预算、评审到 evaluator 给出证据并 accept 的完整闭环。",
+  "expected_skills": ["sprint"],
+  "project": {
+    "name": "SprintDemo",
+    "files": {
+      "README.md": "# SprintDemo\n## Auth\n",
+      "src/auth.py": "def login(user):\n    return True\n"
+    }
+  },
+  "steps": [
+    { "id": "init", "kind": "cli", "args": ["init", "-y"], "expect_exit": 0 },
+    {
+      "id": "write-plan",
+      "kind": "write",
+      "file": ".hackathon/state/plan.json",
+      "content": "{\n  \"version\": \"1.0\",\n  \"generated_at\": \"2026-08-24T08:00:00Z\",\n  \"demo_goal\": \"A user signs in and sees the dashboard.\",\n  \"time_remaining_minutes\": 240,\n  \"features\": [\n    {\n      \"name\": \"Auth\",\n      \"status\": \"half-implemented\",\n      \"classification\": \"KEEP\",\n      \"rationale\": \"Core demo path.\",\n      \"time_estimate_minutes\": 45,\n      \"passes\": false,\n      \"acceptance_criteria\": [\"Login route returns 200 with valid credentials.\"],\n      \"evidence\": []\n    }\n  ],\n  \"demo_path\": [\n    { \"step\": 1, \"action\": \"Open login page.\", \"expected_outcome\": \"Form renders.\" },\n    { \"step\": 2, \"action\": \"Submit credentials.\", \"expected_outcome\": \"Dashboard appears.\" }\n  ],\n  \"next_tasks\": [\n    { \"priority\": \"P0\", \"task\": \"Finish Auth\", \"estimate_minutes\": 45 }\n  ]\n}\n",
+      "expect_exit": 0
+    },
+    {
+      "id": "sprint-new",
+      "kind": "cli",
+      "args": [
+        "sprint",
+        "new",
+        "--feature",
+        "Auth",
+        "--minutes",
+        "45",
+        "--max-iterations",
+        "3",
+        "--json",
+        "-C",
+        "{cwd}"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "sprint-budget",
+      "kind": "cli",
+      "args": [
+        "sprint",
+        "budget",
+        "--minutes",
+        "45",
+        "--max-iterations",
+        "3",
+        "--json",
+        "-C",
+        "{cwd}"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "sprint-status",
+      "kind": "cli",
+      "args": ["sprint", "status", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "sprint-approve",
+      "kind": "cli",
+      "args": ["sprint", "approve", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "sprint-review",
+      "kind": "cli",
+      "args": ["sprint", "review", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "write-eval",
+      "kind": "write",
+      "file": ".hackathon/state/eval.json",
+      "content": "{\n  \"version\": \"1.0\",\n  \"generated_at\": \"2026-08-24T08:30:00Z\",\n  \"sprint\": \"sprint-Auth\",\n  \"verdict\": \"pass\",\n  \"criteria\": [\n    {\n      \"id\": \"c1\",\n      \"description\": \"Login route returns 200 with valid credentials.\",\n      \"passes\": true,\n      \"evidence\": [\n        { \"kind\": \"test\", \"value\": \"npm test -- login\" }\n      ]\n    }\n  ],\n  \"feedback\": []\n}\n",
+      "expect_exit": 0
+    },
+    {
+      "id": "sprint-accept",
+      "kind": "cli",
+      "args": ["sprint", "accept", "--owner", "alice", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    { "id": "eval", "kind": "cli", "args": ["eval", "--json", "-C", "{cwd}"], "expect_exit": 0 },
+    {
+      "id": "status",
+      "kind": "cli",
+      "args": ["status", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "resume",
+      "kind": "cli",
+      "args": ["resume", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    { "id": "trace", "kind": "cli", "args": ["trace", "--json", "-C", "{cwd}"], "expect_exit": 0 },
+    {
+      "id": "validate",
+      "kind": "cli",
+      "args": ["validate", "{cwd}/.hackathon/state"],
+      "expect_exit": 0
+    }
+  ],
+  "assertions": [
+    {
+      "id": "plan-created",
+      "description": "plan.json 含 default-FAIL 功能",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/plan.json"
+    },
+    {
+      "id": "sprint-new",
+      "description": "sprint new 成功",
+      "type": "cli_result",
+      "step": "sprint-new",
+      "op": "exit_equals",
+      "value": 0
+    },
+    {
+      "id": "sprint-approve",
+      "description": "sprint approve 成功",
+      "type": "cli_result",
+      "step": "sprint-approve",
+      "op": "exit_equals",
+      "value": 0
+    },
+    {
+      "id": "sprint-review",
+      "description": "sprint review 生成 eval skeleton",
+      "type": "cli_result",
+      "step": "sprint-review",
+      "op": "exit_equals",
+      "value": 0
+    },
+    {
+      "id": "eval-created",
+      "description": "eval.json 生成且合法",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/eval.json"
+    },
+    {
+      "id": "sprint-accept",
+      "description": "evaluator accept 成功",
+      "type": "cli_result",
+      "step": "sprint-accept",
+      "op": "exit_equals",
+      "value": 0
+    },
+    {
+      "id": "feature-passed",
+      "description": "plan 中 Auth 被 evidence 翻转为 passes=true",
+      "critical": true,
+      "type": "json",
+      "file": ".hackathon/state/plan.json",
+      "path": "features.0.passes",
+      "op": "is_true",
+      "value": true
+    },
+    {
+      "id": "feature-evidence",
+      "description": "Auth 带 machine-readable evidence",
+      "type": "json",
+      "file": ".hackathon/state/plan.json",
+      "path": "features.0.evidence",
+      "op": "length_gte",
+      "value": 1
+    },
+    {
+      "id": "eval-verdict",
+      "description": "eval 显示 pass",
+      "type": "json",
+      "file": ".hackathon/state/eval.json",
+      "path": "verdict",
+      "op": "equals",
+      "value": "pass"
+    }
+  ]
+}

@@ -10,6 +10,11 @@
     "version": { "const": "1.0" },
     "started_at": { "type": "string", "format": "date-time" },
     "finished_at": { "type": "string", "format": "date-time" },
+    "workspace_digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "SHA-256 digest of the source tree at verification time."
+    },
     "status": {
       "enum": ["pass", "fail", "partial", "skipped"],
       "description": "Overall outcome."
@@ -27,6 +32,18 @@
           "expected_outcome": { "type": "string" },
           "actual_outcome": { "type": "string" },
           "status": { "enum": ["pass", "fail", "skip"] },
+          "exit_code": { "type": "integer" },
+          "stdout_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "stderr_sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "cwd": { "type": "string" },
+          "started_at": { "type": "string", "format": "date-time" },
+          "finished_at": { "type": "string", "format": "date-time" },
           "duration_seconds": { "type": "number", "minimum": 0 },
           "error_signature": { "type": "string" },
           "diagnosis": {

@@ -24,14 +24,15 @@ export default [
       'AI-Time-Run-keynote/**',
       '情投音合路演/**',
       'ai-time-run-eval/**',
-      'skill-eval-lab/**',
       '.npm-cache/**',
+      '.review/**',
     ],
   },
   js.configs.recommended,
   {
     files: [
       'scripts/**/*.{mjs,cjs}',
+      'skill-eval-lab/**/*.mjs',
       'examples/**/scripts/**/*.mjs',
       'examples/**/src/**/*.mjs',
       'eslint.config.js',

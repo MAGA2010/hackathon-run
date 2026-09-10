@@ -12,7 +12,9 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 import subprocess
 import sys
 import time
@@ -42,6 +44,10 @@ def expected_is_present(expected: str, stdout: str, stderr: str) -> bool:
     return expected.strip().lower() in haystack
 
 
+def sha256_text(value: str) -> str:
+    return hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--command", required=True)
@@ -49,9 +55,11 @@ def main() -> int:
     ap.add_argument("--timeout", type=int, default=30)
     args = ap.parse_args()
 
+    started_at = datetime.now(timezone.utc).isoformat()
     start = time.time()
     code, stdout, stderr = run(args.command, args.timeout)
     duration = time.time() - start
+    finished_at = datetime.now(timezone.utc).isoformat()
     outcome_present = expected_is_present(args.expected_outcome, stdout, stderr)
     status = "pass" if code == 0 and outcome_present else "fail"
     # Prefer a line that starts with a common error marker.
@@ -73,7 +81,11 @@ def main() -> int:
         "duration_seconds": round(duration, 3),
         "actual_outcome": (stdout.strip().splitlines()[-1] if stdout else "")[:200],
         "error_signature": sig,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "cwd": os.getcwd(),
+        "started_at": started_at,
+        "finished_at": finished_at,
+        "stdout_sha256": sha256_text(stdout),
+        "stderr_sha256": sha256_text(stderr),
     }
     print(json.dumps(result, ensure_ascii=False))
     return 0 if status == "pass" else 1

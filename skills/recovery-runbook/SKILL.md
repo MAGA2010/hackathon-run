@@ -13,6 +13,8 @@ tags: ["fallback", "decision-tree", "30-second"]
 dependencies: ["fast-verify", "demo-coach"]
 side_effects: ["recovery"]
 triggers: ["demo is broken", "fallback", "recovery", "what do we do if X fails", "30-second fallback"]
+allowed_tools: [Read, Write]
+capabilities: [fs_read, fs_write, env]
 ---
 
 # recovery-runbook

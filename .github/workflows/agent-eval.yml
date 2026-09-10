@@ -1,0 +1,81 @@
+name: Agent Eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: Runs per scenario
+        required: true
+        default: '3'
+      min_delta:
+        description: Minimum A/B improvement required
+        required: true
+        default: '0'
+  schedule:
+    - cron: '0 3 * * 1'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-eval-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  agent-eval:
+    name: Model-backed skill evaluation
+    runs-on: ubuntu-latest
+    env:
+      HACKATHON_EVAL_AGENT_COMMAND: ${{ secrets.HACKATHON_EVAL_AGENT_COMMAND }}
+      HACKATHON_EVAL_CONTROL_COMMAND: ${{ secrets.HACKATHON_EVAL_CONTROL_COMMAND }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Build
+        run: npm run build
+
+      - name: Skip when no agent command is configured
+        if: env.HACKATHON_EVAL_AGENT_COMMAND == ''
+        run: echo "::notice::Set HACKATHON_EVAL_AGENT_COMMAND to enable model-backed evaluation."
+
+      - name: Run agent evaluation
+        if: env.HACKATHON_EVAL_AGENT_COMMAND != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            skill-eval-lab/harness.mjs
+            --runner command
+            --agent-command "$HACKATHON_EVAL_AGENT_COMMAND"
+            --runs "${{ inputs.runs || '3' }}"
+            --min-delta "${{ inputs.min_delta || '0' }}"
+            --judge skill-eval-lab/judge.json
+            --min-grade A
+            --fail-on-p1
+          )
+          if [[ -n "${HACKATHON_EVAL_CONTROL_COMMAND:-}" ]]; then
+            args+=(--ab --control-command "$HACKATHON_EVAL_CONTROL_COMMAND")
+          fi
+          node "${args[@]}"
+
+      - name: Upload evaluation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-eval-report
+          path: |
+            skill-eval-lab/results/report.md
+            skill-eval-lab/results/runs/aggregate.json
+          if-no-files-found: ignore

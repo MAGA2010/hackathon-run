@@ -149,6 +149,10 @@ const TOOLS: ToolDef[] = [
         next_task: { type: 'string', description: 'next task for the next session' },
         feature: { type: 'string', description: 'feature worked on' },
         actor: { type: 'string', description: 'actor writing the checkpoint' },
+        compress: {
+          type: 'boolean',
+          description: 'write a bounded SESSION.md handoff summary (<=150 lines)',
+        },
         cwd: { type: 'string', description: 'repo root; defaults to CWD' },
       },
       additionalProperties: false,
@@ -258,6 +262,7 @@ const TOOLS: ToolDef[] = [
       properties: {
         cwd: { type: 'string', description: 'repo root; defaults to CWD' },
         last: { type: 'number', description: 'only return the last N events' },
+        verify: { type: 'boolean', description: 'verify the trace hash chain' },
       },
       additionalProperties: false,
     },
@@ -526,6 +531,7 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
           nextTask: args.next_task ? String(args.next_task) : undefined,
           feature: args.feature ? String(args.feature) : undefined,
           actor: args.actor ? String(args.actor) : undefined,
+          compress: args.compress === true,
           json: true,
         }),
       );
@@ -599,6 +605,7 @@ async function toolCall(name: string, args: Record<string, unknown>): Promise<un
           cwd: String(args.cwd ?? cwd),
           json: true,
           last: args.last != null ? Number(args.last) : undefined,
+          verify: args.verify === true,
         }),
       );
     }

@@ -145,6 +145,7 @@ export function parseFrontmatter(raw: string): ParseResult {
       when_to_use: when_to_use || undefined,
       paths: Array.isArray(fm.paths) ? fm.paths.map(String) : undefined,
       allowed_tools: Array.isArray(fm.allowed_tools) ? fm.allowed_tools.map(String) : undefined,
+      capabilities: Array.isArray(fm.capabilities) ? fm.capabilities.map(String) : undefined,
       model: fm.model ? String(fm.model) : undefined,
       version: fm.version ? String(fm.version) : undefined,
       category: fm.category ? String(fm.category) : undefined,

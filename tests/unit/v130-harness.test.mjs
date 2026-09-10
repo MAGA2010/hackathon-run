@@ -2,7 +2,7 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { mkdtempSync, mkdirSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -19,6 +19,7 @@ import {
 import { appendTrace, readTraces, traceStats } from '../../dist/harness/trace.js';
 import { readState, writeState } from '../../dist/harness/state.js';
 import { appendProgress, progressPath, readProgress } from '../../dist/harness/progress.js';
+import { syncVerificationToPlan } from '../../dist/harness/verification.js';
 import {
   isStopped,
   stopMessage,
@@ -129,6 +130,147 @@ describe('agent-maintained progress', () => {
     assert.equal(session.current_stage, 'verifying');
     rmSync(repo, { recursive: true, force: true });
   });
+
+  it('checkpoint --compress writes a bounded SESSION.md without truncating raw trace', () => {
+    const repo = makeHarnessRepo();
+    writeState({ repoRoot: repo, file: 'plan.json', data: validPlan() });
+    appendTrace(repo, {
+      type: 'session.checkpoint',
+      actor: 'test',
+      status: 'ok',
+      summary: 'previous checkpoint',
+    });
+    const r = spawnSync(
+      process.execPath,
+      [
+        CLI,
+        'checkpoint',
+        '--summary',
+        'Compressed the handoff.',
+        '--stage',
+        'building',
+        '--compress',
+        '--json',
+        '-C',
+        repo,
+      ],
+      { encoding: 'utf8' },
+    );
+    assert.equal(r.status, 0, r.stderr);
+    const payload = JSON.parse(r.stdout);
+    assert.ok(payload.compressed_session.endsWith('SESSION.md'));
+    assert.ok(payload.compressed_lines <= 150);
+    const brief = readFileSync(join(repo, '.hackathon', 'SESSION.md'), 'utf8');
+    assert.match(brief, /Compressed the handoff\./);
+    assert.match(brief, /Raw trace:.*append-only events/);
+    assert.ok(readTraces(repo).length >= 2);
+    rmSync(repo, { recursive: true, force: true });
+  });
+});
+
+describe('fast-verify plan synchronization', () => {
+  it('flips a mapped feature to pass and records command evidence', () => {
+    const repo = makeHarnessRepo();
+    const plan = validPlan();
+    plan.demo_path[0].feature = 'Auth';
+    plan.demo_path[0].command = 'npm test -- auth';
+    writeState({ repoRoot: repo, file: 'plan.json', data: plan });
+    writeState({
+      repoRoot: repo,
+      file: 'verify.json',
+      data: {
+        version: '1.0',
+        started_at: '2026-09-10T00:00:00Z',
+        finished_at: '2026-09-10T00:00:01Z',
+        status: 'pass',
+        steps: [
+          {
+            step: 1,
+            action: 'Open app',
+            command: 'npm test -- auth',
+            expected_outcome: 'Loads',
+            actual_outcome: 'Loads',
+            status: 'pass',
+          },
+        ],
+      },
+    });
+
+    const result = syncVerificationToPlan(repo);
+    assert.equal(result.synced, true);
+    assert.equal(result.updates.length, 1);
+    assert.equal(result.updates[0].passes, true);
+    const synced = readState({ repoRoot: repo, file: 'plan.json' });
+    assert.equal(synced.features[0].passes, true);
+    assert.equal(synced.features[0].evidence[0].source, 'fast-verify');
+    assert.equal(synced.features[0].evidence[0].value, 'npm test -- auth');
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('resets a mapped feature to fail when verification fails', () => {
+    const repo = makeHarnessRepo();
+    const plan = validPlan();
+    plan.features[0].passes = true;
+    plan.features[0].evidence = [{ kind: 'test', value: 'old evidence' }];
+    plan.demo_path[0].feature = 'Auth';
+    writeState({ repoRoot: repo, file: 'plan.json', data: plan });
+    writeState({
+      repoRoot: repo,
+      file: 'verify.json',
+      data: {
+        version: '1.0',
+        started_at: '2026-09-10T00:00:00Z',
+        finished_at: '2026-09-10T00:00:01Z',
+        status: 'fail',
+        steps: [
+          {
+            step: 1,
+            action: 'Open app',
+            command: 'npm test -- auth',
+            expected_outcome: 'Loads',
+            actual_outcome: 'Connection refused',
+            error_signature: 'ECONNREFUSED',
+            status: 'fail',
+          },
+        ],
+      },
+    });
+
+    const result = syncVerificationToPlan(repo);
+    assert.equal(result.updates[0].passes, false);
+    const synced = readState({ repoRoot: repo, file: 'plan.json' });
+    assert.equal(synced.features[0].passes, false);
+    assert.equal(synced.features[0].evidence.length, 2);
+    assert.match(synced.features[0].evidence[1].value, /ECONNREFUSED/);
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('does not pass a feature when an owned step was never verified', () => {
+    const repo = makeHarnessRepo();
+    const plan = validPlan();
+    plan.demo_path = [
+      { step: 1, action: 'Open app', expected_outcome: 'Loads', feature: 'Auth' },
+      { step: 2, action: 'Sign up', expected_outcome: 'Dashboard', feature: 'Auth' },
+    ];
+    writeState({ repoRoot: repo, file: 'plan.json', data: plan });
+    writeState({
+      repoRoot: repo,
+      file: 'verify.json',
+      data: {
+        version: '1.0',
+        started_at: '2026-09-10T00:00:00Z',
+        finished_at: '2026-09-10T00:00:01Z',
+        status: 'pass',
+        steps: [{ step: 1, action: 'Open app', status: 'pass' }],
+      },
+    });
+
+    const result = syncVerificationToPlan(repo);
+    assert.equal(result.updates[0].passes, false);
+    const synced = readState({ repoRoot: repo, file: 'plan.json' });
+    assert.equal(synced.features[0].passes, false);
+    rmSync(repo, { recursive: true, force: true });
+  });
 });
 
 describe('operator controls', () => {
@@ -218,6 +360,59 @@ describe('sprint contract', () => {
     const evalData = readState({ repoRoot: repo, file: 'eval.json' });
     assert.equal(evalData.criteria[0].weight, 0.5);
     assert.equal(evalData.criteria[0].threshold, 4);
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('sprint review applies an existing fast-verify result', () => {
+    const repo = makeHarnessRepo();
+    const plan = validPlan();
+    plan.demo_path[0].feature = 'Auth';
+    plan.demo_path[0].command = 'npm test -- auth';
+    writeState({ repoRoot: repo, file: 'plan.json', data: plan });
+    writeState({
+      repoRoot: repo,
+      file: 'verify.json',
+      data: {
+        version: '1.0',
+        started_at: '2026-09-10T00:00:00Z',
+        finished_at: '2026-09-10T00:00:01Z',
+        status: 'pass',
+        steps: [
+          {
+            step: 1,
+            action: 'Open app',
+            command: 'npm test -- auth',
+            expected_outcome: 'Loads',
+            actual_outcome: 'Loads',
+            status: 'pass',
+          },
+        ],
+      },
+    });
+    writeSprint(repo, {
+      ...defaultSprint({
+        name: 'sprint-Auth',
+        goal: 'A user can sign up and see the dashboard.',
+        feature: 'Auth',
+        status: 'approved',
+        criteria: [
+          {
+            id: 'c1',
+            description: 'A user can sign up and see the dashboard.',
+            passes: false,
+            evidence: [],
+          },
+        ],
+      }),
+    });
+    const r = spawnSync(process.execPath, [CLI, 'sprint', 'review', '--json', '-C', repo], {
+      encoding: 'utf8',
+    });
+    assert.equal(r.status, 0, r.stderr);
+    const payload = JSON.parse(r.stdout);
+    assert.equal(payload.verification_sync.updates.length, 1);
+    const synced = readState({ repoRoot: repo, file: 'plan.json' });
+    assert.equal(synced.features[0].passes, true);
     rmSync(repo, { recursive: true, force: true });
   });
 });

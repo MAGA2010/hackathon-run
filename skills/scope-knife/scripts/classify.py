@@ -55,12 +55,24 @@ def stem_word(word: str) -> str:
 
 
 def demo_relevance(demo_goal: str, feature_name: str) -> int:
-    """Count demo-goal stems that appear inside a feature name."""
-    goal_tokens = set(re.findall(r"[a-z0-9]+", demo_goal.lower()))
+    """Score the strongest stem overlap between a goal clause and feature name.
+
+    Joining every token in a multi-clause goal can over-credit a feature that
+    appears in two clauses but is not the core action. Taking the best single
+    clause keeps the action phrase authoritative.
+    """
     name_tokens = set(re.findall(r"[a-z0-9]+", feature_name.lower()))
-    goal_stems = {stem_word(w) for w in goal_tokens if len(w) >= 4}
     name_stems = {stem_word(w) for w in name_tokens if len(w) >= 4}
-    return len(goal_stems & name_stems)
+    clauses = re.split(r"\b(?:and|then)\b|[,;]", demo_goal.lower())
+    scores = []
+    for clause in clauses:
+        goal_stems = {
+            stem_word(w)
+            for w in re.findall(r"[a-z0-9]+", clause)
+            if len(w) >= 4
+        }
+        scores.append(len(goal_stems & name_stems))
+    return max(scores, default=0)
 
 
 def pressure_cut_rate(time_remaining_minutes: int) -> float:
@@ -185,9 +197,26 @@ def classify(features: list[dict], demo_goal: str,
     return classified, warnings
 
 
-def build_demo_path(demo_goal: str) -> list[dict]:
-    """Return the canonical four-step judge-facing demo path."""
-    return [
+def build_demo_path(demo_goal: str, classified: list[dict]) -> list[dict]:
+    """Return the canonical four-step judge-facing demo path.
+
+    Steps that exercise product state point at the most demo-relevant KEEP
+    feature so fast-verify can synchronize evidence back to plan.features.
+    """
+    keep_features = [f for f in classified if f.get("classification") == "KEEP"]
+    core_feature = None
+    if keep_features:
+        core_feature = max(
+            keep_features,
+            key=lambda f: (
+                demo_relevance(demo_goal, f["name"]),
+                f.get("status") != "implemented",
+                f.get("wsjf_score", 0),
+            ),
+        )
+    core_name = core_feature["name"] if core_feature else None
+
+    demo_path = [
         {
             "step": 1,
             "action": "Open the app URL.",
@@ -209,6 +238,10 @@ def build_demo_path(demo_goal: str) -> list[dict]:
             "expected_outcome": "Judges understand the value.",
         },
     ]
+    if core_name:
+        demo_path[1]["feature"] = core_name
+        demo_path[2]["feature"] = core_name
+    return demo_path
 
 
 def build_next_tasks(classified: list[dict]) -> list[dict]:
@@ -303,7 +336,7 @@ if __name__ == '__main__':
         'demo_goal': args.demo_goal,
         'time_remaining_minutes': args.time_remaining,
         'features': [serialize_feature(f) for f in classified],
-        'demo_path': build_demo_path(args.demo_goal),
+        'demo_path': build_demo_path(args.demo_goal, classified),
         'next_tasks': build_next_tasks(classified),
     }
     (out / 'state' / 'plan.json').write_text(json.dumps(plan, indent=2) + '\n', encoding='utf-8')

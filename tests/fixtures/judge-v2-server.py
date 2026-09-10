@@ -2,20 +2,34 @@
 """Tiny protocol-v2 mock judge used by acceptance tests."""
 
 import json
-import sys
+from argparse import ArgumentParser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 
+GOLDEN_CASES = []
+
+
 class Handler(BaseHTTPRequestHandler):
+    request_index = 0
+
     def do_POST(self):
         length = int(self.headers.get("Content-Length", "0"))
         request = json.loads(self.rfile.read(length))
         assert request.get("protocol") == "hackathon-run.judge.v2"
         assert len(request.get("rubric", {}).get("dimensions", [])) == 7
+        expected = (
+            GOLDEN_CASES[Handler.request_index % len(GOLDEN_CASES)]
+            if GOLDEN_CASES
+            else None
+        )
         dimensions = [
             {
                 "name": item["name"],
-                "score": (index % 5),
+                "score": (
+                    expected["expected"].get(item["name"], index % 5)
+                    if expected is not None
+                    else index % 5
+                ),
                 "rationale": f"Mock rationale for {item['name']}.",
                 "confidence": 0.85,
                 "evidence": [{"kind": "test", "value": "acceptance mock evidence"}],
@@ -24,6 +38,7 @@ class Handler(BaseHTTPRequestHandler):
             }
             for index, item in enumerate(request["rubric"]["dimensions"])
         ]
+        Handler.request_index += 1
         response = {
             "protocol": "hackathon-run.judge.v2",
             "request_id": request.get("request_id"),
@@ -44,9 +59,16 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main():
-    port_file = sys.argv[1]
+    global GOLDEN_CASES
+    parser = ArgumentParser()
+    parser.add_argument("port_file")
+    parser.add_argument("--golden")
+    args = parser.parse_args()
+    if args.golden:
+        with open(args.golden, encoding="utf-8") as handle:
+            GOLDEN_CASES = json.load(handle)["cases"]
     server = HTTPServer(("127.0.0.1", 0), Handler)
-    with open(port_file, "w", encoding="utf-8") as handle:
+    with open(args.port_file, "w", encoding="utf-8") as handle:
         handle.write(str(server.server_port))
     server.serve_forever()
 

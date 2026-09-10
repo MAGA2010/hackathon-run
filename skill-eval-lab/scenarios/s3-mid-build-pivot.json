@@ -1,0 +1,226 @@
+{
+  "id": "s3-mid-build-pivot",
+  "title": "中道转向：从预测展示改为学生预购",
+  "brief": "第 2 天上午，评委反馈「预测仪表盘不够打动用户」，团队决定转向让学生预购剩余餐食。还剩 10 小时，要求保留已有菜单同步和预测核心。",
+  "expected_skills": ["pivot", "scope-knife", "decision-log", "team-roster", "time-box"],
+  "project": {
+    "name": "WasteStop",
+    "files": {
+      "README.md": "# WasteStop\n## AI Predictor\n## Menu Sync\n## Allergen Alerts\n## Admin Dashboard\n## Rewards Program\n",
+      "package.json": "{\n  \"name\": \"wastestop\",\n  \"version\": \"0.3.0\"\n}\n",
+      "src/predict.py": "def predict(menu):\n    return []\n",
+      "src/menu.py": "def sync_menu():\n    return []\n",
+      "src/dashboard.py": "def render():\n    return {}\n"
+    }
+  },
+  "steps": [
+    { "id": "init", "kind": "cli", "args": ["init", "-y"], "expect_exit": 0 },
+    {
+      "id": "scan-old",
+      "kind": "python",
+      "script": "skills/scope-knife/scripts/scan_repo.py",
+      "args": ["{cwd}"],
+      "capture": "inventory.json",
+      "expect_exit": 0
+    },
+    {
+      "id": "scope-old",
+      "kind": "python",
+      "script": "skills/scope-knife/scripts/classify.py",
+      "args": [
+        "--inventory",
+        "{cwd}/inventory.json",
+        "--demo-goal",
+        "Show predicted canteen waste on a dashboard.",
+        "--time-remaining",
+        "600",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "write-pivot-report",
+      "kind": "write",
+      "file": ".hackathon/artifacts/pivot-report.md",
+      "content": "# Pivot report\n\n- Previous plan: AI Predictor KEEP, Menu Sync KEEP, Dashboard KEEP\n- New direction: students prebook surplus meals\n- Preserve: AI Predictor, Menu Sync\n- Rewrite: Admin Dashboard -> Prebooking flow\n- New demo goal: A student sees tomorrow's surplus and prebooks one meal.\n- Next step: hackathon run scope-knife with the new brief.\n",
+      "expect_exit": 0
+    },
+    {
+      "id": "write-roster",
+      "kind": "write",
+      "file": ".hackathon/state/roster.json",
+      "content": "{\n  \"version\": \"1.0\",\n  \"generated_at\": \"2026-08-24T08:00:00Z\",\n  \"team_size\": 4,\n  \"members\": [\n    { \"name\": \"alice\", \"role\": \"PM\", \"features\": [\"Prebooking Flow\"], \"status\": \"ok\" },\n    { \"name\": \"bob\", \"role\": \"Backend\", \"features\": [\"AI Predictor\"], \"status\": \"ok\" },\n    { \"name\": \"carol\", \"role\": \"Frontend\", \"features\": [\"Prebooking UI\"], \"status\": \"stuck\", \"blocker\": \"Waiting for API contract\" },\n    { \"name\": \"dave\", \"role\": \"QA\", \"features\": [\"Menu Sync\"], \"status\": \"free\" }\n  ],\n  \"bottleneck\": { \"member\": \"carol\", \"reason\": \"Frontend blocked on API contract\" },\n  \"free_members\": [\"dave\"]\n}\n",
+      "expect_exit": 0
+    },
+    {
+      "id": "write-roster-md",
+      "kind": "write",
+      "file": ".hackathon/artifacts/roster.md",
+      "content": "# Roster\n\n- PM alice -> Prebooking Flow\n- Backend bob -> AI Predictor\n- Frontend carol -> Prebooking UI [stuck: API contract]\n- QA dave -> Menu Sync [free]\n\nBottleneck: carol.\n",
+      "expect_exit": 0
+    },
+    {
+      "id": "scope-new",
+      "kind": "python",
+      "script": "skills/scope-knife/scripts/classify.py",
+      "args": [
+        "--inventory",
+        "{cwd}/inventory.json",
+        "--demo-goal",
+        "A student sees tomorrow's surplus and prebooks one meal.",
+        "--time-remaining",
+        "600",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "log-pivot",
+      "kind": "python",
+      "script": "skills/decision-log/scripts/log_decision.py",
+      "args": [
+        "--feature",
+        "Admin Dashboard",
+        "--classification",
+        "PIVOT",
+        "--rationale",
+        "Judge feedback says prediction dashboard is not compelling enough.",
+        "--author",
+        "alice",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "log-cut",
+      "kind": "python",
+      "script": "skills/decision-log/scripts/log_decision.py",
+      "args": [
+        "--feature",
+        "Rewards Program",
+        "--classification",
+        "CUT",
+        "--rationale",
+        "Off the new prebooking demo path.",
+        "--author",
+        "dave",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "timebox",
+      "kind": "python",
+      "script": "skills/time-box/scripts/compute.py",
+      "args": [
+        "--time-remaining",
+        "600",
+        "--team-size",
+        "4",
+        "--current-stage",
+        "build",
+        "--out-dir",
+        "{cwd}/.hackathon"
+      ],
+      "expect_exit": 0
+    },
+    {
+      "id": "status",
+      "kind": "cli",
+      "args": ["status", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    {
+      "id": "resume",
+      "kind": "cli",
+      "args": ["resume", "--json", "-C", "{cwd}"],
+      "expect_exit": 0
+    },
+    { "id": "trace", "kind": "cli", "args": ["trace", "--json", "-C", "{cwd}"], "expect_exit": 0 },
+    {
+      "id": "validate",
+      "kind": "cli",
+      "args": ["validate", "{cwd}/.hackathon/state"],
+      "expect_exit": 0
+    }
+  ],
+  "assertions": [
+    {
+      "id": "pivot-report",
+      "description": "pivot-report.md 生成且给出保留/重写判断",
+      "critical": true,
+      "type": "text",
+      "file": ".hackathon/artifacts/pivot-report.md",
+      "op": "contains",
+      "value": "Preserve"
+    },
+    {
+      "id": "roster-created",
+      "description": "roster.json 生成且合法",
+      "critical": true,
+      "type": "json_valid",
+      "file": ".hackathon/state/roster.json"
+    },
+    {
+      "id": "roster-members",
+      "description": "roster 覆盖 4 名成员",
+      "type": "json",
+      "file": ".hackathon/state/roster.json",
+      "path": "members",
+      "op": "length_gte",
+      "value": 4
+    },
+    {
+      "id": "roster-bottleneck",
+      "description": "roster 识别 bottleneck",
+      "type": "json",
+      "file": ".hackathon/state/roster.json",
+      "path": "bottleneck.member",
+      "op": "not_equals",
+      "value": ""
+    },
+    {
+      "id": "new-goal",
+      "description": "新 plan 转向预购目标",
+      "type": "text",
+      "file": ".hackathon/state/plan.json",
+      "op": "contains",
+      "value": "prebooks"
+    },
+    {
+      "id": "decision-pivot",
+      "description": "decision-log 记录 PIVOT",
+      "type": "text",
+      "file": ".hackathon/state/decision-log.json",
+      "op": "contains",
+      "value": "\"PIVOT\""
+    },
+    {
+      "id": "decision-cut",
+      "description": "decision-log 记录 CUT",
+      "type": "text",
+      "file": ".hackathon/state/decision-log.json",
+      "op": "contains",
+      "value": "\"CUT\""
+    },
+    {
+      "id": "timebox-created",
+      "description": "转向后重新排期",
+      "type": "json_valid",
+      "file": ".hackathon/state/time-box.json"
+    },
+    {
+      "id": "timebox-schedule",
+      "description": "转向后排期非空",
+      "type": "json",
+      "file": ".hackathon/state/time-box.json",
+      "path": "schedule",
+      "op": "length_gte",
+      "value": 1
+    }
+  ]
+}

@@ -13,6 +13,8 @@ tags: ['smoke-test', 'cross-platform', '30-second']
 dependencies: ['scope-knife']
 side_effects: ['verify']
 triggers: ['verify it works', 'smoke test', 'does it run', 'does the demo run', 'quick check', 'fast verify']
+allowed_tools: [Read, Bash]
+capabilities: [fs_read, exec]
 ---
 
 # fast-verify
@@ -63,6 +65,7 @@ If a step fails, run `scripts/diagnose.py`:
 
 - `.hackathon/state/verify.json` (matches `verify.schema.json`)
 - `.hackathon/artifacts/fast-verify-output.md` (human-readable run log)
+- `.hackathon/state/plan.json` (syncs mapped `features[].passes` + evidence)
 
 ## Output contract
 
@@ -77,6 +80,7 @@ Files written:
 - [ ] Records actual outcome per step.
 - [ ] Stops at first failure.
 - [ ] Cannot mark unverified items as PASS.
+- [ ] Synchronizes mapped demo-step results back to `plan.features[].passes`.
 - [ ] Emits a one-line fix suggestion for the failing step.
 
 ## Failure modes

@@ -21,6 +21,14 @@ Each skill writes JSON state files into `.hackathon/state/`. Schemas live in
 | `sprint.json`       | `hackathon sprint`        | generator, evaluator                                 |
 | `eval.json`         | `hackathon sprint review` | evaluator, generator feedback loop                   |
 
+`plan.demo_path[].feature` optionally maps a demo step to a KEEP feature.
+`fast-verify` uses that mapping to update `features[].passes` and attach
+command/log evidence. Evidence written automatically carries
+`source: "fast-verify"` so later runs replace it without deleting evaluator
+or manual evidence. `verify.json` records a workspace digest and per-step
+command evidence. If source files change, the next sync marks that evidence
+stale and resets `passes` to false.
+
 ## Why JSON + Schema?
 
 - **Inspectable**: open any state file with a text editor.

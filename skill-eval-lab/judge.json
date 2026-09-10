@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "source": "expert-rubric",
+  "scores": {
+    "s1-green-tech-48h": {
+      "goal_alignment": 2,
+      "specificity": 4,
+      "actionability": 4,
+      "risk_awareness": 3,
+      "consistency": 2,
+      "notes": "Order Prebooking 是 demo 目标核心却被 DEFER；prize 命中 Best UX 而非可持续赛道；scan 还混入 Demo/GreenFork/Run 等伪 feature。"
+    },
+    "s2-demo-crash-3h": {
+      "goal_alignment": 5,
+      "specificity": 5,
+      "actionability": 5,
+      "risk_awareness": 5,
+      "consistency": 4,
+      "notes": "P0 runbook、30 秒脚本、密钥扫描、dry-run 演练都成立；dry-run 会把所有 segment 标为 broken，但用于 smoke test 可接受。"
+    },
+    "s3-mid-build-pivot": {
+      "goal_alignment": 4,
+      "specificity": 4,
+      "actionability": 4,
+      "risk_awareness": 4,
+      "consistency": 4,
+      "notes": "pivot-report 与 roster 为按 SKILL.md 契约手工生成的 agent artifact，结构完整，但不是脚本自动产出。"
+    },
+    "s4-post-mortem": {
+      "goal_alignment": 5,
+      "specificity": 4,
+      "actionability": 4,
+      "risk_awareness": 4,
+      "consistency": 5,
+      "notes": "retro 四比例、三个 bucket、evidence 指向齐全；retro 同样为手工 artifact。"
+    },
+    "s6-sprint-contract": {
+      "goal_alignment": 5,
+      "specificity": 5,
+      "actionability": 5,
+      "risk_awareness": 4,
+      "consistency": 5,
+      "notes": "default-FAIL -> approve -> review -> evaluator evidence -> accept 闭环完整。"
+    }
+  }
+}

@@ -12,6 +12,8 @@ tags: ['audit', 'release', 'non-fatal-webhook']
 dependencies: ['judge-sim']
 side_effects: ['ship']
 triggers: ['ship it', 'submit', 'package the submission', 'final audit', 'release']
+allowed_tools: [Read, Write, WebFetch]
+capabilities: [fs_read, fs_write, net, env]
 ---
 
 # ship-pack

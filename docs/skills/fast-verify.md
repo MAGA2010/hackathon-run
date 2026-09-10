@@ -16,6 +16,7 @@ After scope-knife produces a demo_path, run this skill before declaring any feat
 ## Outputs
 
 - `.hackathon/state/verify.json` — Per-step pass/fail with timing and error signature; matches verify.schema.json.
+- `.hackathon/state/plan.json` — `features[].passes` and evidence are synchronized for demo steps that declare a `feature` owner.
 
 ## Example
 
@@ -50,6 +51,7 @@ Output (verify.json highlights)
 - [ ] Failed steps include `error_signature` and `diagnosis.{likely_cause, minimal_fix, re_verify_command}`.
 - [ ] Total duration recorded; overall status is `pass` only when all steps pass.
 - [ ] verify.json validates against verify.schema.json.
+- [ ] Mapped plan features are true only when every owned executable step passes.
 
 ## Failure modes
 

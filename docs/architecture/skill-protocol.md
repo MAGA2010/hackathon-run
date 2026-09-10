@@ -39,9 +39,16 @@ category:
 tags: ['mvp', 'demo-path'] # optional
 dependencies: ['scope-knife'] # optional: skills this skill consumes
 side_effects: ['plan'] # optional: state files this skill writes (stem names)
+capabilities: [fs_read, exec] # optional: audited runtime capabilities
 triggers: # optional: explicit trigger phrases
   - 'too many features'
 ```
+
+`capabilities` uses the canonical set `fs_read`, `fs_write`, `net`, `exec`,
+`env`, and `mcp`. `hackathon skills audit` compares declared capabilities
+with script behavior and reports undeclared capabilities. `allowed_tools`
+still records the runtime tool grant, but it is not a substitute for the
+capability declaration.
 
 ### v1.2 third-party manifest fields
 
@@ -79,7 +86,8 @@ reranking, but the offline matcher remains the fallback.
 
 Critical findings fail by default. Pass `--strict` to fail on high findings.
 Use `--risk-summary` for a compact install decision (`yes`, `no`, or
-`with-caveats`) with per-skill categories.
+`with-caveats`) with per-skill categories. `--policy <file>` can deny
+capabilities or rules, and `--sarif` emits SARIF 2.1.0 for code scanning.
 
 ## SKILL.md body
 

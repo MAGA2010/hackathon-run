@@ -69,7 +69,7 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 
 ## Now (1.2.x)
 
-- [ ] **Re-enable GitHub Pages deployment** — `docs.yml` build step is green; the deploy step needs Pages enabled in repo settings (Source: GitHub Actions).
+- [ ] **Re-enable GitHub Pages deployment** — enable Pages in repo settings and set the `ENABLE_GITHUB_PAGES=true` repository variable; `docs.yml` builds and uploads the artifact either way.
 
 ## Later (1.3.x)
 

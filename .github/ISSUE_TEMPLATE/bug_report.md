@@ -28,7 +28,7 @@ assignees: []
 
 - OS:
 - Node version (`node --version`):
-- Python version (`python3 --version`):
+- Python version (`python3 --version`, or `py -3 --version` on Windows):
 - `hackathon-run` version (`hackathon --version`):
 
 ## Logs / screenshots

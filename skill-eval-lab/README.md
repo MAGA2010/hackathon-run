@@ -1,7 +1,7 @@
 # Hackathon Run Skill Evaluation Lab
 
-本目录是一套可重复运行的 **skill 专业测评实验室**，用于对
-`D:\personal skill\SKILL.md`（`hackathon-run` v1.3.0）做执行型跑分。
+本目录是一套可重复运行的 **skill 专业测评实验室**，对
+`hackathon-run` v1.5+ skill pack 做执行型跑分、契约检查和 A/B 对比。
 
 ## 测评对象
 
@@ -40,9 +40,15 @@ skill-eval-lab/
 
 ## 如何运行
 
-```powershell
-cd "D:\personal skill"
+```bash
 node skill-eval-lab/harness.mjs --scenarios skill-eval-lab/scenarios --out skill-eval-lab/results
+```
+
+从源码运行时先构建共享模块：
+
+```bash
+npm run build
+npm run test:skill-eval
 ```
 
 CI uses the same harness as a grade gate:
@@ -51,14 +57,17 @@ CI uses the same harness as a grade gate:
 npm run test:skill-eval
 ```
 
-This requires grade A with zero critical failures and zero P1 findings.
-Generated `results/` files stay untracked.
+该门禁要求 grade A、零 critical failure、零 P1 finding。`results/` 下的
+完整运行目录保持未跟踪，CI 只上传 `report.md`、`final.json` 和
+`runs/aggregate.json`。
 
 环境要求：
 
-- Node.js 20+
-- Python 3（可在 `PYTHON` 环境变量中指定路径）
-- 未设置 `PYTHON` 时，harness 自动寻找系统 `python3` / `python`
+- Node.js 20.9+
+- Python 3.11+
+- 共享 resolver 的顺序为 `PYTHON` → `python3` → `python` → Windows
+  `py -3`。可用 `PYTHON` 指定绝对路径；CLI 的 `doctor`、`flow` 与本
+  harness 会选到同一个解释器。
 
 ## 报告输出
 
@@ -68,3 +77,6 @@ Generated `results/` files stay untracked.
 - `runs/aggregate.json`：机器可读的断言与评分结果
 - `report.md`：专业评分报告
 - `final.json`：最终分数、等级与 CI gate
+
+GitHub Actions 会把上述三份汇总资产作为 `quality-reports` artifact
+上传；路由 golden set 同时生成 `routing-report.json`。

@@ -35,9 +35,9 @@ runs:
       shell: bash
       run: |
         if [ "${{ inputs.version }}" = "latest" ]; then
-          npm install -g @maga2010/hackathon-run
+          npm install -g @hackathon-run/hackathon-run
         else
-          npm install -g "@maga2010/hackathon-run@${{ inputs.version }}"
+          npm install -g "@hackathon-run/hackathon-run@${{ inputs.version }}"
         fi
 
     - name: Run

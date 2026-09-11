@@ -38,14 +38,93 @@ function makeRepo(files) {
   return repo;
 }
 
-const emptyPlan = () => ({
+const now = () => new Date().toISOString();
+
+const validPlan = () => ({
   version: '1.0',
-  generated_at: new Date().toISOString(),
-  demo_goal: 'x',
+  generated_at: now(),
+  demo_goal: 'A user signs up and saves a note.',
   time_remaining_minutes: 60,
-  features: [],
-  demo_path: [],
-  next_tasks: [],
+  features: [
+    {
+      name: 'Auth',
+      status: 'implemented',
+      classification: 'KEEP',
+      rationale: 'Core demo path.',
+      passes: true,
+    },
+  ],
+  demo_path: [
+    {
+      step: 1,
+      action: 'Open the app.',
+      expected_outcome: 'The landing page renders.',
+      command: 'node -e "console.log(\'ok\')"',
+    },
+  ],
+  next_tasks: [{ priority: 'P0', task: 'Rehearse.', estimate_minutes: 10 }],
+});
+
+const validVerify = () => ({
+  version: '1.0',
+  started_at: now(),
+  finished_at: now(),
+  status: 'pass',
+  steps: [{ step: 1, action: 'Open the app.', status: 'pass' }],
+});
+
+const validDemo = () => {
+  const names = ['opening', 'pain', 'product', 'core_action', 'result', 'close'];
+  return {
+    version: '1.0',
+    generated_at: now(),
+    duration_seconds: 60,
+    one_liner: 'A fast way to save your first note.',
+    steps: names.map((name, index) => ({
+      name,
+      max_seconds: 10,
+      say: `Step ${index + 1} says what the product does.`,
+      click: `Action ${index + 1}.`,
+      show: `Result ${index + 1}.`,
+      not: `Avoid mistake ${index + 1}.`,
+      risks: [],
+    })),
+  };
+};
+
+const validReview = () => {
+  const names = [
+    'problem_clarity',
+    'originality',
+    'completeness',
+    'technical_depth',
+    'demo_quality',
+    'business_value',
+    'submission_readiness',
+  ];
+  return {
+    version: '1.0',
+    generated_at: now(),
+    overall: 4,
+    dimensions: names.map((name) => ({
+      name,
+      score: 4,
+      deduction_reason: `${name} is clear.`,
+      judge_questions: ['What changed?', 'Why does it matter?'],
+      improvements: [],
+    })),
+    fix_priorities: { fix_now: [], fix_last_10min: [], do_not_touch: [] },
+  };
+};
+
+const validShip = () => ({
+  version: '1.0',
+  generated_at: now(),
+  readme: { present: ['name', 'run'], missing: [] },
+  secret_scan: { clean: true, findings: [] },
+  checklist: { passed: ['readme'], failed: [] },
+  reproducible: { ok: true, reason: 'README + dependency manifest present.' },
+  packaging_command: 'tar czf submit.tar.gz --exclude=node_modules .',
 });
 
 describe('buildPlan', () => {
@@ -59,7 +138,7 @@ describe('buildPlan', () => {
   });
 
   it('marks stage 1 done when plan.json exists', () => {
-    const repo = makeRepo({ 'plan.json': emptyPlan() });
+    const repo = makeRepo({ 'plan.json': validPlan() });
     const plan = buildPlan({ cwd: repo });
     assert.equal(plan.stages[0].done, true);
     assert.equal(plan.cursor, 1);
@@ -68,30 +147,37 @@ describe('buildPlan', () => {
 
   it('marks all stages done when all 5 files exist', () => {
     const repo = makeRepo({
-      'plan.json': emptyPlan(),
-      'verify.json': {
-        version: '1.0',
-        started_at: new Date().toISOString(),
-        status: 'pass',
-        steps: [],
-      },
-      'demo.json': { version: '1.0', duration_seconds: 60, one_liner: 'x', steps: [] },
-      'review.json': {
-        version: '1.0',
-        overall: 4,
-        dimensions: [],
-        fix_priorities: { fix_now: [], fix_later: [] },
-      },
-      'ship.json': {
-        version: '1.0',
-        secret_scan: { clean: true, findings: [] },
-        checklist: { passed: [], failed: [] },
-        packaging_command: '',
-      },
+      'plan.json': validPlan(),
+      'verify.json': validVerify(),
+      'demo.json': validDemo(),
+      'review.json': validReview(),
+      'ship.json': validShip(),
     });
     const plan = buildPlan({ cwd: repo });
     assert.equal(plan.cursor, 5);
+    assert.equal(plan.lifecycle, 'complete');
     assert.equal(plan.nextCommand, null);
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it('keeps seeded state files at cursor 0 until their content is complete', () => {
+    const repo = makeRepo({
+      'plan.json': {
+        version: '1.0',
+        generated_at: now(),
+        demo_goal: '(set via hackathon run scope-knife --demo-goal=...)',
+        time_remaining_minutes: 0,
+        features: [],
+        demo_path: [],
+        next_tasks: [],
+      },
+      'verify.json': { version: '1.0', started_at: now(), status: 'skipped', steps: [] },
+    });
+    const plan = buildPlan({ cwd: repo });
+    assert.equal(plan.cursor, 0);
+    assert.equal(plan.lifecycle, 'empty');
+    assert.equal(plan.stages[0].done, false);
+    assert.equal(plan.lifecycle_snapshot.complete['plan.json'], false);
     rmSync(repo, { recursive: true, force: true });
   });
 
@@ -144,26 +230,11 @@ describe('flow', () => {
 
   it("returns 0 and prints 'Ready to ship' when fully done", () => {
     const repo = makeRepo({
-      'plan.json': emptyPlan(),
-      'verify.json': {
-        version: '1.0',
-        started_at: new Date().toISOString(),
-        status: 'pass',
-        steps: [],
-      },
-      'demo.json': { version: '1.0', duration_seconds: 60, one_liner: 'x', steps: [] },
-      'review.json': {
-        version: '1.0',
-        overall: 4,
-        dimensions: [],
-        fix_priorities: { fix_now: [], fix_later: [] },
-      },
-      'ship.json': {
-        version: '1.0',
-        secret_scan: { clean: true, findings: [] },
-        checklist: { passed: [], failed: [] },
-        packaging_command: '',
-      },
+      'plan.json': validPlan(),
+      'verify.json': validVerify(),
+      'demo.json': validDemo(),
+      'review.json': validReview(),
+      'ship.json': validShip(),
     });
     captured = '';
     const code = flow({ cwd: repo, json: false });
@@ -175,31 +246,17 @@ describe('flow', () => {
 
   it('does not claim ready to ship when verify.json is skipped', () => {
     const repo = makeRepo({
-      'plan.json': emptyPlan(),
-      'verify.json': {
-        version: '1.0',
-        started_at: new Date().toISOString(),
-        status: 'skipped',
-        steps: [],
-      },
-      'demo.json': { version: '1.0', duration_seconds: 60, one_liner: 'x', steps: [] },
-      'review.json': {
-        version: '1.0',
-        overall: 4,
-        dimensions: [],
-        fix_priorities: { fix_now: [], fix_last_10min: [], do_not_touch: [] },
-      },
-      'ship.json': {
-        version: '1.0',
-        secret_scan: { clean: true, findings: [] },
-        checklist: { passed: [], failed: [] },
-        packaging_command: '',
-      },
+      'plan.json': validPlan(),
+      'verify.json': { ...validVerify(), status: 'skipped', steps: [] },
+      'demo.json': validDemo(),
+      'review.json': validReview(),
+      'ship.json': validShip(),
     });
     captured = '';
     const code = flow({ cwd: repo, json: false });
-    assert.equal(code, 1);
-    assert.match(stripAnsi(captured), /not verified/);
+    assert.equal(code, 0);
+    assert.doesNotMatch(stripAnsi(captured), /Ready to ship/);
+    assert.match(stripAnsi(captured), /Next: fast-verify/);
     rmSync(repo, { recursive: true, force: true });
   });
 

@@ -3,7 +3,7 @@
  *
  * What it checks:
  *   - node >= 20.0.0
- *   - python3 on PATH (so the skill scripts can run)
+ *   - Python 3 on PATH or PYTHON (so the skill scripts can run)
  *   - git available (for shipping / packaging)
  *   - .hackathon/state/ exists and is readable
  *   - every bundled skill parses cleanly (frontmatter + trigger budget)
@@ -30,6 +30,7 @@ import addFormats from 'ajv-formats';
 import { c } from '../lib/colors.js';
 import { loadAllSkills } from '../../harness/loader.js';
 import { TRIGGER_BUDGET } from '../../harness/frontmatter.js';
+import { resolvePython, shellPythonCommand, type PythonResolution } from '../../harness/python.js';
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 addFormats(ajv);
@@ -47,6 +48,7 @@ export interface DoctorReport {
   cwd: string;
   nodeVersion: string;
   pythonAvailable: boolean;
+  python: PythonResolution | null;
   gitAvailable: boolean;
   checks: Check[];
   failCount: number;
@@ -96,17 +98,22 @@ export function doctor(opts: { cwd: string; json?: boolean }): number {
     });
   }
 
-  // python3 availability
-  const py = spawnCapture('python3', ['--version']);
-  if (py.ok) {
-    checks.push({ name: 'python3', severity: 'ok', message: py.stdout });
+  // One resolver is shared with flow so Windows `python.exe` and PYTHON
+  // overrides behave identically across every entry point.
+  const python = resolvePython();
+  if (python) {
+    checks.push({
+      name: 'python',
+      severity: 'ok',
+      message: `${python.version} (${python.source}: ${shellPythonCommand(python)})`,
+    });
   } else {
     checks.push({
-      name: 'python3',
+      name: 'python',
       severity: 'warn',
-      message: 'python3 not found on PATH',
+      message: 'Python 3 not found on PATH',
       detail:
-        'Skill scripts require Python 3.11+. Install via your OS package manager or run scripts via uv.',
+        'Skill scripts require Python 3.11+. Set PYTHON, install python3/python/py, or run scripts via uv.',
     });
   }
 
@@ -254,7 +261,8 @@ export function doctor(opts: { cwd: string; json?: boolean }): number {
   const report: DoctorReport = {
     cwd,
     nodeVersion,
-    pythonAvailable: py.ok,
+    pythonAvailable: python !== null,
+    python,
     gitAvailable: git.ok,
     checks,
     failCount,

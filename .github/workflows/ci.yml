@@ -46,10 +46,22 @@ jobs:
         run: npm run build
 
       - name: Routing golden set
-        run: npm run test:routing
+        run: npm run test:routing -- --out routing-report.json
 
       - name: Skill evaluation lab
         run: npm run test:skill-eval
+
+      - name: Upload routing and evaluation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-reports
+          path: |
+            routing-report.json
+            skill-eval-lab/results/report.md
+            skill-eval-lab/results/final.json
+            skill-eval-lab/results/runs/aggregate.json
+          if-no-files-found: warn
 
       - name: Skill security audit
         run: node dist/cli/index.js skills audit --strict --json

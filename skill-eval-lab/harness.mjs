@@ -22,8 +22,9 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import { dirname, join, resolve, sep } from 'node:path';
+import { delimiter, dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { requirePython, shellPythonCommand } from '../dist/harness/python.js';
 import {
   buildEvalPrompt,
   extractUsage,
@@ -78,18 +79,7 @@ if (abMode && (!agentCommand || !controlCommand)) {
   throw new Error('--ab requires both --agent-command and --control-command');
 }
 
-function pythonPath() {
-  if (process.env.PYTHON) return process.env.PYTHON;
-  for (const candidate of ['python3', 'python']) {
-    const r = spawnSync(candidate, ['--version'], { encoding: 'utf8' });
-    if (r.status === 0) return candidate;
-  }
-  throw new Error(
-    'Python not found. Set PYTHON to the python executable before running the harness.',
-  );
-}
-
-const py = skipRuns ? null : pythonPath();
+const py = skipRuns ? null : requirePython();
 
 function readJson(file) {
   try {
@@ -112,7 +102,7 @@ function runCommand(command, cwd) {
   const started = Date.now();
   const env = {
     ...process.env,
-    PATH: [dirname(nodePath), process.env.PATH].join(';'),
+    PATH: [dirname(nodePath), process.env.PATH].filter(Boolean).join(delimiter),
     AI_TIME_RUN_DIST: dirname(cliPath),
   };
   const result = spawnSync(command[0], command.slice(1), {
@@ -157,7 +147,12 @@ function runStep(step, cwd) {
       ...step.args.map((a) => replaceTokens(a, cwd)),
     ];
   } else if (step.kind === 'python') {
-    command = [py, join(skillRoot, step.script), ...step.args.map((a) => replaceTokens(a, cwd))];
+    command = [
+      py.executable,
+      ...py.args,
+      join(skillRoot, step.script),
+      ...step.args.map((a) => replaceTokens(a, cwd)),
+    ];
   } else {
     command = step.args.map((a) => replaceTokens(a, cwd));
   }
@@ -930,7 +925,9 @@ async function main() {
       mode: abMode ? 'ab' : 'single',
       variants,
       primary_variant: primaryVariant,
-      python: py,
+      python: py ? shellPythonCommand(py) : null,
+      python_source: py?.source ?? null,
+      python_args: py?.args ?? [],
       node: nodePath,
     },
     contract,

@@ -10,7 +10,11 @@
   },
   "files": [
     "dist/",
-    "skills/",
+    "skills/**/*.md",
+    "skills/**/*.py",
+    "skills/**/*.sh",
+    "skills/**/*.json",
+    "skills/**/*.yaml",
     "agents/",
     "src/state/schemas/",
     "README.md",

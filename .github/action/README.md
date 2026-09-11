@@ -1,6 +1,6 @@
 # Hackathon Run GitHub Action
 
-Reusable composite action that wraps the `@maga2010/hackathon-run` CLI
+Reusable composite action that wraps the `@hackathon-run/hackathon-run` CLI
 for use in any GitHub Actions workflow.
 
 ## Usage
@@ -32,7 +32,7 @@ for use in any GitHub Actions workflow.
 | skill     | no       | (empty)  | Skill name for `match` and `new-skill`                                              |
 | utterance | no       | (empty)  | Utterance for `match`                                                               |
 | cwd       | no       | `.`      | Working directory (defaults to repo root)                                           |
-| version   | no       | `latest` | `@maga2010/hackathon-run` version to install                                        |
+| version   | no       | `latest` | `@hackathon-run/hackathon-run` version to install                                   |
 
 ## Subcommands
 

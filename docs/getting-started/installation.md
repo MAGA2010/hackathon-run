@@ -10,6 +10,18 @@ npm install -g @hackathon-run/hackathon-run
 
 Requires Node.js 20+ (LTS).
 
+The Python-backed skills resolve Python in this order:
+
+1. `PYTHON`
+2. `python3`
+3. `python`
+4. `py -3` on Windows
+
+Set `PYTHON` to an absolute `python.exe` path when the executable is not on
+`PATH`. `hackathon doctor`, `hackathon flow`, and the evaluation lab use the
+same resolver, so the selected executable and launcher arguments match across
+Windows, Git Bash, WSL, and CI.
+
 ## Option B — Run from source
 
 ```bash

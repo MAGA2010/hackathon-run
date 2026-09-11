@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- CI now generates a machine-readable routing report and uploads the routing
+  plus skill-evaluation reports as the `quality-reports` artifact.
+- Release automation now verifies that the pushed `v*` tag matches
+  `package.json` and runs `npm pack --dry-run` before publishing to npm.
+- npm packaging now excludes Python bytecode and cache directories from the
+  published tarball.
+
+### Changed
+
+- The local release script now runs ESLint, routing, skill evaluation, and
+  package preflight before creating a release tag.
+- The composite GitHub Action and its README now install the correct
+  `@hackathon-run/hackathon-run` package.
+- README and installation docs now document lifecycle placeholder semantics,
+  the shared Python resolver order, and CI/release quality artifacts.
+
+### Fixed
+
+- `status`, `resume`, and `flow` now share one content-aware lifecycle
+  snapshot. The placeholder files created by `init` remain incomplete until a
+  stage has produced a real artifact, and `resume` no longer presents a stale
+  session stage as the canonical pipeline state.
+- `flow`, `doctor`, and the skill evaluation lab now share one Python
+  resolver with `PYTHON` override precedence, `python3`/`python`/`py -3`
+  fallback, Python 3 version validation, launcher argument forwarding, and
+  Windows/Git Bash command rendering.
+
 ## [1.5.0] - 2026-09-10
 
 ### Added

@@ -5,7 +5,7 @@
 A decision-making and execution system for hackathon teams operating under time pressure. Fifteen skills, one workflow: **clarify, prize-target, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro, decide-log.**
 
 [![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
-[![Version](https://img.shields.io/badge/version-1.5.0-blue)](CHANGELOG.md)
+[![Version](https://img.shields.io/github/package-json/v/MAGA2010/hackathon-run?label=version)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
 [![npm version](https://img.shields.io/npm/v/@hackathon-run/hackathon-run.svg)](https://www.npmjs.com/package/@hackathon-run/hackathon-run)
@@ -479,6 +479,12 @@ npm run ab:harness -- \
 
 ## 30-second quickstart
 
+Requires Node.js 20.9+ and Python 3.11+ for the script-backed skills. The CLI
+resolves Python in this order: `PYTHON`, `python3`, `python`, then the Windows
+`py -3` launcher. `hackathon doctor`, `hackathon flow`, and the evaluation lab
+all use the same resolver, so an explicit `PYTHON` override behaves
+consistently on Windows, Git Bash, WSL, and CI.
+
 ```bash
 
 # Option A -- one-shot via npx (no install needed)
@@ -519,7 +525,13 @@ hackathon trace # inspect the runtime event log
 hackathon run demo-rehearsal --chain # scope-knife -> fast-verify -> demo-coach -> demo-rehearsal
 ```
 
-State is saved to .hackathon/state/ and is never required by the next step.
+State is saved to `.hackathon/state/` and is never required by the next step.
+`hackathon init` seeds placeholder files so the schema and paths exist, but
+`status`, `resume`, and `flow` do not treat that scaffold as completed work.
+The shared lifecycle snapshot checks artifact content instead: a placeholder
+plan keeps the pipeline at `empty`, a passing verification moves it to
+`demoing`, and a clean ship audit is required before the pipeline reports
+`complete`.
 
 After install, the CLI command is hackathon (not hackathon-run). The package is @hackathon-run/hackathon-run; the binary is hackathon.
 
@@ -556,6 +568,8 @@ The deterministic evaluation gate remains offline. A manual or scheduled
 model-backed evaluation can run Codex, Claude Code, or any command template:
 
 ```bash
+npm run test:skill-eval
+
 node skill-eval-lab/harness.mjs \
   --runner command \
   --runner-preset codex \
@@ -565,6 +579,17 @@ node skill-eval-lab/harness.mjs \
   --min-grade A \
   --fail-on-p1
 ```
+
+CI writes `routing-report.json` plus `skill-eval-lab/results/report.md`,
+`final.json`, and `runs/aggregate.json`, then uploads them as the
+`quality-reports` artifact. See the
+[evaluation lab](skill-eval-lab/README.md) for the scoring model, scenario
+layout, and cross-platform commands.
+
+Release tags run the reusable CI workflow, verify that the `v*` tag exactly
+matches `package.json`, run `npm pack --dry-run`, and only then publish to npm.
+The local `npm run release` path applies the same routing, evaluation, lint,
+format, build, and package preflight gates before creating the tag.
 
 Third-party skills can ship a full manifest (`license`, `author`, `homepage`, `repository`, `compatibility`) that `hackathon skills search --json` and the `find_skills` MCP tool surface.
 
@@ -583,7 +608,7 @@ Third-party skills can ship a full manifest (`license`, `author`, `homepage`, `r
 
 ## Documentation
 
-Full docs in [docs/index.md](docs/index.md). (A hosted site is not deployed yet.)
+Full docs in [docs/index.md](docs/index.md).
 
 - [Getting Started](docs/getting-started/installation.md)
 - [36-Hour Walkthrough](docs/guides/36-hour-walkthrough.md)

@@ -24,6 +24,14 @@ import { basename, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 import { findSkillDirs } from '../../harness/loader.js';
+import {
+  lifecycleSummary,
+  readLifecycleSnapshot,
+  type FlowStateFile,
+  type LifecycleStage,
+  type LifecycleSummary,
+} from '../../harness/lifecycle.js';
+import { resolvePython, shellPythonCommand, type PythonResolution } from '../../harness/python.js';
 import { readState, writeState } from '../../harness/state.js';
 import { appendTrace, readTraces } from '../../harness/trace.js';
 import { readSession, updateSession } from '../../harness/session.js';
@@ -139,7 +147,11 @@ const STAGES: StageSpec[] = [
 export interface FlowPlan {
   cwd: string;
   initialized: boolean;
+  lifecycle: LifecycleStage;
+  nextSkill: string | null;
+  lifecycle_snapshot: LifecycleSummary;
   pythonAvailable: boolean;
+  python: PythonResolution | null;
   traceCount?: number;
   /** index into STAGES: 0 = nothing done, STAGES.length = everything done */
   cursor: number;
@@ -155,14 +167,6 @@ export interface FlowPlan {
     requires?: string;
   }>;
   nextCommand: string | null;
-}
-
-function findPython(): string | null {
-  for (const candidate of ['python3', 'python']) {
-    const r = spawnSync(candidate, ['--version'], { stdio: 'ignore' });
-    if (r.status === 0) return candidate;
-  }
-  return null;
 }
 
 function quoteArg(arg: string): string {
@@ -184,23 +188,37 @@ function resolveArgs(args: string[], values: Record<string, string>): string[] {
   );
 }
 
+function resolveFlowPython(
+  python: string | null | undefined,
+  pythonResolution: PythonResolution | null | undefined,
+): PythonResolution | null {
+  if (pythonResolution !== undefined) return pythonResolution;
+  if (python === null) return null;
+  if (python !== undefined) {
+    return { executable: python, args: [], source: 'PYTHON', version: '' };
+  }
+  return resolvePython();
+}
+
 export function buildPlan(opts: {
   cwd: string;
   demoGoal?: string;
   timeRemaining?: number;
   inventoryPath?: string;
   python?: string | null;
+  pythonResolution?: PythonResolution | null;
 }): FlowPlan {
   const cwd = resolve(opts.cwd);
-  const stateDir = join(cwd, '.hackathon', 'state');
-  const initialized = existsSync(stateDir);
-  const python = opts.python ?? findPython();
+  const snapshot = readLifecycleSnapshot(cwd);
+  const initialized = snapshot.initialized;
+  const python = resolveFlowPython(opts.python, opts.pythonResolution);
+  const pythonCommand = python ? shellPythonCommand(python) : 'python3';
   const demoGoal = opts.demoGoal?.trim() || 'A working demo that judges can run end-to-end.';
   const timeRemaining = opts.timeRemaining ?? 240;
   const inventoryPath =
     opts.inventoryPath ?? join(tmpdir(), `hackathon-flow-${process.pid}-inventory.json`);
   const enriched = STAGES.map((s) => {
-    const done = existsSync(join(stateDir, s.produces));
+    const done = snapshot.complete[s.produces as FlowStateFile];
     const steps = s.steps.map((step) => ({
       script: skillScript(cwd, s.skill, step.script),
       args: resolveArgs(step.args, {
@@ -211,8 +229,7 @@ export function buildPlan(opts: {
       }),
     }));
     const commands = steps.map(
-      (step) =>
-        `${python ?? 'python3'} ${quoteArg(step.script)} ${step.args.map(quoteArg).join(' ')}`,
+      (step) => `${pythonCommand} ${quoteArg(step.script)} ${step.args.map(quoteArg).join(' ')}`,
     );
     return {
       order: s.order,
@@ -225,13 +242,16 @@ export function buildPlan(opts: {
       requires: s.requires,
     };
   });
-  let cursor = enriched.findIndex((s) => !s.done);
-  if (cursor < 0) cursor = enriched.length;
+  const cursor = snapshot.cursor;
   const nextStage = cursor < enriched.length ? enriched[cursor] : null;
   return {
     cwd,
     initialized,
+    lifecycle: snapshot.lifecycle,
+    nextSkill: snapshot.nextSkill,
+    lifecycle_snapshot: lifecycleSummary(snapshot),
     pythonAvailable: python !== null,
+    python,
     traceCount: readTraces(cwd).length,
     cursor,
     stages: enriched,
@@ -270,22 +290,23 @@ function readFlowPlan(cwd: string): PlanSnapshot | null {
   }
 }
 
-function stepDisplay(python: string, step: ResolvedStage['steps'][number]): string {
-  return `${python} ${quoteArg(step.script)} ${step.args.map(quoteArg).join(' ')}`;
+function stepDisplay(python: PythonResolution, step: ResolvedStage['steps'][number]): string {
+  return `${shellPythonCommand(python)} ${quoteArg(step.script)} ${step.args.map(quoteArg).join(' ')}`;
 }
 
 function runPythonCommand(
-  python: string,
+  python: PythonResolution,
   script: string,
   args: string[],
   cwd: string,
   captureOutput: boolean,
 ): { status: number | null; stdout: string; error?: Error } {
+  const commandArgs = [...python.args, script, ...args];
   if (captureOutput) {
-    const result = spawnSync(python, [script, ...args], { encoding: 'utf8', cwd });
+    const result = spawnSync(python.executable, commandArgs, { encoding: 'utf8', cwd });
     return { status: result.status, stdout: result.stdout ?? '', error: result.error };
   }
-  const result = spawnSync(python, [script, ...args], { stdio: 'inherit', cwd });
+  const result = spawnSync(python.executable, commandArgs, { stdio: 'inherit', cwd });
   return { status: result.status, stdout: '', error: result.error };
 }
 
@@ -323,7 +344,7 @@ function updateSessionForStage(cwd: string, stage: ResolvedStage) {
 }
 
 function executeScopeKnife(
-  python: string,
+  python: PythonResolution,
   stage: ResolvedStage,
   cwd: string,
   inventoryPath: string,
@@ -355,7 +376,7 @@ function executeScopeKnife(
   return 0;
 }
 
-function executeFastVerify(python: string, stage: ResolvedStage, cwd: string): number {
+function executeFastVerify(python: PythonResolution, stage: ResolvedStage, cwd: string): number {
   const plan = readFlowPlan(cwd);
   const startedAt = new Date().toISOString();
   const workspaceDigest = computeWorkspaceDigest(cwd);
@@ -500,7 +521,7 @@ function executeFastVerify(python: string, stage: ResolvedStage, cwd: string): n
   return 0;
 }
 
-function executePythonStage(python: string, stage: ResolvedStage, cwd: string): number {
+function executePythonStage(python: PythonResolution, stage: ResolvedStage, cwd: string): number {
   for (const step of stage.steps) {
     log.info('$ ' + stepDisplay(python, step));
     const result = runPythonCommand(python, step.script, step.args, cwd, false);
@@ -517,9 +538,8 @@ function executePythonStage(python: string, stage: ResolvedStage, cwd: string): 
 
 export function flow(opts: FlowOptions): number {
   const cwd = resolve(opts.cwd);
-  const stateDir = join(cwd, '.hackathon', 'state');
-  const initialized = existsSync(stateDir);
-  const python = findPython();
+  const pythonResolution = resolvePython();
+  const initialized = existsSync(join(cwd, '.hackathon', 'state'));
   const existingPlan = initialized ? readFlowPlan(cwd) : null;
   const demoGoal =
     opts.demoGoal?.trim() ||
@@ -541,7 +561,7 @@ export function flow(opts: FlowOptions): number {
       demoGoal,
       timeRemaining,
       inventoryPath,
-      python,
+      pythonResolution,
     });
     if (opts.json) {
       console.log(JSON.stringify(plan, null, 2));
@@ -549,7 +569,14 @@ export function flow(opts: FlowOptions): number {
     }
     console.log(c.bold('\u{1F3AF}  hackathon flow \u2014 ' + plan.cwd));
     console.log(c.dim('state dir: ' + join(plan.cwd, '.hackathon', 'state')));
-    console.log(c.dim('python: ' + (plan.pythonAvailable ? 'available' : 'NOT FOUND on PATH')));
+    console.log(
+      c.dim(
+        'python: ' +
+          (plan.python
+            ? `${shellPythonCommand(plan.python)} (${plan.python.version}, ${plan.python.source})`
+            : 'NOT FOUND on PATH'),
+      ),
+    );
     console.log();
     if (!plan.initialized) {
       log.warn('.hackathon/state/ not found in ' + plan.cwd);
@@ -571,17 +598,7 @@ export function flow(opts: FlowOptions): number {
       }
     }
     console.log();
-    if (plan.cursor === plan.stages.length) {
-      const verification = readState<{ status?: string }>({ repoRoot: cwd, file: 'verify.json' });
-      if (verification?.status !== 'pass') {
-        console.log(c.yellow('All state files exist, but the demo is not verified.'));
-        console.log(
-          c.dim(
-            'Add executable commands to plan.demo_path and re-run fast-verify before shipping.',
-          ),
-        );
-        return 1;
-      }
+    if (plan.lifecycle === 'complete') {
       console.log(c.green('All 5 stages complete. Ready to ship.'));
       return 0;
     }
@@ -591,7 +608,7 @@ export function flow(opts: FlowOptions): number {
       console.log(c.dim('Run: ') + plan.nextCommand);
     }
     if (opts.execute) {
-      if (!python) {
+      if (!pythonResolution) {
         log.err('python not available; cannot --execute. Run the commands above manually.');
         return 2;
       }
@@ -603,11 +620,11 @@ export function flow(opts: FlowOptions): number {
 
         let code: number;
         if (stage.skill === 'scope-knife') {
-          code = executeScopeKnife(python, stage, cwd, inventoryPath);
+          code = executeScopeKnife(pythonResolution, stage, cwd, inventoryPath);
         } else if (stage.skill === 'fast-verify') {
-          code = executeFastVerify(python, stage, cwd);
+          code = executeFastVerify(pythonResolution, stage, cwd);
         } else {
-          code = executePythonStage(python, stage, cwd);
+          code = executePythonStage(pythonResolution, stage, cwd);
         }
 
         if (code !== 0) {

@@ -15,7 +15,13 @@ import { traceStats } from '../../harness/trace.js';
 import { readState } from '../../harness/state.js';
 import { isStopped, stopMessage, readSteer } from '../../harness/guard.js';
 import { progressExists, progressPath } from '../../harness/progress.js';
-import { buildPlan } from './flow.js';
+import {
+  LIFECYCLE_NEXT_SUGGESTION,
+  lifecycleSummary,
+  readLifecycleSnapshot,
+  type LifecycleStage,
+  type LifecycleSummary,
+} from '../../harness/lifecycle.js';
 import { c } from '../lib/colors.js';
 import { commandFail, commandOk, type CommandResult } from '../lib/command-result.js';
 import { log } from '../lib/logger.js';
@@ -45,6 +51,10 @@ export interface ResumePayload {
     next_feature: string | null;
   } | null;
   plan_error: string | null;
+  lifecycle: LifecycleStage;
+  cursor: number;
+  next_skill: string | null;
+  lifecycle_snapshot: LifecycleSummary;
   sprint: {
     name: string;
     feature: string;
@@ -88,9 +98,9 @@ export function resumeResult(
   const session = readSession(cwd) ?? defaultSession(cwd);
   if (!readSession(cwd)) writeSession(cwd, session);
 
+  const lifecycleSnapshot = readLifecycleSnapshot(cwd);
   const { plan, error: planError } = safeReadPlan(cwd);
   const sprint = readSprint(cwd);
-  const flowPlan = buildPlan({ cwd });
   const trace = traceStats(cwd);
   const stopped = isStopped(cwd);
   const steer = stopped ? null : readSteer(cwd, true);
@@ -98,8 +108,7 @@ export function resumeResult(
 
   const keep = (plan?.features ?? []).filter((f) => f.classification === 'KEEP');
   const passed = keep.filter((f) => f.passes === true).length;
-  const nextStage =
-    flowPlan.cursor < flowPlan.stages.length ? flowPlan.stages[flowPlan.cursor] : null;
+  const nextSkill = lifecycleSnapshot.nextSkill;
 
   const payload: ResumePayload = {
     repo_root: cwd,
@@ -114,6 +123,10 @@ export function resumeResult(
         }
       : null,
     plan_error: planError,
+    lifecycle: lifecycleSnapshot.lifecycle,
+    cursor: lifecycleSnapshot.cursor,
+    next_skill: nextSkill,
+    lifecycle_snapshot: lifecycleSummary(lifecycleSnapshot),
     sprint: sprint
       ? {
           name: sprint.name,
@@ -127,7 +140,7 @@ export function resumeResult(
           max_iterations: sprint.max_iterations ?? null,
         }
       : null,
-    next_stage: nextStage?.skill ?? 'complete',
+    next_stage: nextSkill ?? 'complete',
     trace,
     stopped,
     stop_message: stopped ? stopMessage(cwd) : null,
@@ -167,13 +180,18 @@ export function resume(opts: ResumeOptions): number {
   const plan = payload.plan;
   const steer = payload.steer;
   const sprint = payload.sprint;
+  const lifecycle = payload.lifecycle_snapshot.lifecycle;
   console.log(c.bold('hackathon resume \u2014 ' + cwd));
   console.log(c.dim('state dir: ' + stateDir));
   console.log();
-  console.log(c.bold('Stage:    ') + c.cyan(session.current_stage));
-  console.log(c.bold('Next:     ') + session.next_task);
+  console.log(c.bold('Stage:    ') + c.cyan(lifecycle));
+  console.log(c.bold('Next:     ') + (LIFECYCLE_NEXT_SUGGESTION[lifecycle] ?? payload.next_stage));
   if (session.next_action) console.log(c.bold('Strategy: ') + session.next_action);
-  console.log(c.bold('Pipeline: ') + c.dim(payload.next_stage));
+  console.log(c.bold('Pipeline: ') + c.dim(payload.next_skill ?? 'complete'));
+  if (session.current_stage !== lifecycle) {
+    console.log(c.bold('Session:  ') + c.dim(session.current_stage));
+  }
+  if (session.next_task) console.log(c.bold('Session task: ') + session.next_task);
   if (plan) {
     console.log(
       c.bold('Features: ') +

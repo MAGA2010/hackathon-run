@@ -10,6 +10,19 @@ export * from './harness/types.js';
 export { loadAllSkills, loadSkill, findSkillDirs } from './harness/loader.js';
 export { parseFrontmatter, enforceTriggerBudget, TRIGGER_BUDGET } from './harness/frontmatter.js';
 export { matchSkill } from './harness/trigger.js';
+export {
+  FLOW_STATE_FILES,
+  LIFECYCLE_ORDER,
+  LIFECYCLE_NEXT_SUGGESTION,
+  PIPELINE_SKILLS,
+  flowCursor,
+  lifecycleForState,
+  lifecycleStageNumber,
+  lifecycleSummary,
+  readLifecycleSnapshot,
+  stateFileComplete,
+} from './harness/lifecycle.js';
+export { requirePython, resolvePython, shellPythonCommand } from './harness/python.js';
 export { readState, writeState, stateChecksum } from './harness/state.js';
 export {
   defaultSession,

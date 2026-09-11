@@ -3,6 +3,16 @@
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
+import {
+  LIFECYCLE_ORDER,
+  LIFECYCLE_NEXT_SUGGESTION,
+  lifecycleStageNumber,
+  lifecycleSummary,
+  readLifecycleSnapshot,
+  type FlowStateFile,
+  type LifecycleStage,
+  type LifecycleSummary,
+} from '../../harness/lifecycle.js';
 import { readSession } from '../../harness/session.js';
 import { readSprint } from '../../harness/sprint.js';
 import { readTraces } from '../../harness/trace.js';
@@ -18,6 +28,9 @@ export interface StatusSummary {
   stateDir: string;
   files: Partial<Record<FileName, FileSummary>>;
   lifecycle: LifecycleStage;
+  cursor: number;
+  nextSkill: string | null;
+  lifecycle_snapshot: LifecycleSummary;
   nextSuggestion: string | null;
   warnings: string[];
   runtime: RuntimeSummary;
@@ -27,6 +40,9 @@ export interface UninitializedStatusSummary {
   initialized: false;
   stateDir: string;
   lifecycle: 'empty';
+  cursor: number;
+  nextSkill: string | null;
+  lifecycle_snapshot: LifecycleSummary;
   nextSuggestion: string | null;
   files: Partial<Record<FileName, FileSummary>>;
   warnings: string[];
@@ -60,32 +76,12 @@ interface RuntimeSummary {
 
 interface FileSummary {
   present: boolean;
+  complete: boolean;
   size: number;
   age: string | null;
   generatedAt: string | null;
   highlights: string[];
 }
-
-type LifecycleStage =
-  'empty' | 'scoping' | 'verifying' | 'demoing' | 'judging' | 'shipping' | 'complete';
-const STAGE_ORDER: LifecycleStage[] = [
-  'empty',
-  'scoping',
-  'verifying',
-  'demoing',
-  'judging',
-  'shipping',
-  'complete',
-];
-const NEXT_SUGGESTION: Record<LifecycleStage, string | null> = {
-  empty: 'hackathon init then hackathon run scope-knife',
-  scoping: 'hackathon run fast-verify on the demo_path steps',
-  verifying: 'hackathon run fast-verify, then hackathon run demo-coach',
-  demoing: 'hackathon run judge-sim',
-  judging: 'address the fix_now list from judge-sim, then hackathon run ship-pack',
-  shipping: 'tar -xzf with packaging_command from ship.json',
-  complete: 'ship it -- nothing left to cut',
-};
 
 function ageString(iso: string | null): string | null {
   if (!iso) return null;
@@ -178,15 +174,6 @@ function summarize(file: FileName, raw: unknown): string[] {
   return [];
 }
 
-function stageFor(files: Partial<Record<FileName, FileSummary>>): LifecycleStage {
-  if (!files['plan.json']?.present) return 'empty';
-  if (!files['verify.json']?.present) return 'scoping';
-  if (!files['demo.json']?.present) return 'verifying';
-  if (!files['review.json']?.present) return 'demoing';
-  if (!files['ship.json']?.present) return 'judging';
-  return 'shipping';
-}
-
 function readJson(path: string): unknown | null {
   try {
     return JSON.parse(readFileSync(path, 'utf-8'));
@@ -255,13 +242,18 @@ function summarizeRuntime(cwd: string, stateDir: string): RuntimeSummary {
 export function statusResult(opts: { cwd: string }): CommandResult<StatusPayload> {
   const cwd = resolve(opts.cwd);
   const stateDir = join(cwd, '.hackathon', 'state');
-  const initialized = existsSync(stateDir);
+  const snapshot = readLifecycleSnapshot(cwd);
+  const snapshotSummary = lifecycleSummary(snapshot);
+  const initialized = snapshot.initialized;
   if (!initialized) {
     return commandFail({
       initialized: false,
       stateDir,
       lifecycle: 'empty',
-      nextSuggestion: NEXT_SUGGESTION.empty,
+      cursor: snapshot.cursor,
+      nextSkill: snapshot.nextSkill,
+      lifecycle_snapshot: snapshotSummary,
+      nextSuggestion: LIFECYCLE_NEXT_SUGGESTION[snapshot.lifecycle],
       files: {},
       warnings: ['.hackathon/state/ not found'],
     });
@@ -271,7 +263,14 @@ export function statusResult(opts: { cwd: string }): CommandResult<StatusPayload
   for (const f of STATE_FILES) {
     const full = join(stateDir, f);
     if (!existsSync(full)) {
-      files[f] = { present: false, size: 0, age: null, generatedAt: null, highlights: [] };
+      files[f] = {
+        present: false,
+        complete: false,
+        size: 0,
+        age: null,
+        generatedAt: null,
+        highlights: [],
+      };
       continue;
     }
     let stat;
@@ -292,20 +291,24 @@ export function statusResult(opts: { cwd: string }): CommandResult<StatusPayload
     if (!generatedAt) warnings.push(f + ': missing generated_at / started_at timestamp');
     files[f] = {
       present: true,
+      complete: snapshot.complete[f as FlowStateFile],
       size: stat.size,
       age: ageString(generatedAt),
       generatedAt,
       highlights: summarize(f, data),
     };
   }
-  const lifecycle = stageFor(files);
-  const nextSuggestion = NEXT_SUGGESTION[lifecycle];
+  const lifecycle = snapshot.lifecycle;
+  const nextSuggestion = LIFECYCLE_NEXT_SUGGESTION[lifecycle];
   const runtime = summarizeRuntime(cwd, stateDir);
   const summary: StatusSummary = {
     initialized,
     stateDir,
     files,
     lifecycle,
+    cursor: snapshot.cursor,
+    nextSkill: snapshot.nextSkill,
+    lifecycle_snapshot: snapshotSummary,
     nextSuggestion,
     warnings,
     runtime,
@@ -339,9 +342,9 @@ export function status(opts: { cwd: string; json?: boolean }): number {
     c.bold('Lifecycle: ') +
       c.cyan(lifecycle) +
       '  (stage ' +
-      (STAGE_ORDER.indexOf(lifecycle) + 1) +
+      lifecycleStageNumber(lifecycle) +
       ' / ' +
-      STAGE_ORDER.length +
+      LIFECYCLE_ORDER.length +
       ')',
   );
   if (nextSuggestion) console.log(c.bold('Next:     ') + nextSuggestion);
@@ -354,7 +357,9 @@ export function status(opts: { cwd: string; json?: boolean }): number {
       continue;
     }
     const age = info.age ? c.dim(info.age) : c.gray('no timestamp');
-    console.log('  ' + c.green(f.padEnd(14)) + ' ' + age);
+    const marker = info.complete ? c.green(f.padEnd(14)) : c.yellow(f.padEnd(14));
+    const status = info.complete ? '' : ' ' + c.yellow('(seeded, not complete)');
+    console.log('  ' + marker + ' ' + age + status);
     for (const line of info.highlights) console.log('    ' + c.dim('\u2022 ' + line));
   }
   if (runtime.sprint) {

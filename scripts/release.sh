@@ -65,11 +65,15 @@ fi
 TAG="v${NEXT}"
 echo "  $CUR -> $NEXT (tag $TAG)"
 
-step "run tests + lint + build"
+step "run tests + quality gates + build"
 npm run test:all
 npm run lint
+npm run lint:eslint
 git ls-files -z '*.ts' '*.md' '*.json' | xargs -0 -r npx prettier --check
+npm run test:routing
+npm run test:skill-eval
 npm run build
+npm pack --dry-run
 
 step "write CHANGELOG date placeholder if needed"
 if grep -q "2025-XX-XX" CHANGELOG.md; then

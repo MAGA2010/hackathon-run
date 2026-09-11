@@ -23,6 +23,18 @@ jobs:
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci || npm install
       - run: npm run build
+      - name: Verify tag matches package version
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          test "$TAG_VERSION" = "$PACKAGE_VERSION" || {
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $PACKAGE_VERSION"
+            exit 1
+          }
+      - name: Package preflight
+        run: npm pack --dry-run
       - run: npm publish --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

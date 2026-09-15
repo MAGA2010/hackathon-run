@@ -4,10 +4,12 @@
 import { readFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { calibrateJudge } from '../dist/cli/commands/judge-calibrate.js';
 
-const ROOT = resolve(import.meta.dirname, '..');
+const HERE = fileURLToPath(new URL('.', import.meta.url));
+const ROOT = resolve(HERE, '..');
 const golden = resolve(ROOT, 'tests', 'fixtures', 'judge-golden.json');
 const cases = JSON.parse(readFileSync(golden, 'utf8')).cases;
 let requestIndex = 0;

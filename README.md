@@ -513,6 +513,7 @@ hackathon run fast-verify # verifies the demo path
 hackathon run demo-coach # drafts the pitch
 hackathon run judge-sim # self-reviews before submitting
 hackathon run ship-pack # packages and checks for leaks
+hackathon status --watch --interval 30 # live time and rehearsal-risk pulse
 hackathon resume # handoff brief for a fresh agent or new session
 hackathon sprint new --feature Auth # create a default-FAIL contract
 hackathon sprint approve # lock the contract before building
@@ -532,6 +533,11 @@ The shared lifecycle snapshot checks artifact content instead: a placeholder
 plan keeps the pipeline at `empty`, a passing verification moves it to
 `demoing`, and a clean ship audit is required before the pipeline reports
 `complete`.
+
+When `time-box.json`, `rehearsal.json`, or `verify.json` evidence exists,
+`hackathon status` also prints a `Pulse` section with remaining time, stage
+burn, rehearsal risk, and a suggested recovery severity. Use
+`hackathon status --watch` during the final countdown.
 
 After install, the CLI command is hackathon (not hackathon-run). The package is @hackathon-run/hackathon-run; the binary is hackathon.
 

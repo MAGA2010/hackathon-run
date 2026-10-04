@@ -14,33 +14,25 @@
   ],
   "additionalProperties": false,
   "properties": {
-    "version": {
-      "const": "1.0"
-    },
-    "generated_at": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "time_remaining_minutes": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "buffer_minutes": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "team_size": {
-      "type": "integer",
-      "minimum": 1
-    },
+    "version": { "const": "1.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "deadline_at": { "type": "string", "format": "date-time" },
+    "time_remaining_minutes": { "type": "integer", "minimum": 0 },
+    "buffer_minutes": { "type": "integer", "minimum": 0 },
+    "team_size": { "type": "integer", "minimum": 1 },
     "current_stage": {
       "enum": ["idea", "scope", "build", "verify", "demo", "ship"]
     },
-    "stage_progress": {
-      "type": "number",
-      "minimum": 0,
-      "maximum": 1
-    },
+    "stage_progress": { "type": "number", "minimum": 0, "maximum": 1 },
+    "elapsed_minutes": { "type": "integer", "minimum": 0 },
+    "current_stage_started_at": { "type": "string", "format": "date-time" },
+    "current_stage_budget_minutes": { "type": "integer", "minimum": 0 },
+    "burn_rate": { "type": ["number", "null"], "minimum": 0 },
+    "burn_rate_threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+    "demo_target_minutes": { "type": "integer", "minimum": 1 },
+    "minimum_viable_demo_feasible": { "type": "boolean" },
+    "slipping": { "type": "boolean" },
+    "warnings": { "type": "array", "items": { "type": "string" } },
     "schedule": {
       "type": "array",
       "items": {
@@ -57,34 +49,52 @@
           "stage": {
             "enum": ["idea", "scope", "build", "verify", "demo", "ship"]
           },
-          "start_in_minutes": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "duration_minutes": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "per_person_minutes": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "exit_criteria": {
-            "type": "string",
-            "minLength": 1
-          },
+          "start_in_minutes": { "type": "integer", "minimum": 0 },
+          "duration_minutes": { "type": "integer", "minimum": 0 },
+          "ends_at_minute": { "type": "integer", "minimum": 0 },
+          "per_person_minutes": { "type": "integer", "minimum": 0 },
+          "exit_criteria": { "type": "string", "minLength": 1 },
           "alarm_at_minutes": {
-            "type": "integer",
-            "minimum": 0
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0 }
           }
         }
       }
     },
-    "slipping": {
-      "type": "boolean"
+    "alarms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stage", "threshold", "at_minute", "severity"],
+        "additionalProperties": false,
+        "properties": {
+          "stage": {
+            "enum": ["idea", "scope", "build", "verify", "demo", "ship"]
+          },
+          "threshold": { "type": "number", "minimum": 0, "maximum": 1 },
+          "at_minute": { "type": "integer", "minimum": 0 },
+          "severity": { "enum": ["soft", "firm", "hard"] }
+        }
+      }
     },
-    "warning": {
-      "type": "string"
-    }
+    "recovery": {
+      "type": ["object", "null"],
+      "required": [
+        "deficit_minutes",
+        "cut_from_verify",
+        "cut_from_demo",
+        "cut_from_ship_buffer",
+        "rationale"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "deficit_minutes": { "type": "integer", "minimum": 0 },
+        "cut_from_verify": { "type": "integer", "minimum": 0 },
+        "cut_from_demo": { "type": "integer", "minimum": 0 },
+        "cut_from_ship_buffer": { "type": "integer", "minimum": 0 },
+        "rationale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "warning": { "type": "string" }
   }
 }

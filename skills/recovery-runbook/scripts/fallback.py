@@ -81,6 +81,57 @@ SCRIPT_BY_SEVERITY = {
 }
 
 
+def load_json(path):
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def derive_evidence(out_dir):
+    state_dir = os.path.join(out_dir, "state")
+    evidence = []
+
+    verify = load_json(os.path.join(state_dir, "verify.json")) or {}
+    for step in verify.get("steps", []):
+        if not isinstance(step, dict) or step.get("status") != "fail":
+            continue
+        diagnosis = step.get("diagnosis") or {}
+        evidence.append({
+            "source": "fast-verify",
+            "step": step.get("step"),
+            "action": step.get("action"),
+            "detail": step.get("error_signature") or diagnosis.get("minimal_fix"),
+        })
+
+    rehearsal = load_json(os.path.join(state_dir, "rehearsal.json")) or {}
+    for risk in rehearsal.get("risks", []):
+        if not isinstance(risk, dict):
+            continue
+        evidence.append({
+            "source": "demo-rehearsal",
+            "step": risk.get("step"),
+            "action": risk.get("action"),
+            "detail": risk.get("recommendation"),
+        })
+
+    return evidence
+
+
+def evidence_recovery_steps(evidence):
+    steps = list(RECOVERY_STEPS)
+    for item in evidence:
+        label = item.get("action") or f"step {item.get('step') or '?'}"
+        if item.get("source") == "fast-verify":
+            steps.insert(0, f"Apply the recorded fix for {label}: {item.get('detail') or 'run fast-verify again'}.")
+        else:
+            steps.insert(0, f"Rehearse the revised {label}: {item.get('detail') or 'reduce the step by five seconds'}.")
+    return steps
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--failure", required=True)
@@ -90,6 +141,8 @@ def main() -> int:
 
     fallback = FALLBACKS[args.severity]
     script = SCRIPT_BY_SEVERITY[args.severity]
+    evidence = derive_evidence(args.out_dir)
+    recovery_steps = evidence_recovery_steps(evidence)
 
     artifact = {
         "version": "1.0",
@@ -97,7 +150,8 @@ def main() -> int:
         "failure": args.failure,
         "severity": args.severity,
         "fallback": fallback,
-        "recovery_steps": RECOVERY_STEPS,
+        "recovery_steps": recovery_steps,
+        "evidence": evidence,
         "script": [{"step": i + 1, **dict(zip(("phase", "max_seconds", "line"), s))}
                    for i, s in enumerate(script)],
     }
@@ -131,7 +185,7 @@ def main() -> int:
         md.append("")
         md.append("## Off-stage recovery steps")
         md.append("")
-        for s in RECOVERY_STEPS:
+        for s in recovery_steps:
             md.append(f"- {s}")
         md.append("")
         f.write("\n".join(md))

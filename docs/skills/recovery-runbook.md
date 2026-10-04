@@ -7,29 +7,41 @@ Run when something breaks (build red, demo broken, secrets leaked, deploy failed
 
 ## Inputs
 
-| Field                          | Type   | Required | Description                                                                  |
-| ------------------------------ | ------ | -------- | ---------------------------------------------------------------------------- |
-| `repo_root`                    | path   | required | current project root                                                         |
-| `symptom`                      | string | required | one of: build_red, demo_broken, secret_leak, slow, deploy_failed, agent_loop |
-| `.hackathon/state/verify.json` | file   | optional | most recent verification log                                                 |
+| Field                             | Type   | Required | Description                                           |
+| --------------------------------- | ------ | -------- | ----------------------------------------------------- |
+| `failure_description`             | string | required | one-sentence description of what broke                |
+| `severity`                        | enum   | required | P0 / P1 / P2 / P3                                     |
+| `out_dir`                         | path   | optional | repo or `.hackathon` directory (default `.hackathon`) |
+| `.hackathon/state/verify.json`    | file   | optional | most recent verification failures                     |
+| `.hackathon/state/rehearsal.json` | file   | optional | timed rehearsal risks                                 |
 
 ## Outputs
 
-- `.hackathon/state/recovery.json` — A runbook with ranked actions (minutes saved each) and the smallest reversible fix.
+- `.hackathon/artifacts/recovery-runbook.md` — printable fallback plan and 30-second script
+- `.hackathon/state/recovery.json` — severity, fallback, script, recovery steps, and absorbed evidence
+
+`scripts/fallback.py` reads `verify.json` and `rehearsal.json`, records their
+failures in `recovery.json.evidence`, and prepends the recorded fixes to the
+off-stage recovery steps.
 
 ## Example
 
 ```
 Input
-  symptom: build_red
-  time_remaining_minutes: 180
+  failure_description: "The live API timed out."
+  severity: P1
 
 Output (recovery.json highlights)
-  actions:
-    - { order: 1, action: "revert last commit",
-        eta_minutes: 5, verify: "npm run build", rollback: "git revert" }
-    - { order: 2, action: "pin dependency X to 1.2.3",
-        eta_minutes: 10, verify: "npm ci && npm run build", rollback: "rm override" }
+  fallback:
+    default: screenshots
+    do: "Switch to curated screenshots and walk through them verbally."
+    say: "The live API is timing out; I have screenshots showing the working flow."
+    not: "Do not retry the API call. Do not blame the network."
+  script:
+    - { step: 1, phase: acknowledge, max_seconds: 3, line: "Live demo hiccup..." }
+    - { step: 2, phase: playback, max_seconds: 12, line: "(play the GIF)" }
+  evidence:
+    - { source: fast-verify, step: 2, action: "save note", detail: "connection refused" }
 ```
 
 ## Trigger phrases
@@ -44,18 +56,19 @@ Output (recovery.json highlights)
 
 ## Acceptance criteria
 
-- [ ] At most 5 actions; total estimated minutes <= time_remaining / 4.
-- [ ] Each action has owner, ETA, verification command, and rollback plan.
-- [ ] recovery.json validates against recovery.schema.json.
+- [ ] Emits a P0/P1/P2/P3 fallback with DO / SAY / NOT guidance.
+- [ ] The on-stage script fits within 30 seconds.
+- [ ] Verify and rehearsal evidence is absorbed into recovery steps.
+- [ ] `recovery.json` validates against `recovery.schema.json`.
 
 ## Failure modes
 
-| Mode                        | Behavior                                                        |
-| --------------------------- | --------------------------------------------------------------- |
-| `Unknown symptom`           | Ask the agent to pick from the enum; refuse to invent.          |
-| `No verify.json`            | Run fast-verify first; refuse to guess at root causes.          |
-| `Multiple symptoms`         | Treat as one composite symptom; pick the highest-EVA fix first. |
-| `All actions exceed budget` | Surface the budget breach and ask to CUT scope first.           |
+| Mode                      | Behavior                                                        |
+| ------------------------- | --------------------------------------------------------------- |
+| Missing failure text      | Refuse; ask once for the dominant failure description.          |
+| Unknown severity          | Refuse; accept only P0 / P1 / P2 / P3.                          |
+| No verify/rehearsal files | Emit generic off-stage steps without evidence fields.           |
+| Multiple evidence records | Prepend every recorded fix, keeping the existing recovery list. |
 
 ## See also
 

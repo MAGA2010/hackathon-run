@@ -15,6 +15,7 @@ import {
 } from '../../harness/lifecycle.js';
 import { readSession } from '../../harness/session.js';
 import { readSprint } from '../../harness/sprint.js';
+import { computePulse, type PulseSummary } from '../../harness/pulse.js';
 import { readTraces } from '../../harness/trace.js';
 import { c } from '../lib/colors.js';
 import { commandFail, commandOk, type CommandResult } from '../lib/command-result.js';
@@ -34,6 +35,7 @@ export interface StatusSummary {
   nextSuggestion: string | null;
   warnings: string[];
   runtime: RuntimeSummary;
+  pulse: PulseSummary | null;
 }
 
 export interface UninitializedStatusSummary {
@@ -46,6 +48,7 @@ export interface UninitializedStatusSummary {
   nextSuggestion: string | null;
   files: Partial<Record<FileName, FileSummary>>;
   warnings: string[];
+  pulse: PulseSummary | null;
 }
 
 export type StatusPayload = StatusSummary | UninitializedStatusSummary;
@@ -256,6 +259,7 @@ export function statusResult(opts: { cwd: string }): CommandResult<StatusPayload
       nextSuggestion: LIFECYCLE_NEXT_SUGGESTION[snapshot.lifecycle],
       files: {},
       warnings: ['.hackathon/state/ not found'],
+      pulse: null,
     });
   }
   const warnings: string[] = [];
@@ -301,6 +305,7 @@ export function statusResult(opts: { cwd: string }): CommandResult<StatusPayload
   const lifecycle = snapshot.lifecycle;
   const nextSuggestion = LIFECYCLE_NEXT_SUGGESTION[lifecycle];
   const runtime = summarizeRuntime(cwd, stateDir);
+  const pulse = computePulse({ cwd, now: new Date() });
   const summary: StatusSummary = {
     initialized,
     stateDir,
@@ -312,79 +317,180 @@ export function statusResult(opts: { cwd: string }): CommandResult<StatusPayload
     nextSuggestion,
     warnings,
     runtime,
+    pulse,
   };
   return commandOk(summary);
 }
 
-export function status(opts: { cwd: string; json?: boolean }): number {
-  const result = statusResult(opts);
-  const summary = result.data;
-  if (opts.json) {
-    console.log(JSON.stringify(summary, null, 2));
-    return result.exitCode;
+function formatMinutes(value: number | null): string {
+  if (value === null) return 'n/a';
+  if (value <= 0) return '0m';
+  const hours = Math.floor(value / 60);
+  const minutes = value % 60;
+  return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+}
+
+function printPulse(pulse: PulseSummary | null): void {
+  if (!pulse?.available) {
+    console.log(c.dim('Pulse: no time-box / rehearsal / verify evidence yet'));
+    return;
   }
-  if (!summary.initialized) {
-    log.warn('.hackathon/state/ not found in ' + resolve(opts.cwd));
-    log.dim('Run: hackathon init');
-    return result.exitCode;
-  }
-  const cwd = resolve(opts.cwd);
-  const stateDir = summary.stateDir;
-  const lifecycle = summary.lifecycle;
-  const nextSuggestion = summary.nextSuggestion;
-  const files = summary.files;
-  const warnings = summary.warnings;
-  const runtime = summary.runtime;
-  console.log(c.bold('\u2708\ufe0f  hackathon status \u2014 ' + cwd));
-  console.log(c.dim('state dir: ' + stateDir));
   console.log();
-  console.log(
-    c.bold('Lifecycle: ') +
-      c.cyan(lifecycle) +
-      '  (stage ' +
-      lifecycleStageNumber(lifecycle) +
-      ' / ' +
-      LIFECYCLE_ORDER.length +
-      ')',
-  );
-  if (nextSuggestion) console.log(c.bold('Next:     ') + nextSuggestion);
-  console.log();
-  for (const f of STATE_FILES) {
-    const info = files[f];
-    if (!info) continue;
-    if (!info.present) {
-      console.log('  ' + c.gray(f.padEnd(14)) + ' ' + c.gray('(missing)'));
-      continue;
-    }
-    const age = info.age ? c.dim(info.age) : c.gray('no timestamp');
-    const marker = info.complete ? c.green(f.padEnd(14)) : c.yellow(f.padEnd(14));
-    const status = info.complete ? '' : ' ' + c.yellow('(seeded, not complete)');
-    console.log('  ' + marker + ' ' + age + status);
-    for (const line of info.highlights) console.log('    ' + c.dim('\u2022 ' + line));
+  console.log(c.bold('Pulse:    ') + c.cyan('time and rehearsal evidence'));
+  if (pulse.current_stage) {
+    console.log(c.bold('Stage:    ') + pulse.current_stage);
   }
-  if (runtime.sprint) {
-    console.log(
-      c.bold('Sprint:   ') +
-        `${runtime.sprint.name} [${runtime.sprint.status}] ${runtime.sprint.criteria_passed}/${runtime.sprint.criteria_total} criteria passing`,
-    );
+  if (pulse.deadline_at && pulse.minutes_remaining !== null) {
+    const remaining =
+      pulse.minutes_remaining <= 0
+        ? c.red('expired')
+        : c.yellow(formatMinutes(pulse.minutes_remaining) + ' left');
+    console.log(c.bold('Clock:    ') + remaining);
   }
-  if (runtime.eval) {
+  if (pulse.stage) {
+    const burn =
+      pulse.stage.burn_rate === null ? 'n/a' : Math.round(pulse.stage.burn_rate * 100) + '%';
+    const nextAlarm =
+      pulse.stage.next_alarm_in_minutes === null
+        ? 'none'
+        : `in ${pulse.stage.next_alarm_in_minutes}m`;
     console.log(
-      c.bold('Eval:     ') +
-        `${runtime.eval.verdict} ${runtime.eval.criteria_passed}/${runtime.eval.criteria_total} criteria`,
+      c.bold('Burn:     ') +
+        `${burn} used of ${pulse.stage.duration_minutes}m; next alarm ${nextAlarm}`,
     );
-    if (runtime.eval.strategy) {
-      console.log(c.bold('Strategy: ') + runtime.eval.strategy);
+    if (pulse.stage.exit_criteria) {
+      console.log(c.dim('          exit: ' + pulse.stage.exit_criteria));
     }
   }
-  console.log(c.bold('Trace:    ') + `${runtime.traceCount} events`);
-  if (warnings.length) {
+  if (pulse.recovery_budget) {
+    console.log(
+      c.yellow('Budget:   ') +
+        `over by ${pulse.recovery_budget.deficit_minutes}m; cut verify/demo/ship by ` +
+        `${pulse.recovery_budget.cut_from_verify}/${pulse.recovery_budget.cut_from_demo}/` +
+        `${pulse.recovery_budget.cut_from_ship_buffer}m`,
+    );
+  }
+  if (pulse.verification.available) {
+    console.log(
+      c.bold('Verify:   ') +
+        `${pulse.verification.status ?? 'unknown'}, ` +
+        `${pulse.verification.failed_steps} failed step(s)`,
+    );
+  }
+  if (pulse.rehearsal.available) {
+    const timing = pulse.rehearsal.within_budget ? 'within budget' : 'over budget';
+    console.log(
+      c.bold('Rehearsal:') +
+        ` run #${pulse.rehearsal.run_number ?? '?'}: ` +
+        `${pulse.rehearsal.total_seconds ?? '?'}s (${timing}); ` +
+        `${pulse.rehearsal.broken_steps} broken, ${pulse.rehearsal.drift_steps} drifting`,
+    );
+  }
+  const evidence = pulse.recovery_evidence;
+  if (evidence.likely_failures.length > 0) {
+    console.log(
+      c.yellow('Risk:     ') +
+        `${evidence.risk_level} risk, suggested severity ${evidence.suggested_severity}`,
+    );
+    for (const failure of evidence.likely_failures.slice(0, 3)) {
+      console.log(c.dim(`          ${failure.source}: ${failure.action ?? 'unknown step'}`));
+    }
+  }
+  if (pulse.recommended_action) {
+    console.log(c.bold('Next:     ') + pulse.recommended_action);
+  }
+  if (pulse.stale) {
+    console.log(c.yellow('          time-box is stale; re-run `hackathon run time-box`'));
+  }
+}
+
+export function status(opts: {
+  cwd: string;
+  json?: boolean;
+  watch?: boolean;
+  intervalSeconds?: number;
+}): number | Promise<number> {
+  const render = (): number => {
+    const result = statusResult({ cwd: opts.cwd });
+    const summary = result.data;
+    if (opts.json) {
+      console.log(JSON.stringify(summary, null, 2));
+      return result.exitCode;
+    }
+    if (!summary.initialized) {
+      log.warn('.hackathon/state/ not found in ' + resolve(opts.cwd));
+      log.dim('Run: hackathon init');
+      return result.exitCode;
+    }
+    const cwd = resolve(opts.cwd);
+    const stateDir = summary.stateDir;
+    const lifecycle = summary.lifecycle;
+    const nextSuggestion = summary.nextSuggestion;
+    const files = summary.files;
+    const warnings = summary.warnings;
+    const runtime = summary.runtime;
+    console.log(c.bold('\u2708\ufe0f  hackathon status \u2014 ' + cwd));
+    console.log(c.dim('state dir: ' + stateDir));
     console.log();
-    console.log(c.yellow('Warnings:'));
-    for (const w of warnings) console.log('  ' + c.yellow('\u26a0 ') + w);
-  }
-  console.log();
-  const orphans = readdirSync(stateDir).filter((n) => !STATE_FILES.includes(n as FileName));
-  if (orphans.length) console.log(c.dim('Other files in state/: ' + orphans.join(', ')));
-  return 0;
+    console.log(
+      c.bold('Lifecycle: ') +
+        c.cyan(lifecycle) +
+        '  (stage ' +
+        lifecycleStageNumber(lifecycle) +
+        ' / ' +
+        LIFECYCLE_ORDER.length +
+        ')',
+    );
+    if (nextSuggestion) console.log(c.bold('Next:     ') + nextSuggestion);
+    console.log();
+    for (const f of STATE_FILES) {
+      const info = files[f];
+      if (!info) continue;
+      if (!info.present) {
+        console.log('  ' + c.gray(f.padEnd(14)) + ' ' + c.gray('(missing)'));
+        continue;
+      }
+      const age = info.age ? c.dim(info.age) : c.gray('no timestamp');
+      const marker = info.complete ? c.green(f.padEnd(14)) : c.yellow(f.padEnd(14));
+      const status = info.complete ? '' : ' ' + c.yellow('(seeded, not complete)');
+      console.log('  ' + marker + ' ' + age + status);
+      for (const line of info.highlights) console.log('    ' + c.dim('\u2022 ' + line));
+    }
+    if (runtime.sprint) {
+      console.log(
+        c.bold('Sprint:   ') +
+          `${runtime.sprint.name} [${runtime.sprint.status}] ${runtime.sprint.criteria_passed}/${runtime.sprint.criteria_total} criteria passing`,
+      );
+    }
+    if (runtime.eval) {
+      console.log(
+        c.bold('Eval:     ') +
+          `${runtime.eval.verdict} ${runtime.eval.criteria_passed}/${runtime.eval.criteria_total} criteria`,
+      );
+      if (runtime.eval.strategy) {
+        console.log(c.bold('Strategy: ') + runtime.eval.strategy);
+      }
+    }
+    console.log(c.bold('Trace:    ') + `${runtime.traceCount} events`);
+    printPulse(summary.pulse);
+    if (warnings.length) {
+      console.log();
+      console.log(c.yellow('Warnings:'));
+      for (const w of warnings) console.log('  ' + c.yellow('\u26a0 ') + w);
+    }
+    console.log();
+    const orphans = readdirSync(stateDir).filter((n) => !STATE_FILES.includes(n as FileName));
+    if (orphans.length) console.log(c.dim('Other files in state/: ' + orphans.join(', ')));
+    return 0;
+  };
+
+  if (!opts.watch) return render();
+  const intervalMs = Math.max(1, (opts.intervalSeconds ?? 30) * 1000);
+  console.log(c.dim(`Watching every ${Math.round(intervalMs / 1000)}s. Press Ctrl+C to stop.`));
+  const timer = setInterval(render, intervalMs);
+  process.once('SIGINT', () => {
+    clearInterval(timer);
+    process.exit(0);
+  });
+  return new Promise<number>(() => {});
 }

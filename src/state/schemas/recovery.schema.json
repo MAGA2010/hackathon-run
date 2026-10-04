@@ -36,6 +36,20 @@
           "line": { "type": "string", "minLength": 1 }
         }
       }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source", "step", "action", "detail"],
+        "additionalProperties": false,
+        "properties": {
+          "source": { "enum": ["fast-verify", "demo-rehearsal"] },
+          "step": { "type": ["integer", "null"], "minimum": 1 },
+          "action": { "type": ["string", "null"], "minLength": 1 },
+          "detail": { "type": ["string", "null"], "minLength": 1 }
+        }
+      }
     }
   }
 }

@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Time-aware status pulse (v1.6)** — `hackathon status` derives live
+  remaining time, current-stage burn, next alarm, rehearsal risk, and a
+  suggested recovery severity from `time-box.json`, `rehearsal.json`, and
+  `verify.json`. `status --watch --interval <seconds>` refreshes the
+  dashboard without rerunning helper scripts.
+- `time-box` now records `deadline_at`, `current_stage_started_at`, and
+  `current_stage_budget_minutes`. `demo-rehearsal` emits `finished_at`,
+  `total_seconds`, `within_budget`, `verdict`, and schema-compatible `risks`
+  with step-specific recommendations.
+- `recovery-runbook` absorbs failing fast-verify steps and rehearsal risks
+  into `recovery.json.evidence`, then prepends their recorded fixes to the
+  off-stage recovery steps.
 - CI now generates a machine-readable routing report and uploads the routing
   plus skill-evaluation reports as the `quality-reports` artifact.
 - Release automation now verifies that the pushed `v*` tag matches
@@ -18,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The `time-box`, `rehearsal`, and `recovery` schemas now describe the live
+  timing and evidence fields consumed by the status pulse.
 - The local release script now runs ESLint, routing, skill evaluation, and
   package preflight before creating a release tag.
 - The composite GitHub Action and its README now install the correct

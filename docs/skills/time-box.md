@@ -27,8 +27,14 @@ Do not invoke on day 1 when the team has 30+ hours and no plan yet; use scope-kn
 
 ## Output contract
 
-- `.hackathon/state/time-box.json` — schedule + checkpoints (matches `time-box.schema.json`)
+- `.hackathon/state/time-box.json` — schedule, checkpoints, live deadline, and current-stage timing (matches `time-box.schema.json`)
 - `.hackathon/artifacts/time-box-schedule.md` — human-readable timeline
+
+The helper also records `deadline_at`, `elapsed_minutes`,
+`current_stage_started_at`, and `current_stage_budget_minutes`, so
+`hackathon status` can recompute remaining time and stage burn later without
+rerunning `compute.py`. Use `hackathon status --watch --interval 30` during
+the final countdown.
 
 ## Stage-split table
 

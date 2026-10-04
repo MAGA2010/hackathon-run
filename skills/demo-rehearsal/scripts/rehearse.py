@@ -102,28 +102,41 @@ def main():
         delta = actual - per_step
         s = score_step(delta)
         seg = {
-            "index": i,
-            "name": step["name"],
+            "step": i,
+            "action": step["action"],
             "budget_seconds": per_step,
             "actual_seconds": round(actual, 2),
-            "delta_seconds": round(delta, 2),
             "score": s,
-            "classification": classify(s),
+            "class": classify(s),
         }
         segments.append(seg)
         log_lines.append(
-            f"- step {i} ({step['name']}): budget {per_step}s, actual {actual:.1f}s, score {s}, {seg['classification']}"
+            f"- step {i} ({step['name']}): budget {per_step}s, actual {actual:.1f}s, score {s}, {seg['class']}"
         )
 
-    broken = [s for s in segments if s["classification"] == "broken"]
-    drift = [s for s in segments if s["classification"] == "drift"]
+    broken = [s for s in segments if s["class"] == "broken"]
+    drift = [s for s in segments if s["class"] == "drift"]
     fixes = []
     for s in broken:
         fixes.append({
-            "step": s["name"],
-            "what_to_cut": f"drop one sentence from step {s['index']}",
-            "what_to_keep": "the core action phrase",
+            "step": s["step"],
+            "cut": f"drop one sentence from step {s['step']}",
+            "keep": "the core action phrase",
             "new_budget_seconds": max(5, s["budget_seconds"] - 5),
+        })
+    fixes_by_step = {fix["step"]: fix for fix in fixes}
+    risks = []
+    for s in broken + drift:
+        recommendation = "trim one sentence or add a breath"
+        if s["class"] == "broken":
+            fix = fixes_by_step.get(s["step"])
+            recommendation = fix["cut"] if fix else "rewrite the step and cut one sentence"
+        risks.append({
+            "step": s["step"],
+            "action": s["action"],
+            "class": s["class"],
+            "overrun_seconds": max(0, s["actual_seconds"] - s["budget_seconds"]),
+            "recommendation": recommendation,
         })
 
     if args.dry_run:
@@ -134,11 +147,14 @@ def main():
     rec = {
         "version": "1.0",
         "started_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "finished_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         "target_total_seconds": args.target_total_seconds,
         "run_number": args.run_number,
         "total_seconds": total_seconds,
         "within_budget": abs(total_seconds - args.target_total_seconds) <= args.target_total_seconds * 0.15,
+        "verdict": "rewrite-needed" if broken else "mixed" if drift else "all-green",
         "segments": segments,
+        "risks": risks,
         "fixes": fixes,
     }
 
@@ -159,7 +175,7 @@ def main():
     if not fixes:
         log_lines.append("- all-green")
     for f in fixes:
-        log_lines.append(f"- **{f['step']}**: cut `{f['what_to_cut']}`; keep `{f['what_to_keep']}`; new budget {f['new_budget_seconds']}s")
+        log_lines.append(f"- **{f['step']}**: cut `{f['cut']}`; keep `{f['keep']}`; new budget {f['new_budget_seconds']}s")
     (out_artifacts / "rehearsal-log.md").write_text("\n".join(log_lines) + "\n", encoding="utf-8")
 
     print(f"rehearsal #{args.run_number} done: {total_seconds}s total, {len(broken)} broken step(s)")

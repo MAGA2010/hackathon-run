@@ -44,7 +44,7 @@ describe("P0 skill ability fixes (v1.2.1.3)", () => {
     assert.match(body, /^VERSION = "1\.0"/m);
     assert.match(body, /--dry-run/);
     assert.match(body, /rehearsal\.json/);
-    assert.match(body, /classification/);
+    assert.match(body, /classify\(s\)/);
   });
 
   it("the 3 originally-missing scripts now pin VERSION = 1.0 outside docstring", () => {

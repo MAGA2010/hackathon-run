@@ -87,6 +87,13 @@ New in v1.2.1.5:
 - **Minimum-viable demo (MVD) check** against --demo-target-minutes (default 180 = 3 min). The state JSON gets minimum_viable_demo_feasible.
 - --demo-at HH:MM accepts a wall-clock demo time and converts it to ime-remaining.
 
+New in v1.6:
+
+- compute.py records `deadline_at`, `current_stage_started_at`, `current_stage_budget_minutes`, and `elapsed_minutes` so the clock can be re-read later.
+- `hackathon status` consumes those fields into a live `pulse` section with remaining time, current-stage burn rate, and the next alarm.
+- `hackathon status --watch --interval 30` refreshes that dashboard without rerunning compute.py.
+- Schedule and alarm fields now match `time-box.schema.json` exactly.
+
 ## Output contract
 
 Files written:

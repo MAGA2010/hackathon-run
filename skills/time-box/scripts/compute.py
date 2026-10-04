@@ -21,7 +21,7 @@ VERSION = "1.0"  # contract pin: hackathon validate-skill checks this
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
@@ -140,12 +140,14 @@ def main():
     for stage, mins, per in zip(future, per_stage, per_person):
         starts_at = cursor
         ends_at = cursor + mins
-        all_alarms.extend(escalation_alarms(stage, starts_at, ends_at))
+        stage_alarms = escalation_alarms(stage, starts_at, ends_at)
+        all_alarms.extend(stage_alarms)
         schedule.append({
             "stage": stage,
-            "starts_at_minute": starts_at,
+            "start_in_minutes": starts_at,
+            "duration_minutes": mins,
             "ends_at_minute": ends_at,
-            "alarms_at_minute": [a["at_minute"] for a in all_alarms[-len(ALARM_THRESHOLDS):]],
+            "alarm_at_minutes": [a["at_minute"] for a in stage_alarms],
             "per_person_minutes": per,
             "exit_criteria": EXIT_CRITERIA[stage],
         })
@@ -171,16 +173,25 @@ def main():
     future_mins = sum(per_stage)
     mvd_feasible = future_mins >= args.demo_target_minutes + 30  # 30 = slack for stage transitions
 
+    now_dt = datetime.now(timezone.utc)
     rec = {
         "version": "1.0",
-        "generated_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "generated_at": now_dt.isoformat().replace("+00:00", "Z"),
+        "deadline_at": (now_dt + timedelta(minutes=args.time_remaining)).isoformat().replace("+00:00", "Z"),
         "time_remaining_minutes": args.time_remaining,
+        "buffer_minutes": args.buffer,
         "team_size": args.team_size,
         "current_stage": args.current_stage,
+        "stage_progress": args.stage_progress,
+        "elapsed_minutes": args.elapsed,
+        "current_stage_started_at": (now_dt - timedelta(minutes=args.elapsed)).isoformat().replace("+00:00", "Z"),
+        "current_stage_budget_minutes": current_budget,
         "burn_rate": burn_rate,
         "burn_rate_threshold": args.burn_rate_threshold,
         "demo_target_minutes": args.demo_target_minutes,
         "minimum_viable_demo_feasible": mvd_feasible,
+        "slipping": slipping,
+        "warnings": warnings,
         "schedule": schedule,
         "alarms": all_alarms,
         "recovery": recovery,
@@ -209,9 +220,9 @@ def main():
         "| --- | --- | --- | --- | --- |",
     ]
     for item in schedule:
-        alarms_str = ", ".join(str(a) for a in item["alarms_at_minute"])
+        alarms_str = ", ".join(str(a) for a in item["alarm_at_minutes"])
         md.append(
-            f"| {item['stage']} | {item['starts_at_minute']}-{item['ends_at_minute']} | "
+            f"| {item['stage']} | {item['start_in_minutes']}-{item['ends_at_minute']} | "
             f"{item['per_person_minutes']} | {alarms_str} | {item['exit_criteria']} |"
         )
     md += [

@@ -75,5 +75,56 @@ assert 'script' in d
 "
 pass "recovery.json well-formed"
 
+section "Acceptance: recovery runbook absorbs verify and rehearsal evidence"
+EVIDENCE="$BASH_TMP/evidence"
+mkdir -p "$EVIDENCE/state"
+cat > "$EVIDENCE/state/verify.json" <<'EOF'
+{
+  "version": "1.0",
+  "started_at": "2026-10-04T00:00:00Z",
+  "status": "fail",
+  "steps": [
+    {
+      "step": 1,
+      "action": "open app",
+      "status": "fail",
+      "error_signature": "connection refused",
+      "diagnosis": {"likely_cause": "server down", "minimal_fix": "npm run dev"}
+    }
+  ]
+}
+EOF
+cat > "$EVIDENCE/state/rehearsal.json" <<'EOF'
+{
+  "version": "1.0",
+  "started_at": "2026-10-04T00:00:00Z",
+  "target_total_seconds": 60,
+  "segments": [],
+  "risks": [
+    {
+      "step": 2,
+      "action": "save note",
+      "class": "broken",
+      "overrun_seconds": 12,
+      "recommendation": "rewrite the step and cut one sentence"
+    }
+  ],
+  "fixes": []
+}
+EOF
+"$PY" "$ROOT/skills/recovery-runbook/scripts/fallback.py" \
+  --failure "test evidence failure" --severity P1 --out-dir "$EVIDENCE" >/dev/null
+EVIDENCE_REC="$EVIDENCE/state/recovery.json"
+EVIDENCE_REC_WIN="$(win "$EVIDENCE_REC")"
+"$PY" -c "
+import json
+d = json.load(open(r'$EVIDENCE_REC_WIN'))
+assert len(d['evidence']) == 2, d
+assert d['evidence'][0]['source'] == 'fast-verify'
+assert any('open app' in step for step in d['recovery_steps'])
+assert any('save note' in step for step in d['recovery_steps'])
+"
+pass "evidence loop populated recovery steps"
+
 echo
 echo "ALL recovery-runbook TESTS PASSED"

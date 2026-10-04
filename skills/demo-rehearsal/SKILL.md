@@ -79,8 +79,14 @@ The skill ships scripts/rehearse.py which drives the timed rehearsal: it reads p
 
 ## Output contract
 
-- `.hackathon/state/rehearsal.json` (NEW schema, matches `rehearsal.schema.json`)
+- `.hackathon/state/rehearsal.json` (matches `rehearsal.schema.json`)
 - `.hackathon/artifacts/rehearsal-log.md` — timestamped transcript
+
+In v1.6, `rehearsal.json` also emits:
+
+- `finished_at`, `total_seconds`, and `within_budget`
+- `verdict`: `all-green`, `mixed`, or `rewrite-needed`
+- `risks`: the drift/broken steps that recovery-runbook can read directly
 
 ## Acceptance criteria
 

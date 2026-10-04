@@ -110,7 +110,7 @@ commands:
 - `hackathon list`, `hackathon skills search`, `hackathon skills graph`
 - `hackathon run <skill> [--chain] [--apply]`
 - `hackathon match "<utterance>"`
-- `hackathon init`, `hackathon status`, `hackathon flow`
+- `hackathon init`, `hackathon status [--watch]`, `hackathon flow`
 - `hackathon resume` — print the handoff brief for a fresh agent
 - `hackathon sprint new|approve|review|accept|status|budget` — contract lifecycle
 - `hackathon eval` — evaluator dashboard with verdict, strategy, pass rate,
@@ -122,6 +122,12 @@ commands:
 - `hackathon doctor`, `hackathon validate`, `hackathon validate-skill`
 - `hackathon replay`, `hackathon report`, `hackathon skills pin`
 - `hackathon mcp` — Model Context Protocol server (`tools/list`, `find_skills`, ...)
+
+`hackathon status` derives a `pulse` from optional `time-box.json`,
+`rehearsal.json`, and `verify.json` artifacts: remaining clock, current-stage
+burn, next alarm, rehearsal drift/broken counts, and a suggested recovery
+severity. `status --watch --interval 30` re-evaluates that snapshot against
+the wall clock without rerunning the Python helpers.
 
 The MCP server dispatches to typed CLI result APIs and validates every tool
 argument against its advertised JSON Schema. Responses carry

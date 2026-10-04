@@ -303,6 +303,31 @@ describe('status command lifecycle', () => {
     rmSync(repo, { recursive: true, force: true });
   });
 
+  it('includes a v1.6 pulse when time-box evidence exists', () => {
+    const repo = makeRepo({
+      'plan.json': validPlan(),
+      'time-box.json': {
+        version: '1.0',
+        generated_at: new Date(Date.now() - 10 * 60000).toISOString(),
+        deadline_at: new Date(Date.now() + 110 * 60000).toISOString(),
+        time_remaining_minutes: 120,
+        team_size: 4,
+        current_stage: 'build',
+        current_stage_started_at: new Date(Date.now() - 40 * 60000).toISOString(),
+        current_stage_budget_minutes: 60,
+        schedule: [],
+      },
+    });
+    captured = '';
+    status({ cwd: repo, json: true });
+    const out = JSON.parse(captured.trim());
+    assert.ok(out.pulse);
+    assert.equal(out.pulse.available, true);
+    assert.equal(out.pulse.stage.stage, 'build');
+    assert.equal(out.pulse.stage.elapsed_minutes, 40);
+    rmSync(repo, { recursive: true, force: true });
+  });
+
   it('emits nextSuggestion for each lifecycle', () => {
     const data = {
       generated_at: new Date().toISOString(),

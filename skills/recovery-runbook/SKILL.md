@@ -30,6 +30,7 @@ Required:
 Optional:
 
 - `.hackathon/state/verify.json` (last failure signatures)
+- `.hackathon/state/rehearsal.json` (timed rehearsal risks)
 
 ## Execution
 
@@ -78,7 +79,9 @@ For the engineer, off-stage:
 Files written:
 
 - `.hackathon/artifacts/recovery-runbook.md` (the 30-second script + fallback plan)
-- `.hackathon/state/recovery.json` (matches `src/state/schemas/recovery.schema.json`; severity + steps + fallback)
+- `.hackathon/state/recovery.json` (matches `src/state/schemas/recovery.schema.json`; severity + steps + fallback + `evidence`)
+
+`scripts/fallback.py` automatically reads verify and rehearsal evidence from `--out-dir`, then prepends the recorded fixes to the off-stage recovery steps.
 
 ## Acceptance criteria
 

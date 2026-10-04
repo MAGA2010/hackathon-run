@@ -147,10 +147,20 @@ program
 
 program
   .command('status')
-  .description('Show current lifecycle state across all 5 state files')
+  .description('Show current lifecycle, time budget, and rehearsal risk')
   .option('--json', 'machine-readable JSON output')
+  .option('--watch', 'refresh the dashboard continuously')
+  .option('--interval <seconds>', 'watch refresh interval', (value) => parseInt(value, 10), 30)
   .option('-C, --cwd <path>', 'use a different working directory', process.cwd())
-  .action((opts) => process.exit(status({ cwd: opts.cwd, json: Boolean(opts.json) })));
+  .action(async (opts) => {
+    const code = await status({
+      cwd: opts.cwd,
+      json: Boolean(opts.json),
+      watch: Boolean(opts.watch),
+      intervalSeconds: opts.interval,
+    });
+    process.exit(code);
+  });
 
 program
   .command('resume')

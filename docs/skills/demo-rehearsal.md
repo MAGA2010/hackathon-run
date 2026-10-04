@@ -27,8 +27,13 @@ Do not invoke on day 1; the demo path is not stable yet. Run `scope-knife` and `
 
 ## Output contract
 
-- `.hackathon/state/rehearsal.json` — per-segment timings + scores + fix list (matches `rehearsal.schema.json`)
+- `.hackathon/state/rehearsal.json` — per-segment timings, scores, fix list, verdict, and risk records (matches `rehearsal.schema.json`)
 - `.hackathon/artifacts/rehearsal-log.md` — timestamped transcript
+
+`rehearsal.json` also carries `finished_at`, `total_seconds`, `within_budget`,
+`verdict`, and a `risks` array. `recovery-runbook` reads those risk records
+directly and `hackathon status` uses them to surface the most likely failure
+and suggested recovery severity.
 
 ## Scoring
 

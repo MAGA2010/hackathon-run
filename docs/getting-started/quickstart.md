@@ -148,7 +148,8 @@ Checks README, scans secrets, emits a packaging command.
 
 ```bash
 hackathon run demo-rehearsal --chain   # deps-first: scope-knife -> fast-verify -> demo-coach -> demo-rehearsal
-hackathon status                       # current lifecycle stage
+hackathon status                       # lifecycle snapshot + one-shot pulse
+hackathon status --watch --interval 30 # live time and rehearsal-risk pulse
 hackathon report                       # post-run markdown report
 hackathon trace                        # inspect the append-only event log
 ```

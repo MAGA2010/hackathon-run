@@ -6,12 +6,12 @@ Each skill writes JSON state files into `.hackathon/state/`. Schemas live in
 | State file          | Producer                  | Consumers                                            |
 | ------------------- | ------------------------- | ---------------------------------------------------- |
 | `plan.json`         | `scope-knife`             | `fast-verify`, `demo-coach`, `judge-sim`, `time-box` |
-| `time-box.json`     | `time-box`                | humans, `scope-knife` re-runs                        |
+| `time-box.json`     | `time-box`                | humans, `hackathon status`, `scope-knife` re-runs    |
 | `stack.json`        | `stack-picker`            | humans, bootstrap scripts                            |
 | `roster.json`       | `team-roster`             | humans, `demo-rehearsal`                             |
 | `verify.json`       | `fast-verify`             | `judge-sim`, `recovery-runbook`                      |
 | `demo.json`         | `demo-coach`              | `judge-sim`, `recovery-runbook`                      |
-| `rehearsal.json`    | `demo-rehearsal`          | humans                                               |
+| `rehearsal.json`    | `demo-rehearsal`          | humans, `hackathon status`, `recovery-runbook`       |
 | `review.json`       | `judge-sim`               | humans, future `portfolio-convert`                   |
 | `ship.json`         | `ship-pack`               | humans, CI                                           |
 | `recovery.json`     | `recovery-runbook`        | humans, future log tools                             |
@@ -25,7 +25,11 @@ Each skill writes JSON state files into `.hackathon/state/`. Schemas live in
 `fast-verify` uses that mapping to update `features[].passes` and attach
 command/log evidence. Evidence written automatically carries
 `source: "fast-verify"` so later runs replace it without deleting evaluator
-or manual evidence. `verify.json` records a workspace digest and per-step
+or manual evidence. `hackathon status` also derives a live `pulse` from
+optional `time-box.json`, `rehearsal.json`, and `verify.json`: remaining
+clock, stage burn, next alarm, and risk evidence. `recovery-runbook` reads
+the latter two sources and stores the absorbed failures in
+`recovery.json.evidence`. `verify.json` records a workspace digest and per-step
 command evidence. If source files change, the next sync marks that evidence
 stale and resets `passes` to false.
 

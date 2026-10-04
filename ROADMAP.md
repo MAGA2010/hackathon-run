@@ -5,6 +5,7 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 
 ## Shipped
 
+- [x] **Time-aware pulse + rehearsal evidence loop (v1.6)** — live deadline/stage burn in `hackathon status`, watch mode, and recovery-runbook evidence absorption
 - [x] **Harness primitives v1.3** — default-FAIL plan contract, session handoff, sprint contracts, evaluator handoff, append-only trace, budget gates, and a harness A/B measurement script
 - [x] **`hackathon resume`** — fresh-agent handoff brief from `.hackathon/state/session.json`
 - [x] **`hackathon sprint`** — `new / approve / review / status / budget` contract lifecycle
@@ -67,11 +68,11 @@ when priorities shift; the most recent release notes are in [CHANGELOG.md](CHANG
 - [x] **Optional third-party manifest fields** — `license` / `author` / `homepage` / `repository` / `compatibility` (WARN-only, surfaced in `skills search` + `find_skills`) (v1.2.0)
 - [x] **158/158 unit tests passing** after v1.2.0 (was 152/152)
 
-## Now (1.2.x)
+## Now (1.6.x)
 
 - [ ] **Re-enable GitHub Pages deployment** — enable Pages in repo settings and set the `ENABLE_GITHUB_PAGES=true` repository variable; `docs.yml` builds and uploads the artifact either way.
 
-## Later (1.3.x)
+## Later (1.6.x)
 
 - [ ] Wire sprint review into `fast-verify` so evaluator evidence can automatically update `plan.features[].passes` after a hard pass.
 

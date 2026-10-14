@@ -378,7 +378,11 @@ function executeScopeKnife(
 function executeFastVerify(python: PythonResolution, stage: ResolvedStage, cwd: string): number {
   const result = executeVerifyRun(cwd, python);
   if (result.total === 0) {
-    return failStage(stage, 'plan.demo_path is empty; run scope-knife first');
+    // A corrupt plan reports its real reason instead of the generic
+    // "demo_path is empty" advice.
+    const reason =
+      result.firstFailure?.error_signature ?? 'plan.demo_path is empty; run scope-knife first';
+    return failStage(stage, reason);
   }
   if (result.status === 'fail') {
     const first = result.firstFailure;

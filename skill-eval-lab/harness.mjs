@@ -216,13 +216,21 @@ function runAgentStep(scenario, cwd, variant) {
   } catch {
     // The agent may have removed or replaced its own prompt file.
   }
+  // A timeout-kill beheads the event stream: turn.completed (and its usage
+  // payload) never arrives. Record that so the report does not read as a
+  // zero-cost run.
+  const timedOut = result.signal === 'SIGTERM' || result.signal === 'SIGKILL';
+  const usage = extractUsage(result.stdout);
+  if (timedOut && usage.total_tokens === 0) {
+    usage.timed_out = true;
+  }
   return {
     id: `agent-${variant}`,
     kind: 'agent',
     command,
     prompt,
     ...result,
-    usage: extractUsage(result.stdout),
+    usage,
     expected_exit: 0,
   };
 }
@@ -697,6 +705,11 @@ function reportMarkdown(aggregate, final, judge, scenarioResults, failuresList) 
     lines.push(`| **Reliability** | **${primaryStability.reliability}%** | |`);
     lines.push(`| **Total tokens** | **${aggregate.usage?.total_tokens ?? 0}** | |`);
     lines.push(`| **Cost** | **$${Number(aggregate.usage?.cost_usd ?? 0).toFixed(4)}** | |`);
+    if (aggregate.usage?.timed_out) {
+      lines.push(
+        `| **Note** | agent run(s) hit the timeout and were killed before final usage was reported | |`,
+      );
+    }
   }
   if (aggregate.experiment) {
     lines.push(

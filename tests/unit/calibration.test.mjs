@@ -140,3 +140,50 @@ describe('retro skeleton carries calibration', () => {
     assert.ok(Array.isArray(retro.calibration.stages));
   });
 });
+
+describe('verify run handles corrupt plan.json', () => {
+  let dir;
+  before(() => {
+    dir = mkdtempSync(join(tmpdir(), 'verify-corrupt-'));
+    spawnSync(process.execPath, [CLI, 'init', '-y'], { cwd: dir, encoding: 'utf8' });
+  });
+  after(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('exits 2 with an honest message, not a stack trace', () => {
+    // evidence kind outside the enum fails plan schema validation
+    writeFileSync(
+      join(dir, '.hackathon/state/plan.json'),
+      JSON.stringify({
+        version: '1.0',
+        generated_at: '2026-10-14T00:00:00.000Z',
+        demo_goal: 'g',
+        time_remaining_minutes: 100,
+        features: [
+          {
+            name: 'F',
+            status: 'implemented',
+            classification: 'KEEP',
+            rationale: 'r',
+            passes: false,
+            acceptance_criteria: ['x'],
+            evidence: [{ kind: 'bogus', value: 'x' }],
+            sprint: null,
+            owner: '',
+            time_estimate_minutes: 30,
+          },
+        ],
+        demo_path: [{ step: 1, action: 'a', expected_outcome: 'x' }],
+        next_tasks: [],
+      }),
+    );
+    const r = spawnSync(process.execPath, [CLI, 'verify', 'run', '--json', '-C', dir], {
+      encoding: 'utf8',
+    });
+    assert.equal(r.status, 2);
+    const payload = JSON.parse(r.stdout);
+    assert.match(payload.message, /plan\.json is unreadable/);
+    assert.ok(!r.stderr.includes('at readState'), 'must not dump a stack trace');
+  });
+});

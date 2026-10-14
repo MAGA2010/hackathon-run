@@ -139,6 +139,7 @@ export function summarizeRuns(results, variant) {
       sum.output_tokens += Number(stepUsage.output_tokens ?? 0);
       sum.total_tokens += Number(stepUsage.total_tokens ?? 0);
       sum.cost_usd += Number(stepUsage.cost_usd ?? 0);
+      if (stepUsage.timed_out) sum.timed_out = true;
       return sum;
     },
     { input_tokens: 0, output_tokens: 0, total_tokens: 0, cost_usd: 0 },

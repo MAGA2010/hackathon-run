@@ -110,8 +110,10 @@ function sweepStaleTempFiles(target: string): void {
     const cutoff = Date.now() - 60 * 60 * 1000;
     for (const entry of readdirSync(dir)) {
       if (!/^\..+\.\d+\.[0-9a-f-]{36}\.tmp$/i.test(entry)) continue;
+      // Layout is ".<basename>.<pid>.<uuid>.tmp" — basename may itself
+      // contain dots, so index from the end: pid is parts[length - 3].
       const parts = entry.split('.');
-      const pid = Number(parts[2]);
+      const pid = Number(parts[parts.length - 3]);
       if (Number.isInteger(pid) && pid === process.pid) continue;
       const full = join(dir, entry);
       try {

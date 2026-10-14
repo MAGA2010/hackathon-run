@@ -79,16 +79,26 @@ function runPythonCapture(
 export function executeVerifyRun(cwd: string, python: PythonResolution): VerifyRunResult {
   const root = resolve(cwd);
   const startedAt = new Date().toISOString();
-  const workspaceDigest = computeWorkspaceDigest(root);
-  const plan = readState<PlanSnapshot>({ repoRoot: root, file: 'plan.json' });
+  let plan: PlanSnapshot | null;
+  let planError: string | undefined;
+  try {
+    plan = readState<PlanSnapshot>({ repoRoot: root, file: 'plan.json' });
+  } catch (error) {
+    // A corrupt or schema-mismatched plan is a usage error, not a crash:
+    // surface it through the normal result channel instead of a stack trace.
+    planError = `plan.json is unreadable: ${(error as Error).message.split('\n')[0]}`;
+    plan = null;
+  }
+  const workspaceDigest = plan ? computeWorkspaceDigest(root) : null;
   const demoSteps = plan?.demo_path ?? [];
   if (demoSteps.length === 0) {
     return {
-      code: 1,
+      code: planError ? 2 : 1,
       status: 'skipped',
       total: 0,
       passed: 0,
       skipped: 0,
+      firstFailure: planError ? { step: 0, error_signature: planError, diagnosis: {} } : undefined,
       verifyFile: join(root, '.hackathon', 'state', 'verify.json'),
     };
   }
@@ -264,7 +274,7 @@ export function verifyRunResult(opts: VerifyRunOptions): VerifyRunCliResult {
   const result = executeVerifyRun(root, python);
   const message =
     result.total === 0
-      ? 'plan.demo_path is empty; run scope-knife first'
+      ? (result.firstFailure?.error_signature ?? 'plan.demo_path is empty; run scope-knife first')
       : `verify ${result.status}: ${result.passed}/${result.total} steps passed, ${result.skipped} skipped`;
   return { code: result.code, message, result };
 }

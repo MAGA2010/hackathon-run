@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.7.0] - 2026-10-14
 
+### Fixed
+
+- `verify run` and `flow --execute` report a corrupt or schema-mismatched
+  plan.json as a usage error (exit 2, honest message) instead of crashing
+  with a stack trace or misreporting it as an empty demo path.
+- The state temp-file sweep extracted the owning pid from the wrong index,
+  so it could never recognize its own live temp files; basename dots are
+  now handled by indexing from the end.
+- Model-backed evaluation marks timeout-killed agent runs (`timed_out`) and
+  notes in the report that final token usage never arrived, instead of
+  silently reporting zero tokens.
+
 ### Added
 
 - **Retro calibration loop (v1.7)** — `run retro --apply` now embeds a

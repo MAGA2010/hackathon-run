@@ -42,7 +42,11 @@ export function verifyRun(opts: VerifyCommandOptions): number {
   }
   if (result.total === 0) {
     log.err(message);
-    log.dim('Run: hackathon run scope-knife --demo-goal "..." --apply');
+    if (result.firstFailure?.error_signature.startsWith('plan.json is unreadable')) {
+      log.dim('Fix plan.json (schema validation failed) or regenerate it with scope-knife.');
+    } else {
+      log.dim('Run: hackathon run scope-knife --demo-goal "..." --apply');
+    }
     return code;
   }
   const mark =

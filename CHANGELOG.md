@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`hackathon verify run` (v1.6.1)** — deterministic fast-verify executor as
+  a first-class command. It reads `plan.demo_path`, runs each step through
+  `verify_step.py`, stops at the first failure with a diagnosis, writes a
+  schema-valid `verify.json` with the workspace digest, and syncs
+  `plan.features[].passes`. `flow --execute` now shares the same executor
+  instead of carrying its own copy.
+- **Chinese routing (v1.6.1)** — the trigger tokenizer emits han runs,
+  sliding bigrams, and per-character tokens; BM25 indexes han bigrams the
+  same way; all 15 skills carry Chinese trigger phrases; the routing golden
+  set grows from 65 to 109 cases including 44 Chinese / mixed-language
+  utterances and Chinese adversarial negatives.
+- **Audit waivers (v1.6.1)** — a bundled skill can acknowledge reviewed
+  findings with `audit_waive: ['rule.name', ...]` frontmatter. Only medium
+  and below can be waived; critical and high always remain visible.
 - **Time-aware status pulse (v1.6)** — `hackathon status` derives live
   remaining time, current-stage burn, next alarm, rehearsal risk, and a
   suggested recovery severity from `time-box.json`, `rehearsal.json`, and
@@ -30,6 +44,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `hackathon run <skill> --apply` refuses to overwrite a state file whose
+  content already satisfies the lifecycle completeness predicate; pass
+  `--force` to replace a complete artifact deliberately. The refusal is
+  traced.
+- The skill evaluation harness defaults to 3 runs per scenario (override
+  with `HACKATHON_EVAL_RUNS` or `--runs`), so grade gates reflect repeated
+  runs instead of a single sample.
+- Synonym-rescue acceptance normalizes BM25 coverage by corpus-vocabulary
+  matches, so adding synonym terms in another language cannot dilute a
+  rescue below threshold.
 - The `time-box`, `rehearsal`, and `recovery` schemas now describe the live
   timing and evidence fields consumed by the status pulse.
 - The local release script now runs ESLint, routing, skill evaluation, and
@@ -41,6 +65,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **s1 evaluation scenario now passes** — the scenario's verify step used
+  `run fast-verify --apply`, which only writes a `skipped` skeleton, so the
+  lifecycle cursor could never advance. It now seeds real demo-path commands
+  and invokes `verify run`, and the fixture project ships the submission
+  artifacts (demo, screenshots, deploy note) its ship audit checks for.
+- CJK utterances route correctly: tokenizers in `trigger.ts` and `bm25.ts`
+  previously dropped every han character, so Chinese queries always fell
+  through to no-match.
+- `judge-sim` frontmatter used a multi-line bracket `triggers:` list the
+  YAML parser silently dropped, so none of its declared triggers ever
+  loaded. The block now uses the supported `- item` form.
+- `status` pulse no longer reports "Clock: expired" on seeded state: a
+  time-box with 0 remaining minutes and an empty schedule is an init
+  placeholder, not a passed deadline.
+- `writeState` sweeps orphaned atomic-write temp files (crash leftovers)
+  older than one hour, leaving live writers untouched.
 - `status`, `resume`, and `flow` now share one content-aware lifecycle
   snapshot. The placeholder files created by `init` remain incomplete until a
   stage has produced a real artifact, and `resume` no longer presents a stale

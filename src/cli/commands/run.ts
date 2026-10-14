@@ -25,7 +25,8 @@
  */
 
 import { loadAllSkills } from '../../harness/loader.js';
-import { writeState } from '../../harness/state.js';
+import { stateFileComplete, type FlowStateFile } from '../../harness/lifecycle.js';
+import { readState, writeState } from '../../harness/state.js';
 import { appendTrace } from '../../harness/trace.js';
 import { c } from '../lib/colors.js';
 import { commandFail, commandOk, errorMessage, type CommandResult } from '../lib/command-result.js';
@@ -37,6 +38,8 @@ export interface RunOptions {
   teamSize?: number;
   timeRemaining?: number;
   apply?: boolean;
+  /** With --apply: allow overwriting a complete artifact with a skeleton. */
+  force?: boolean;
   chain?: boolean;
   noBanner?: boolean;
   cwd?: string;
@@ -328,6 +331,23 @@ export function runSkillResult(
       skill: opts.skillName,
       output,
       warning: `${opts.skillName} is guidance-only; nothing to apply.\nre-run without --apply to just print the SKILL.md.`,
+    });
+  }
+  // Overwrite guard: a completed artifact is evidence. Never replace it with
+  // a skeleton — require --force and record the clobber in the trace.
+  const existing = readState({ repoRoot: cwd, file: target });
+  if (!opts.force && existing && stateFileComplete(target as FlowStateFile, existing)) {
+    appendTrace(cwd, {
+      type: 'skill.error',
+      actor: 'cli',
+      skill: opts.skillName,
+      status: 'error',
+      summary: `Refused to overwrite complete ${target} with a skeleton`,
+    });
+    return commandFail({
+      skill: opts.skillName,
+      output,
+      error: `${target} already holds a complete artifact; --apply would replace it with an empty skeleton. Use --force to overwrite deliberately.`,
     });
   }
   const skeleton = buildSkeleton(target, opts);

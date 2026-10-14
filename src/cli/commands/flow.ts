@@ -18,7 +18,7 @@
  *   5. ship-pack     → .hackathon/state/ship.json
  */
 
-import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { basename, join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -31,12 +31,11 @@ import {
   type LifecycleStage,
   type LifecycleSummary,
 } from '../../harness/lifecycle.js';
+import { executeVerifyRun } from '../../harness/verify-run.js';
 import { resolvePython, shellPythonCommand, type PythonResolution } from '../../harness/python.js';
 import { readState, writeState } from '../../harness/state.js';
 import { appendTrace, readTraces } from '../../harness/trace.js';
 import { readSession, updateSession } from '../../harness/session.js';
-import { syncVerificationToPlan } from '../../harness/verification.js';
-import { computeWorkspaceDigest } from '../../harness/workspace.js';
 import { c } from '../lib/colors.js';
 import { log } from '../lib/logger.js';
 
@@ -377,143 +376,20 @@ function executeScopeKnife(
 }
 
 function executeFastVerify(python: PythonResolution, stage: ResolvedStage, cwd: string): number {
-  const plan = readFlowPlan(cwd);
-  const startedAt = new Date().toISOString();
-  const workspaceDigest = computeWorkspaceDigest(cwd);
-  const demoSteps = plan?.demo_path ?? [];
-  if (demoSteps.length === 0) {
+  const result = executeVerifyRun(cwd, python);
+  if (result.total === 0) {
     return failStage(stage, 'plan.demo_path is empty; run scope-knife first');
   }
-
-  const steps: Array<Record<string, unknown>> = [];
-  let overall: 'pass' | 'fail' | 'partial' | 'skipped' = 'pass';
-  let skipped = 0;
-
-  for (let index = 0; index < demoSteps.length; index++) {
-    const item = demoSteps[index];
-    if (!item) continue;
-    const step = item.step ?? index + 1;
-
-    if (!item.command?.trim()) {
-      skipped++;
-      if (overall === 'pass') overall = 'partial';
-      steps.push({
-        step,
-        action: item.action,
-        expected_outcome: item.expected_outcome ?? '',
-        status: 'skip',
-        actual_outcome: 'No command supplied for this demo step.',
-        duration_seconds: 0,
-      });
-      continue;
+  if (result.status === 'fail') {
+    const first = result.firstFailure;
+    if (first) {
+      const diagnosis = first.diagnosis as { minimal_fix?: string };
+      log.err(`step ${first.step} failed: ${first.error_signature}`);
+      if (diagnosis?.minimal_fix) log.dim(`minimal fix: ${diagnosis.minimal_fix}`);
     }
-
-    const verifyScript = skillScript(cwd, 'fast-verify', 'verify_step.py');
-    const args = [
-      '--command',
-      item.command,
-      '--expected-outcome',
-      item.expected_outcome ?? '',
-      '--timeout',
-      String(item.timeout_seconds ?? 30),
-    ];
-    log.info('$ ' + stepDisplay(python, { script: verifyScript, args }));
-    const result = runPythonCommand(python, verifyScript, args, cwd, true);
-
-    let parsed: Record<string, unknown> | null = null;
-    try {
-      parsed = JSON.parse(result.stdout.trim()) as Record<string, unknown>;
-    } catch {
-      parsed = null;
-    }
-
-    const passed = result.status === 0 && parsed?.status === 'pass';
-    steps.push({
-      step,
-      action: item.action,
-      expected_outcome: item.expected_outcome ?? '',
-      command: item.command,
-      status: passed ? 'pass' : 'fail',
-      actual_outcome: parsed?.actual_outcome ?? 'Verification command produced no JSON result.',
-      duration_seconds: parsed?.duration_seconds ?? 0,
-      ...(parsed?.exit_code != null ? { exit_code: parsed.exit_code } : {}),
-      ...(parsed?.stdout_sha256 ? { stdout_sha256: parsed.stdout_sha256 } : {}),
-      ...(parsed?.stderr_sha256 ? { stderr_sha256: parsed.stderr_sha256 } : {}),
-      ...(parsed?.cwd ? { cwd: parsed.cwd } : {}),
-      ...(parsed?.started_at ? { started_at: parsed.started_at } : {}),
-      ...(parsed?.finished_at ? { finished_at: parsed.finished_at } : {}),
-      ...(parsed?.error_signature ? { error_signature: parsed.error_signature } : {}),
-    });
-
-    if (!passed) {
-      overall = 'fail';
-      const signature = String(
-        parsed?.error_signature ?? (result.stdout.trim() || 'verification failed'),
-      );
-      let diagnosis: Record<string, unknown> = {
-        likely_cause: 'Verification command failed or expected output was missing.',
-        minimal_fix: 'Inspect the command output and fix the first failing demo step.',
-        re_verify_command: item.command,
-      };
-      const diagnoseScript = skillScript(cwd, 'fast-verify', 'diagnose.py');
-      const diagnosisResult = runPythonCommand(
-        python,
-        diagnoseScript,
-        ['--signature', signature],
-        cwd,
-        true,
-      );
-      try {
-        diagnosis = JSON.parse(diagnosisResult.stdout.trim()) as Record<string, unknown>;
-      } catch {
-        // Keep the generic diagnosis when the helper cannot produce JSON.
-      }
-      steps[steps.length - 1] = { ...steps[steps.length - 1], diagnosis };
-      break;
-    }
+    return failStage(stage, 'fast-verify stopped at the first failing step');
   }
-
-  if (overall === 'pass' && skipped === demoSteps.length) overall = 'skipped';
-
-  writeState({
-    repoRoot: cwd,
-    file: 'verify.json',
-    data: {
-      version: '1.0',
-      started_at: startedAt,
-      finished_at: new Date().toISOString(),
-      workspace_digest: workspaceDigest,
-      status: overall,
-      steps,
-    },
-  });
-  const sync = syncVerificationToPlan(cwd);
-  if (sync.updates.length > 0) {
-    const passed = sync.updates.filter((update) => update.passes).length;
-    log.info(
-      `synced fast-verify to plan.json: ${passed}/${sync.updates.length} feature(s) passing`,
-    );
-  }
-
-  const artifactDir = join(cwd, '.hackathon', 'artifacts');
-  mkdirSync(artifactDir, { recursive: true });
-  writeFileSync(
-    join(artifactDir, 'fast-verify-output.md'),
-    [
-      '# Fast Verify Output',
-      '',
-      `_Generated: ${startedAt}_`,
-      '',
-      overall === 'pass'
-        ? 'Every demo step passed and its expected outcome was observed.'
-        : overall === 'fail'
-          ? 'Verification stopped at the first failing step; see verify.json for the diagnosis.'
-          : 'Some demo steps have no executable command and were recorded as skip.',
-      '',
-    ].join('\n'),
-  );
-  if (overall === 'fail') return 1;
-  if (overall === 'skipped' || overall === 'partial') {
+  if (result.status === 'skipped' || result.status === 'partial') {
     log.warn(
       'fast-verify did not fully verify the demo path; skipped steps need commands or an agent',
     );

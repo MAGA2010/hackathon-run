@@ -15,12 +15,14 @@
   "project": {
     "name": "GreenFork",
     "files": {
-      "README.md": "# GreenFork\n## AI Meal Prediction\n## Canteen Menu Sync\n## User Allergen Profile\n## Order Prebooking\n## Analytics Dashboard\n## Admin Controls\n## Notifications\n\n## Run\nnpm run dev\n\n## Demo\nOpen the app and prebook one meal.\n",
+      "README.md": "# GreenFork\n## AI Meal Prediction\n## Canteen Menu Sync\n## User Allergen Profile\n## Order Prebooking\n## Analytics Dashboard\n## Admin Controls\n## Notifications\n\n## Run\nnpm run dev\n\n## Install\nnpm install\n\n## Demo\nOpen the app and prebook one meal. Deployed live: https://greenfork.example\n\n## One-liner\nAI-predicted canteen surplus so students prebook meals and cut waste.\n\n## Env\nCopy .env.example to .env and set DATABASE_URL.\n",
       "package.json": "{\n  \"name\": \"green-fork\",\n  \"version\": \"0.1.0\",\n  \"scripts\": {\n    \"dev\": \"vite\"\n  }\n}\n",
-      "src/predict.py": "def predict_surplus(menu, weather):\n    return []\n",
+      "src/predict.py": "menu = [\"rice\", \"noodles\"]\nweather = {}\nsurplus = [m for m in menu if m]\nprint(\"predicted surplus:\", len(surplus))\n",
       "src/menu.py": "def fetch_menu():\n    return []\n",
       "src/user.py": "def get_profile(user_id):\n    return {}\n",
-      "src/prebook.py": "def prebook_meal(user_id, meal_id):\n    return True\n",
+      "src/prebook.py": "print(\"prebooked: True\")\n",
+      "demo/demo.gif": "GIF89a placeholder demo recording\n",
+      "screenshots/home.png": "PNG placeholder screenshot\n",
       ".env.example": "DATABASE_URL=postgres://localhost/greenfork\n",
       "prizes.json": "[\n  {\n    \"name\": \"Best Sustainability\",\n    \"criteria\": \"reduce waste sustainability impact circular measurable\",\n    \"weight\": 3\n  },\n  {\n    \"name\": \"Best AI Use\",\n    \"criteria\": \"ai machine learning generative useful model\",\n    \"weight\": 2\n  },\n  {\n    \"name\": \"Best UX\",\n    \"criteria\": \"design usability delight accessibility\",\n    \"weight\": 1\n  }\n]\n"
     }
@@ -152,9 +154,16 @@
       "expect_exit": 0
     },
     {
+      "id": "verify-commands",
+      "kind": "node_eval",
+      "code": "const fs = require('fs'); const root = process.argv[1]; const planPath = root + '/.hackathon/state/plan.json'; const plan = JSON.parse(fs.readFileSync(planPath, 'utf8')); const commands = {1: ['ls package.json', 'package.json'], 2: ['python3 src/predict.py', 'surplus'], 3: ['python3 src/prebook.py', 'prebooked'], 4: ['cat README.md', 'prebook one meal']}; for (const step of plan.demo_path || []) { const spec = commands[step.step]; if (spec) { step.command = spec[0]; step.expected_outcome = spec[1]; } } fs.writeFileSync(planPath, JSON.stringify(plan, null, 2));",
+      "args": ["{cwd}"],
+      "expect_exit": 0
+    },
+    {
       "id": "verify",
       "kind": "cli",
-      "args": ["run", "fast-verify", "--apply", "-C", "{cwd}"],
+      "args": ["verify", "run", "-C", "{cwd}"],
       "expect_exit": 0
     },
     {

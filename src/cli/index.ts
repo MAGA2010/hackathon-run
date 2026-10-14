@@ -25,6 +25,7 @@ import { list } from './commands/list.js';
 import { status } from './commands/status.js';
 import { doctor } from './commands/doctor.js';
 import { flow } from './commands/flow.js';
+import { verifyRun } from './commands/verify.js';
 import { diff } from './commands/diff.js';
 import { newSkill } from './commands/new-skill.js';
 import { validateSkill } from './commands/validate-skill.js';
@@ -144,6 +145,17 @@ program
       }),
     ),
   );
+
+program
+  .command('verify')
+  .description('Verify the demo path end-to-end (fast-verify executor)')
+  .command('run')
+  .description(
+    'Execute every plan.demo_path step via verify_step.py, write verify.json with evidence, and sync plan.features[].passes',
+  )
+  .option('--json', 'machine-readable JSON output')
+  .option('-C, --cwd <path>', 'use a different working directory', process.cwd())
+  .action((opts) => process.exit(verifyRun({ cwd: opts.cwd, json: Boolean(opts.json) })));
 
 program
   .command('status')
@@ -405,6 +417,7 @@ program
     parseInt,
   )
   .option('--apply', 'actually write the pre-filled state file to .hackathon/state/')
+  .option('--force', 'with --apply: allow overwriting a complete state artifact with a skeleton')
   .option('--chain', 'run the skill dependencies first, in topological order')
   .option('--no-banner', 'skip the "# Skill:" + trigger budget header')
   .option('-C, --cwd <path>', 'repo root (where skills/ and .hackathon/ live)', process.cwd())
@@ -416,6 +429,7 @@ program
         teamSize?: number;
         timeRemaining?: number;
         apply?: boolean;
+        force?: boolean;
         chain?: boolean;
         banner?: boolean;
         cwd?: string;
@@ -428,6 +442,7 @@ program
             teamSize: opts.teamSize,
             timeRemaining: opts.timeRemaining,
             apply: opts.apply,
+            force: opts.force,
             noBanner: opts.banner === false,
             cwd: opts.cwd,
           })
@@ -437,6 +452,7 @@ program
             teamSize: opts.teamSize,
             timeRemaining: opts.timeRemaining,
             apply: opts.apply,
+            force: opts.force,
             noBanner: opts.banner === false,
             cwd: opts.cwd,
           });

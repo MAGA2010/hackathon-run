@@ -51,7 +51,7 @@ function argValue(name, fallback) {
 
 const scenariosDir = resolve(argValue('--scenarios', join(here, 'scenarios')));
 const outRoot = resolve(argValue('--out', join(here, 'results')));
-const runs = Number(argValue('--runs', '1'));
+const runs = Number(argValue('--runs', process.env.HACKATHON_EVAL_RUNS ?? '3'));
 const judgePath = argValue('--judge', null);
 const minGrade = argValue('--min-grade', null);
 const failOnP1 = process.argv.includes('--fail-on-p1');
@@ -140,6 +140,13 @@ function runStep(step, cwd) {
   let command;
   if (step.kind === 'cli') {
     command = [nodePath, cliPath, ...step.args.map((a) => replaceTokens(a, cwd))];
+  } else if (step.kind === 'node_eval') {
+    command = [
+      nodePath,
+      '-e',
+      replaceTokens(step.code, cwd),
+      ...step.args.map((a) => replaceTokens(a, cwd)),
+    ];
   } else if (step.kind === 'node') {
     command = [
       nodePath,

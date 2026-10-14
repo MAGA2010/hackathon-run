@@ -17,7 +17,22 @@ const K1 = 1.2;
 const B = 0.75;
 
 function tokenize(text: string): string[] {
-  return text.toLowerCase().match(TOKEN_RE) ?? [];
+  const lower = text.toLowerCase();
+  const tokens: string[] = lower.match(TOKEN_RE) ?? [];
+  // CJK has no whitespace boundaries: index contiguous han runs as bigrams so
+  // BM25 can rank Chinese queries. Single han characters are kept too so
+  // one-character queries still hit.
+  const runs = lower.match(/[\u4e00-\u9fff\u3400-\u4dbf]+/g);
+  if (runs) {
+    for (const run of runs) {
+      if (run.length === 1) {
+        tokens.push(run);
+        continue;
+      }
+      for (let i = 0; i < run.length - 1; i++) tokens.push(run.slice(i, i + 2));
+    }
+  }
+  return tokens;
 }
 
 export interface Bm25Document {

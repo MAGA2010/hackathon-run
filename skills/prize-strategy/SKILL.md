@@ -15,6 +15,13 @@ triggers:
   - 'how do we position for X prize'
   - 'what do judges want'
   - 'which prize category'
+  - '冲哪个奖'
+  - '选哪个赛道'
+  - '冲奖策略'
+  - '哪个奖'
+  - '冲奖'
+  - '选奖'
+  - '拿奖'
 allowed_tools: [Read, Write]
 capabilities: [fs_read, fs_write]
 ---

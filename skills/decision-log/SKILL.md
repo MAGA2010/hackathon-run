@@ -10,7 +10,7 @@ category: lifecycle
 tags: ["append-only", "audit-trail", "keep-cut-defer-pivot"]
 dependencies: ["scope-knife"]
 side_effects: ["decision-log"]
-triggers: ["log a decision", "record what we decided", "decision history", "keep cut defer", "append-only"]
+triggers: ['log a decision', 'record what we decided', 'decision history', 'keep cut defer', 'append-only', '记录决策', '决策记录', '记录砍功能原因', '记录一下', '为什么转向']
 ---
 
 # decision-log

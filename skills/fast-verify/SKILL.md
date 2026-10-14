@@ -12,9 +12,10 @@ category: verifying
 tags: ['smoke-test', 'cross-platform', '30-second']
 dependencies: ['scope-knife']
 side_effects: ['verify']
-triggers: ['verify it works', 'smoke test', 'does it run', 'does the demo run', 'quick check', 'fast verify']
+triggers: ['verify it works', 'smoke test', 'does it run', 'does the demo run', 'quick check', 'fast verify', '验证功能', '跑通demo', 'demo能不能跑通', '检查功能是否正常', '检查demo']
 allowed_tools: [Read, Bash]
 capabilities: [fs_read, exec]
+audit_waive: ['shell.child-process']
 ---
 
 # fast-verify

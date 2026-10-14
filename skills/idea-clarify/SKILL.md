@@ -11,8 +11,7 @@ version: 1.0
 category: scoping
 tags: ['empty-repo', 'vague-brief', 'pre-scope']
 dependencies: []
-triggers:
-  ['we have no idea', 'what are we building', 'empty repo', 'vague brief', 'scope is unclear']
+triggers: ['we have no idea', 'what are we building', 'empty repo', 'vague brief', 'scope is unclear', '需求不明确', '明确项目目标', '想法落地', '要做什么', '到底要做']
 ---
 
 # idea-clarify

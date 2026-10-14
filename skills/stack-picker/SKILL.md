@@ -10,7 +10,7 @@ category: scoping
 tags: ["tech-stack", "bootstrap", "30-min"]
 dependencies: ["idea-clarify", "scope-knife"]
 side_effects: ["stack"]
-triggers: ["what stack should we use", "tech stack", "how do we bootstrap", "pick the framework", "recommended stack"]
+triggers: ['what stack should we use', 'tech stack', 'how do we bootstrap', 'pick the framework', 'recommended stack', '技术栈', '用什么框架', '选型']
 ---
 
 # stack-picker

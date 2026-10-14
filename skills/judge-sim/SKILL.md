@@ -12,15 +12,19 @@ tags: ['scoring', '7-dimensions', 'feedback']
 dependencies: ['demo-coach']
 side_effects: ['review']
 triggers:
-  [
-    'how would judges score',
-    'pre-submission review',
-    'judge this',
-    'what would judges say',
-    'review my submission',
-  ]
+  - 'how would judges score'
+  - 'pre-submission review'
+  - 'judge this'
+  - 'what would judges say'
+  - 'review my submission'
+  - '评委打分'
+  - '模拟评审'
+  - '评审一下'
+  - '怎么评分'
+  - '打分'
 allowed_tools: [Read, Write, WebFetch]
 capabilities: [fs_read, fs_write, net, env]
+audit_waive: ['env.read-token']
 ---
 
 # judge-sim

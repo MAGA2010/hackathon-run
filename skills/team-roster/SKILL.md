@@ -10,7 +10,7 @@ category: scoping
 tags: ["roles", "assignments", "bottleneck"]
 dependencies: []
 side_effects: ["roster"]
-triggers: ["who does what", "team assignments", "role assignments", "who is blocked", "bottleneck"]
+triggers: ['who does what', 'team assignments', 'role assignments', 'who is blocked', 'bottleneck', '分工', '谁在做什么', '谁被阻塞了']
 ---
 
 # team-roster

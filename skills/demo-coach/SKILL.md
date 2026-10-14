@@ -12,7 +12,7 @@ category: demoing
 tags: ['pitch', 'narrative', '30-60-90']
 dependencies: ['fast-verify']
 side_effects: ['demo']
-triggers: ['draft a pitch', 'demo script', 'what do we say', 'pitch is unclear', 'narrative']
+triggers: ['draft a pitch', 'demo script', 'what do we say', 'pitch is unclear', 'narrative', '演示讲稿', '路演讲稿', '怎么讲演示', '写讲稿']
 ---
 
 # demo-coach

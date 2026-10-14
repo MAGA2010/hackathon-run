@@ -10,7 +10,7 @@ category: scoping
 tags: ["allocation", "checkpoints", "alarms"]
 dependencies: []
 side_effects: ["time-box"]
-triggers: ["how much time per stage", "time allocation", "checkpoints", "set timers", "allocate remaining time"]
+triggers: ['how much time per stage', 'time allocation', 'checkpoints', 'set timers', 'allocate remaining time', '分配时间', '排期', '时间不够用', '还剩多少时间', '时间分配', '排一下', '两小时的计划', '多少分钟']
 ---
 
 # time-box

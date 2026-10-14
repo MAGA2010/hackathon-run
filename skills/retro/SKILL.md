@@ -10,7 +10,7 @@ category: lifecycle
 tags: ["post-mortem", "ratios", "learn"]
 dependencies: ["decision-log", "ship-pack"]
 side_effects: ["retro"]
-triggers: ["retrospective", "what did we learn", "post-mortem", "keep doing stop doing", "try next time"]
+triggers: ['retrospective', 'what did we learn', 'post-mortem', 'keep doing stop doing', 'try next time', '复盘', '赛后总结', '回顾得失', '回顾', '得失']
 ---
 
 # retro

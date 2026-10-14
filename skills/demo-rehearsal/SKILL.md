@@ -10,7 +10,7 @@ category: demoing
 tags: ["mock-demo", "stopwatch", "timing"]
 dependencies: ["demo-coach"]
 side_effects: ["rehearsal"]
-triggers: ["rehearse", "practice the demo", "timed run", "mock demo", "run through"]
+triggers: ['rehearse', 'practice the demo', 'timed run', 'mock demo', 'run through', '排练演示', '练习演示', '再跑一遍演示']
 ---
 
 # demo-rehearsal

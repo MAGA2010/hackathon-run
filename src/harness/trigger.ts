@@ -41,9 +41,26 @@ import { buildBm25Stats, normalizedBm25Score, bm25Match, type Bm25Document } fro
 import type { SkillManifest } from './types.js';
 
 const TOKEN_RE = /[a-z][a-z0-9_-]+/g;
+const HAN_RUN_RE = /[\u4e00-\u9fff\u3400-\u4dbf]+/g;
 
 function tokens(text: string): string[] {
-  return text.toLowerCase().match(TOKEN_RE) ?? [];
+  const lower = text.toLowerCase();
+  const out: string[] = lower.match(TOKEN_RE) ?? [];
+  // CJK has no whitespace boundaries. Keep contiguous han runs as tokens
+  // (multi-char phrases match the zh synonym groups verbatim), plus sliding
+  // bigrams and per-char tokens so 2-char words inside longer runs still
+  // reach the synonym groups ("赛后帮我们复盘" must surface "复盘").
+  const runs = lower.match(HAN_RUN_RE);
+  if (runs) {
+    for (const run of runs) {
+      out.push(run);
+      if (run.length > 1) {
+        for (let i = 0; i < run.length - 1; i++) out.push(run.slice(i, i + 2));
+        for (const ch of run) out.push(ch);
+      }
+    }
+  }
+  return out;
 }
 
 function bigrams(words: string[]): string[] {
@@ -269,18 +286,30 @@ interface PhraseHit {
 
 const MIN_PHRASE_SIG_LENGTH = 1;
 
-function matchExactPhrases(utteranceWords: string[], skills: SkillManifest[]): PhraseHit[] {
+function matchExactPhrases(
+  utteranceWords: string[],
+  skills: SkillManifest[],
+  utteranceRaw = '',
+): PhraseHit[] {
   const rawSet = new Set(utteranceWords);
+  const HAN_ONLY = /^[\u4e00-\u9fff\u3400-\u4dbf]+$/;
+  // CJK phrases have no whitespace boundaries, so token-containment does not
+  // transfer: "冲哪个奖" inside "这次比赛应该冲哪个奖" never produces the same
+  // token multiset. A contiguous substring check on the raw utterance is the
+  // CJK equivalent of the English rule.
   const hits: PhraseHit[] = [];
   for (const skill of skills) {
     const bag = buildBag(skill);
     for (const phrase of bag.phrases) {
-      // Use ALL tokens (not just significant) so stopword-bearing phrases
-      // like "what should we cut" don't match arbitrary utterances that
-      // share a single content word.
       const pTokens = tokens(phrase);
       const sigLen = significantWords(pTokens).length;
       if (sigLen < MIN_PHRASE_SIG_LENGTH) continue;
+      if (HAN_ONLY.test(phrase)) {
+        if (utteranceRaw.includes(phrase)) {
+          hits.push({ skill, phrase, length: sigLen });
+        }
+        continue;
+      }
       const present = pTokens.filter((t) => rawSet.has(t)).length;
       if (present === pTokens.length) {
         hits.push({ skill, phrase, length: sigLen });
@@ -312,18 +341,163 @@ const PARAPHRASE_GROUPS: Record<string, string[]> = {
     'mvp',
     'minimal',
     'roadmap',
+    '砍',
+    '裁剪',
+    '缩小范围',
+    '精简',
+    '最小可行',
   ],
-  verify: ['test', 'check', 'run', 'smoke', 'validate', 'pass', 'works', 'verify'],
-  demo: ['pitch', 'present', 'show', 'rehearse', 'dry', 'mock', 'speak'],
-  team: ['who', 'assign', 'role', 'roster', 'free', 'blocked', 'stuck', 'owner', 'accountable'],
-  retro: ['review', 'postmortem', 'post', 'after', 'reflect', 'learn', 'retrospective', 'mortem'],
-  stack: ['tech', 'language', 'framework', 'tool', 'choose', 'pick', 'recommend', 'lib'],
-  decision: ['log', 'record', 'why', 'keep', 'defer', 'pivot', 'reason', 'rationale', 'decide'],
-  recovery: ['fail', 'crash', 'fallback', 'emergency', 'broken', '2am', 'recover'],
-  ship: ['submit', 'package', 'secret', 'readme', 'audit', 'ready', 'release', 'leak'],
-  judge: ['score', 'rating', 'panel', 'grade', 'feedback', 'review', 'evaluate'],
-  clarify: ['idea', 'brief', 'goal', 'project', 'question', 'understand', 'surface', 'refine'],
-  time: ['schedule', 'allocate', 'clock', 'hours', 'deadline', 'remaining', 'budget', 'minutes'],
+  verify: [
+    'test',
+    'check',
+    'run',
+    'smoke',
+    'validate',
+    'pass',
+    'works',
+    'verify',
+    '验证',
+    '测试',
+    '检查',
+    '跑通',
+  ],
+  demo: [
+    'pitch',
+    'present',
+    'show',
+    'rehearse',
+    'dry',
+    'mock',
+    'speak',
+    '演示',
+    '路演',
+    '排练',
+    '讲稿',
+  ],
+  team: [
+    'who',
+    'assign',
+    'role',
+    'roster',
+    'free',
+    'blocked',
+    'stuck',
+    'owner',
+    'accountable',
+    '分工',
+    '阻塞',
+    '谁负责',
+  ],
+  retro: [
+    'review',
+    'postmortem',
+    'post',
+    'after',
+    'reflect',
+    'learn',
+    'retrospective',
+    'mortem',
+    '复盘',
+    '回顾',
+    '总结',
+  ],
+  stack: [
+    'tech',
+    'language',
+    'framework',
+    'tool',
+    'choose',
+    'pick',
+    'recommend',
+    'lib',
+    '技术栈',
+    '选型',
+    '用什么框架',
+  ],
+  decision: [
+    'log',
+    'record',
+    'why',
+    'keep',
+    'defer',
+    'pivot',
+    'reason',
+    'rationale',
+    'decide',
+    '决策',
+    '记录',
+    '转向',
+  ],
+  recovery: [
+    'fail',
+    'crash',
+    'fallback',
+    'emergency',
+    'broken',
+    '2am',
+    'recover',
+    '挂了',
+    '崩了',
+    '翻车',
+    '现场故障',
+    '恢复',
+  ],
+  ship: [
+    'submit',
+    'package',
+    'secret',
+    'readme',
+    'audit',
+    'ready',
+    'release',
+    'leak',
+    '提交',
+    '打包',
+    '密钥',
+    '泄露',
+  ],
+  judge: [
+    'score',
+    'rating',
+    'panel',
+    'grade',
+    'feedback',
+    'review',
+    'evaluate',
+    '评分',
+    '评审',
+    '评委',
+    '打分',
+  ],
+  clarify: [
+    'idea',
+    'brief',
+    'goal',
+    'project',
+    'question',
+    'understand',
+    'surface',
+    'refine',
+    '想法',
+    '需求',
+    '目标',
+    '明确需求',
+  ],
+  time: [
+    'schedule',
+    'allocate',
+    'clock',
+    'hours',
+    'deadline',
+    'remaining',
+    'budget',
+    'minutes',
+    '时间',
+    '排期',
+    '剩余时间',
+    '截止',
+    '分配时间',
+  ],
 };
 
 const TOKEN_TO_GROUPS = new Map<string, string[]>();
@@ -480,7 +654,7 @@ export function matchSkill(
   const byName = new Map(skills.map((s) => [s.frontmatter.name, s]));
 
   // Layer 1: exact phrase short-circuit.
-  const phraseHits = matchExactPhrases(utteranceWords, skills);
+  const phraseHits = matchExactPhrases(utteranceWords, skills, utterance.toLowerCase());
   if (phraseHits.length > 0) {
     phraseHits.sort(
       (a, b) =>
@@ -628,12 +802,20 @@ function lexicalPipeline(
         const bg = bigramBoost(expanded, buildBag(skill));
         const ug = unigramHits(expanded, buildBag(skill));
         const score = match.score * 10 + bg.bonus + ug * 0.5;
+        // Coverage for rescue acceptance counts query tokens that exist in the
+        // corpus vocabulary. Expansion terms in other languages (zh synonyms
+        // against an English corpus) sit in the query but can never match, so
+        // the raw denominator dilutes coverage below threshold as the synonym
+        // table grows. Normalize by vocabulary-hit tokens instead.
+        const vocabHits = Math.max(match.matchedTokens, signalWords.length);
+        const rescueCoverage =
+          match.queryTokens > 0 ? match.matchedTokens / Math.max(vocabHits, 1) : 0;
         return {
           name: skill.frontmatter.name,
           score,
           reasons: score > 0 ? [`synonym expansion (bm25=${match.score.toFixed(3)})`] : [],
           bm25Score: match.score,
-          coverage: match.coverage,
+          coverage: rescueCoverage,
           matchedTokens: match.matchedTokens,
           matchedDomainTokens: 0,
           exactPhrase: false,

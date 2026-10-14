@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-10-14
+
+### Added
+
+- **Retro calibration loop (v1.7)** — `run retro --apply` now embeds a
+  `calibration` record in `retro.json` distilled from `time-box.json`:
+  planned vs observed minutes per stage, overrun ratios, alarms fired, and
+  the final burn rate. Across events these records become the dataset for
+  adjusting the stage-budget table instead of guessing.
+- **Model-backed agent evaluation, fixed presets (v1.7)** — the `codex`
+  runner preset now targets codex-cli 0.15x+ (`--approve-for-me -C`,
+  prompt passed via file); the legacy template remains as `codex-legacy`.
+  A new `a1-agent-greenfork` scenario exercises a real agent end-to-end
+  (init -> scope-knife -> time-box -> verify run -> demo-coach).
+- Agent evaluation scenarios live under `skill-eval-lab/scenarios-agent/`
+  and results under `skill-eval-lab/results-agent/` (gitignored).
+
+### Changed
+
+- README documents `verify run`, the complete-artifact overwrite guard,
+  bilingual routing, `audit_waive`, and the calibration loop.
+- The root SKILL.md carries Chinese trigger phrases for agent intent
+  matching.
+
 ## [1.6.0] - 2026-10-14
 
 ### Added

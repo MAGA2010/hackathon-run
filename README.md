@@ -410,10 +410,17 @@ hackathon flow --execute --demo-goal "sign up + save note" --time-remaining 240
 ```
 
 For automated verification, add a `command` to each `demo_path` step in
-`.hackathon/state/plan.json`. `flow --execute` runs those commands in order,
-checks the expected output, stops at the first failure, and writes a diagnosis
-to `verify.json`. Steps without commands are recorded as `skip`; they do not
-count as a verified demo, and the pipeline will not report ready to ship.
+`.hackathon/state/plan.json`, then run `hackathon verify run`. It executes
+every step in order, checks the expected output, stops at the first failure
+with a diagnosis, writes the workspace digest to `verify.json`, and syncs
+`plan.features[].passes`. Steps without commands are recorded as `skip`; they
+do not count as a verified demo, and the pipeline will not report ready to
+ship. `flow --execute` runs the same executor as stage 2 of the pipeline.
+
+State files that already hold a complete artifact are protected:
+`hackathon run <skill> --apply` refuses to replace them with an empty
+skeleton. Pass `--force` to overwrite deliberately — verified evidence is
+never silently clobbered.
 
 `sprint accept` applies the evaluator verdict: a passing eval flips the
 feature to `passes: true` and records evidence; a failing eval writes feedback
@@ -539,6 +546,12 @@ When `time-box.json`, `rehearsal.json`, or `verify.json` evidence exists,
 burn, rehearsal risk, and a suggested recovery severity. Use
 `hackathon status --watch` during the final countdown.
 
+The clock telemetry feeds a calibration loop: when `retro` runs,
+`time-box.json` is distilled into a `calibration` record inside
+`retro.json` — planned vs observed minutes per stage, overrun ratios, alarms
+fired, and the final burn rate. Across events, those records become the
+dataset for adjusting the stage-budget table instead of guessing.
+
 After install, the CLI command is hackathon (not hackathon-run). The package is @hackathon-run/hackathon-run; the binary is hackathon.
 
 For CI, run `hackathon skills lint` to validate every bundled skill and
@@ -557,7 +570,15 @@ npm run test:routing
 
 The audit compares declared `capabilities` (`fs_read`, `fs_write`, `net`,
 `exec`, `env`, `mcp`) against scripts, supports deny-policies, and emits
-SARIF 2.1.0 for code-scanning integrations.
+SARIF 2.1.0 for code-scanning integrations. A bundled skill can acknowledge a
+reviewed finding with `audit_waive: ['shell.child-process', ...]` frontmatter
+— medium and below only; critical and high findings always surface.
+
+Skill routing is bilingual: English and Chinese queries both hit the same
+BM25 + trigger-phrase pipeline (han bigram indexing, CJK substring phrase
+match). The 109-case golden set covers 44 Chinese / mixed utterances and
+Chinese adversarial negatives, gating precision, recall, and false-positive
+rate in CI.
 
 `judge-sim` sends protocol v2 requests to `HACKATHON_JUDGE_BACKEND`, requiring
 per-dimension rationale, evidence, and confidence while still accepting older

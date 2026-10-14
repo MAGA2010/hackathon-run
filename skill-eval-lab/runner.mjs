@@ -7,7 +7,11 @@
  */
 
 export const AGENT_RUNNER_PRESETS = {
-  codex: 'codex exec --json --full-auto --cd "{cwd}" "{prompt}"',
+  // codex-cli 0.15x replaced --full-auto with --approve-for-me and renamed
+  // --cd to -C (both accepted). The prompt is passed via file to avoid
+  // shell-quoting trouble with long multilingual briefs.
+  codex: 'codex exec --json --approve-for-me -C "{cwd}" "$(cat {prompt_file})"',
+  'codex-legacy': 'codex exec --json --full-auto --cd "{cwd}" "{prompt}"',
   'claude-code': 'claude -p "{prompt}" --output-format json --permission-mode acceptEdits',
 };
 
@@ -63,7 +67,10 @@ function findUsage(value) {
   const input =
     record.input_tokens ?? record.prompt_tokens ?? record.inputTokens ?? record.promptTokens;
   const output =
-    record.output_tokens ?? record.completion_tokens ?? record.outputTokens ?? record.completionTokens;
+    record.output_tokens ??
+    record.completion_tokens ??
+    record.outputTokens ??
+    record.completionTokens;
   const total = record.total_tokens ?? record.totalTokens;
   const cost = record.cost_usd ?? record.total_cost_usd ?? record.costUsd;
   if (input != null || output != null || total != null || cost != null) {

@@ -92,3 +92,4 @@ _*.py
 NUL
 # Evaluation scratch outputs outside the tracked results dir
 skill-eval-lab/results-s1test*/
+skill-eval-lab/results-agent/

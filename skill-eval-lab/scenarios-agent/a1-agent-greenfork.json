@@ -1,0 +1,85 @@
+{
+  "id": "a1-agent-greenfork",
+  "title": "Agent 全流程: GreenFork 8 小时冲刺",
+  "brief": "你在一个 hackathon 项目 GreenFork 仓库里, 还剩 8 小时。请使用 hackathon-run CLI 完成以下工作: (1) 初始化 .hackathon/ 目录; (2) 运行 scope-knife 对功能做 KEEP/CUT/DEFER 决策, demo 目标是 'A student sees predicted surplus and prebooks one meal to reduce waste', 剩余时间 480 分钟; (3) 运行 time-box 为 build/verify/demo/ship 分配时间; (4) 用 verify run 验证 demo path 并产出 verify.json; (5) 运行 demo-coach 生成 60 秒讲稿。完成后 .hackathon/state/ 下应有 plan.json, time-box.json, verify.json, demo.json。CLI 用法: node \"D:/personal skill/dist/cli/index.js\" <command>, 可用 -C <dir> 指定工作目录, 命令 help 可查看参数。demo path 的验证命令可以用 python3 src/predict.py (期望输出含 surplus) 和 python3 src/prebook.py (期望输出含 prebooked)。",
+  "expected_skills": ["scope-knife", "time-box", "fast-verify", "demo-coach"],
+  "project": {
+    "name": "GreenFork",
+    "files": {
+      "README.md": "# GreenFork\n## AI Meal Prediction\n## Canteen Menu Sync\n## Order Prebooking\n## Analytics Dashboard\n\n## Run\npython3 src/predict.py\n\n## Demo\npython3 src/prebook.py\n",
+      "package.json": "{\n  \"name\": \"green-fork\",\n  \"version\": \"0.1.0\"\n}\n",
+      "src/predict.py": "menu = [\"rice\", \"noodles\"]\nprint(\"predicted surplus:\", len(menu))\n",
+      "src/prebook.py": "print(\"prebooked: True\")\n"
+    }
+  },
+  "steps": [],
+  "assertions": [
+    {
+      "id": "state-exists",
+      "description": ".hackathon/state/ 目录存在",
+      "critical": true,
+      "type": "file_exists",
+      "file": ".hackathon/state/plan.json"
+    },
+    {
+      "id": "plan-goal",
+      "description": "plan.json 记录 demo 目标",
+      "critical": true,
+      "type": "json",
+      "file": ".hackathon/state/plan.json",
+      "path": "demo_goal",
+      "op": "not_equals",
+      "value": "(set via hackathon run scope-knife --demo-goal=...)"
+    },
+    {
+      "id": "plan-features",
+      "description": "plan.json 有功能分类",
+      "critical": false,
+      "type": "json",
+      "file": ".hackathon/state/plan.json",
+      "path": "features",
+      "op": "not_equals",
+      "value": []
+    },
+    {
+      "id": "timebox-schedule",
+      "description": "time-box.json 有排期",
+      "critical": true,
+      "type": "json",
+      "file": ".hackathon/state/time-box.json",
+      "path": "schedule",
+      "op": "not_equals",
+      "value": []
+    },
+    {
+      "id": "verify-evidence",
+      "description": "verify.json 由 verify run 产出 (有 workspace digest)",
+      "critical": true,
+      "type": "json",
+      "file": ".hackathon/state/verify.json",
+      "path": "workspace_digest",
+      "op": "not_equals",
+      "value": null
+    },
+    {
+      "id": "verify-steps",
+      "description": "verify.json 至少执行了 1 个步骤",
+      "critical": true,
+      "type": "json",
+      "file": ".hackathon/state/verify.json",
+      "path": "steps.0.status",
+      "op": "not_equals",
+      "value": null
+    },
+    {
+      "id": "demo-script",
+      "description": "demo.json 有讲稿步骤",
+      "critical": true,
+      "type": "json",
+      "file": ".hackathon/state/demo.json",
+      "path": "steps",
+      "op": "not_equals",
+      "value": []
+    }
+  ]
+}

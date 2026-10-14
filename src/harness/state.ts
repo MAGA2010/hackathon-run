@@ -9,8 +9,8 @@
  *   - file unreadable -> throw
  */
 import { createHash } from 'node:crypto';
-import { readFileSync, existsSync } from 'node:fs';
-import { join, resolve, basename, extname } from 'node:path';
+import { readFileSync, existsSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { join, resolve, dirname, basename, extname } from 'node:path';
 
 import Ajv from 'ajv';
 import addFormats from 'ajv-formats';
@@ -95,7 +95,34 @@ export function writeState(opts: StateWriteOptions): string {
   withFileLockSync(target, () => {
     atomicWriteFileSync(target, JSON.stringify(opts.data, null, 2));
   });
+  sweepStaleTempFiles(target);
   return target;
+}
+
+/**
+ * Remove orphaned atomic-write temp files (crash leftovers like
+ * `.plan.json.<pid>.<uuid>.tmp`). Files younger than one hour or owned by
+ * this pid are left alone so a concurrent writer is never disturbed.
+ */
+function sweepStaleTempFiles(target: string): void {
+  try {
+    const dir = dirname(target);
+    const cutoff = Date.now() - 60 * 60 * 1000;
+    for (const entry of readdirSync(dir)) {
+      if (!/^\..+\.\d+\.[0-9a-f-]{36}\.tmp$/i.test(entry)) continue;
+      const parts = entry.split('.');
+      const pid = Number(parts[2]);
+      if (Number.isInteger(pid) && pid === process.pid) continue;
+      const full = join(dir, entry);
+      try {
+        if (statSync(full).mtimeMs < cutoff) rmSync(full, { force: true });
+      } catch {
+        // Another process swept or locked it first; ignore.
+      }
+    }
+  } catch {
+    // Sweeping is best-effort; never fail the write.
+  }
 }
 
 export interface StateReadOptions {

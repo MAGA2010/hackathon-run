@@ -23,6 +23,8 @@ export interface AuditFinding {
   line: number;
   message: string;
   excerpt?: string;
+  /** Set when the SKILL.md frontmatter waives this rule (medium and below). */
+  waived?: boolean;
 }
 
 export interface SkillAuditResult {
@@ -697,8 +699,26 @@ function auditSkill(dir: string, root: string): SkillAuditResult {
     });
   }
 
+  // Frontmatter waiver: a bundled skill can acknowledge a review finding with
+  // `audit_waive: ['rule.name', ...]`. Only medium/low/info findings can be
+  // waived — critical and high always stay so the waiver cannot hide real risk.
+  const waivedRules = Array.isArray(frontmatter?.audit_waive)
+    ? frontmatter.audit_waive.map(String)
+    : [];
+  if (waivedRules.length > 0) {
+    for (const finding of findings) {
+      if (
+        waivedRules.includes(finding.rule) &&
+        (finding.severity === 'medium' || finding.severity === 'low' || finding.severity === 'info')
+      ) {
+        finding.waived = true;
+      }
+    }
+  }
+  const activeFindings = findings.filter((finding) => !finding.waived);
+
   const counts = (severity: AuditSeverity) =>
-    findings.filter((finding) => finding.severity === severity).length;
+    activeFindings.filter((finding) => finding.severity === severity).length;
   return {
     name: basename(dir),
     path: dir,

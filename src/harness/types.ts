@@ -54,6 +54,12 @@ export interface SkillFrontmatter {
   homepage?: string;
   /** Optional: source repository URL or owner/repo (third-party manifest). */
   repository?: string;
+  /**
+   * Optional: audit rule names the skill author acknowledges as reviewed
+   * design (e.g. shell.child-process). Only medium/low/info findings can be
+   * waived; critical and high always remain.
+   */
+  audit_waive?: string[];
 }
 
 /** Lifecycle categories a skill can belong to (Format v2). */

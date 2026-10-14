@@ -158,6 +158,7 @@ export function parseFrontmatter(raw: string): ParseResult {
       author: fm.author ? String(fm.author) : undefined,
       homepage: fm.homepage ? String(fm.homepage) : undefined,
       repository: fm.repository ? String(fm.repository) : undefined,
+      audit_waive: Array.isArray(fm.audit_waive) ? fm.audit_waive.map(String) : undefined,
     },
     body,
     triggerBudget,

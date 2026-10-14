@@ -87,3 +87,8 @@ SKILL.md
 AI-Time-Run-tech-speech.md
 Tone-Shift-*.pdf
 _*.py
+
+# Windows redirect accident: " > NUL" creates a real file named NUL on some shells
+NUL
+# Evaluation scratch outputs outside the tracked results dir
+skill-eval-lab/results-s1test*/

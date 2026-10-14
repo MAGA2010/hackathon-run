@@ -444,6 +444,14 @@ export function computePulse(opts: { cwd: string; now?: Date }): PulseSummary | 
   const verifyRaw = readJson(join(stateDir, 'verify.json'));
   if (!timeBox && !rehearsalRaw && !verifyRaw) return null;
 
+  // Seeded state (init placeholders) must not read as an expired clock: a
+  // time-box with 0 minutes and no schedule is a template, not a deadline.
+  const timeBoxIsSeed =
+    isRecord(timeBox) &&
+    (asInt(timeBox.time_remaining_minutes) ?? 0) <= 0 &&
+    (!Array.isArray(timeBox.schedule) || timeBox.schedule.length === 0);
+  if (timeBoxIsSeed && !rehearsalRaw && !verifyRaw) return null;
+
   const nowMs = (opts.now ?? new Date()).getTime();
   const generatedAt = timeBox ? asString(timeBox.generated_at) : null;
   const generatedMs = isoMs(generatedAt);

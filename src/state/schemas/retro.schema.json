@@ -116,6 +116,107 @@
           }
         }
       }
+    },
+    "calibration": {
+      "type": ["object", "null"],
+      "description": "Predicted-vs-actual timing calibration extracted from time-box.json (v1.7). Null when no real time-box exists.",
+      "required": ["generated_at", "stages", "alarms_fired", "source_files"],
+      "additionalProperties": false,
+      "properties": {
+        "generated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deadline_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        },
+        "planned_total_minutes": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "elapsed_minutes": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "overrun_minutes": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "burn_rate": {
+          "type": ["number", "null"],
+          "minimum": 0
+        },
+        "slipping": {
+          "type": "boolean"
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "stage",
+              "budgeted_minutes",
+              "observed_minutes",
+              "overrun_minutes",
+              "overrun_ratio",
+              "alarm_fired"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "stage": {
+                "type": "string"
+              },
+              "budgeted_minutes": {
+                "type": ["integer", "null"],
+                "minimum": 0
+              },
+              "observed_minutes": {
+                "type": ["integer", "null"],
+                "minimum": 0
+              },
+              "overrun_minutes": {
+                "type": ["integer", "null"],
+                "minimum": 0
+              },
+              "overrun_ratio": {
+                "type": ["number", "null"],
+                "minimum": 0
+              },
+              "alarm_fired": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "alarms_fired": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["stage", "threshold", "severity"],
+            "additionalProperties": false,
+            "properties": {
+              "stage": {
+                "type": "string"
+              },
+              "threshold": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "severity": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "source_files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
     }
   }
 }

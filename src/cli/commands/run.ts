@@ -28,6 +28,7 @@ import { loadAllSkills } from '../../harness/loader.js';
 import { stateFileComplete, type FlowStateFile } from '../../harness/lifecycle.js';
 import { readState, writeState } from '../../harness/state.js';
 import { appendTrace } from '../../harness/trace.js';
+import { buildCalibration } from '../../harness/calibration.js';
 import { c } from '../lib/colors.js';
 import { commandFail, commandOk, errorMessage, type CommandResult } from '../lib/command-result.js';
 import { log } from '../lib/logger.js';
@@ -79,6 +80,7 @@ function targetStateFile(body: string): string | null {
 }
 
 export function buildSkeleton(stateFile: string, opts: RunOptions): unknown {
+  const cwd = opts.cwd ?? process.cwd();
   const now = new Date().toISOString();
   const tr = opts.timeRemaining ?? 0;
   const team = opts.teamSize ?? 1;
@@ -262,6 +264,7 @@ export function buildSkeleton(stateFile: string, opts: RunOptions): unknown {
         keep_doing: [],
         stop_doing: [],
         try_next_time: [],
+        calibration: buildCalibration(cwd),
       };
     case 'rehearsal.json':
       return {

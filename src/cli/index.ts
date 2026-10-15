@@ -19,6 +19,7 @@
  */
 
 import { Command } from 'commander';
+import { resolve } from 'node:path';
 
 import { init } from './commands/init.js';
 import { list } from './commands/list.js';
@@ -404,7 +405,15 @@ program
 program
   .command('mcp')
   .description('Start the Model Context Protocol (MCP) server on stdio (JSON-RPC 2.0)')
-  .action(() => startMcpServer());
+  .option(
+    '-C, --cwd <path>',
+    'serve this repo root instead of the current directory',
+    process.cwd(),
+  )
+  .action((opts: { cwd?: string }) => {
+    if (opts.cwd && resolve(opts.cwd) !== process.cwd()) process.chdir(resolve(opts.cwd));
+    startMcpServer();
+  });
 
 program
   .command('run <skill>')

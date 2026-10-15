@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   notes in the report that final token usage never arrived, instead of
   silently reporting zero tokens.
 
+- `hackathon mcp` accepts `-C/--cwd` like every other command, so an MCP
+  client can point the server at a repo root without chdir tricks.
+- `sprint accept` reports eval.json schema failures as "unreadable" with the
+  validation reason instead of misleadingly claiming the file is missing.
+
 ### Added
 
 - **Retro calibration loop (v1.7)** — `run retro --apply` now embeds a

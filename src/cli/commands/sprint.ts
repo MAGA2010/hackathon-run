@@ -125,11 +125,14 @@ function readPlan(cwd: string): PlanLikeForSprint | null {
   }
 }
 
-function readEval(cwd: string): EvalResultLike | null {
+function readEval(cwd: string): { value: EvalResultLike | null; error?: string } {
   try {
-    return readState<EvalResultLike>({ repoRoot: cwd, file: 'eval.json' });
-  } catch {
-    return null;
+    return { value: readState<EvalResultLike>({ repoRoot: cwd, file: 'eval.json' }) };
+  } catch (error) {
+    // Surface the schema failure instead of swallowing it: "eval.json
+    // missing" sends the user to re-run sprint review when the real problem
+    // is a malformed file.
+    return { value: null, error: (error as Error).message.split('\n')[0] };
   }
 }
 
@@ -294,12 +297,14 @@ export function sprintResult(opts: SprintOptions): CommandResult<SprintPayload> 
         error: 'no active sprint; run hackathon sprint new first',
       });
     }
-    const evalResult = readEval(cwd);
+    const { value: evalResult, error: evalError } = readEval(cwd);
     if (!evalResult) {
       return commandFail({
         ok: false,
         action: 'accept',
-        error: 'eval.json missing; run hackathon sprint review first',
+        error: evalError
+          ? `eval.json is unreadable: ${evalError}`
+          : 'eval.json missing; run hackathon sprint review first',
       });
     }
     if (evalResult.sprint && evalResult.sprint !== current.name) {

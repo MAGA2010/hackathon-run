@@ -2,7 +2,7 @@
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, existsSync } from 'node:fs';
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, existsSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { spawnSync } from 'node:child_process';
@@ -604,5 +604,72 @@ describe('resume CLI', () => {
     assert.equal(payload.weighted_score, 3);
     assert.equal(payload.criteria_passed, 1);
     rmSync(repo, { recursive: true, force: true });
+  });
+});
+
+describe('sprint accept surfaces eval.json schema failures', () => {
+  it('reports the validation error instead of "missing"', () => {
+    const repo = mkdtempSync(join(tmpdir(), 'hs-sprint-badeval-'));
+    try {
+      spawnSync(process.execPath, [CLI, 'init', '-y'], { cwd: repo, encoding: 'utf8' });
+      writeFileSync(
+        join(repo, '.hackathon/state/plan.json'),
+        JSON.stringify({
+          version: '1.0',
+          generated_at: new Date().toISOString(),
+          demo_goal: 'sign up flow',
+          time_remaining_minutes: 300,
+          features: [
+            {
+              name: 'Auth',
+              status: 'implemented',
+              classification: 'KEEP',
+              rationale: 'core',
+              passes: false,
+              acceptance_criteria: ['user can sign up'],
+              evidence: [],
+              sprint: null,
+              owner: '',
+              time_estimate_minutes: 60,
+            },
+          ],
+          demo_path: [
+            {
+              step: 1,
+              action: 'sign up',
+              expected_outcome: 'account created',
+              command: 'echo done',
+              feature: 'Auth',
+            },
+          ],
+          next_tasks: [{ priority: 'P0', task: 'build auth', estimate_minutes: 60 }],
+        }),
+      );
+      spawnSync(process.execPath, [CLI, 'sprint', 'new', '--feature', 'Auth', '-C', repo], {
+        encoding: 'utf8',
+      });
+      spawnSync(process.execPath, [CLI, 'sprint', 'approve', '-C', repo], { encoding: 'utf8' });
+      // malformed eval: additional property fails schema validation
+      writeFileSync(
+        join(repo, '.hackathon/state/eval.json'),
+        JSON.stringify({
+          version: '1.0',
+          generated_at: new Date().toISOString(),
+          sprint: 'sprint-Auth',
+          verdict: 'pass',
+          criteria: [],
+          feedback: [],
+          bogus: 1,
+        }),
+      );
+      const r = spawnSync(process.execPath, [CLI, 'sprint', 'accept', '-C', repo], {
+        encoding: 'utf8',
+      });
+      assert.notEqual(r.status, 0);
+      assert.match(r.stdout + r.stderr, /eval\.json is unreadable/);
+      assert.doesNotMatch(r.stdout + r.stderr, /eval\.json missing/);
+    } finally {
+      rmSync(repo, { recursive: true, force: true });
+    }
   });
 });

@@ -846,7 +846,7 @@ export function toSarif(report: SkillsAuditReport): Record<string, unknown> {
         tool: {
           driver: {
             name: 'hackathon-run-skills-audit',
-            informationUri: 'https://github.com/MAGA2010/hackathon-run',
+            informationUri: 'https://github.com/hackathon-run/hackathon-run',
             rules: [...rules.values()],
           },
         },

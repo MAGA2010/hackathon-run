@@ -7,18 +7,18 @@ for use in any GitHub Actions workflow.
 
 ```yaml
 - uses: actions/checkout@v4
-- uses: MAGA2010/hackathon-run/.github/action@main
+- uses: hackathon-run/hackathon-run/.github/action@main
   with:
     command: validate-skills
 
 # Or to match an utterance to a skill:
-- uses: MAGA2010/hackathon-run/.github/action@main
+- uses: hackathon-run/hackathon-run/.github/action@main
   with:
     command: match
     utterance: 'the demo path is broken'
 
 # Or to scaffold a new skill in the calling repo:
-- uses: MAGA2010/hackathon-run/.github/action@main
+- uses: hackathon-run/hackathon-run/.github/action@main
   with:
     command: new-skill
     skill: my-cool-skill

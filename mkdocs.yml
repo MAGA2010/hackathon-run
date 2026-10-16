@@ -1,8 +1,8 @@
 site_name: Hackathon Run
 site_description: A decision-making and execution system for hackathon teams.
 site_url: https://maga2010.github.io/hackathon-run/
-repo_url: https://github.com/MAGA2010/hackathon-run
-repo_name: MAGA2010/hackathon-run
+repo_url: https://github.com/hackathon-run/hackathon-run
+repo_name: hackathon-run/hackathon-run
 edit_uri: edit/main/docs/
 
 theme:
@@ -115,7 +115,7 @@ nav:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/MAGA2010/hackathon-run
+      link: https://github.com/hackathon-run/hackathon-run
     - icon: fontawesome/brands/discord
       link: https://discord.gg/hackathon-surgeon
     - icon: fontawesome/brands/twitter

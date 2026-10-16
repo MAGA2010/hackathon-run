@@ -29,7 +29,7 @@ Requirements:
 Setup:
 
 `ash
-git clone https://github.com/MAGA2010/hackathon-run
+git clone https://github.com/hackathon-run/hackathon-run
 cd hackathon-run
 nvm use                        # or fnm use
 npm install

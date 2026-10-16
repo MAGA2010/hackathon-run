@@ -4,13 +4,13 @@
 
 A decision-making and execution system for hackathon teams operating under time pressure. Fifteen skills, one workflow: **clarify, prize-target, scope, time-box, build, verify, demo, judge, ship, recover, pivot, retro, decide-log.**
 
-[![CI](https://img.shields.io/github/actions/workflow/status/MAGA2010/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/MAGA2010/hackathon-run/actions)
-[![Version](https://img.shields.io/github/package-json/v/MAGA2010/hackathon-run?label=version)](CHANGELOG.md)
+[![CI](https://img.shields.io/github/actions/workflow/status/hackathon-run/hackathon-run/ci.yml?branch=main&label=CI)](https://github.com/hackathon-run/hackathon-run/actions)
+[![Version](https://img.shields.io/github/package-json/v/hackathon-run/hackathon-run?label=version)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Stars](https://img.shields.io/github/stars/MAGA2010/hackathon-run?style=social)](https://github.com/MAGA2010/hackathon-run)
+[![Stars](https://img.shields.io/github/stars/hackathon-run/hackathon-run?style=social)](https://github.com/hackathon-run/hackathon-run)
 [![npm version](https://img.shields.io/npm/v/@hackathon-run/hackathon-run.svg)](https://www.npmjs.com/package/@hackathon-run/hackathon-run)
 [![npm downloads](https://img.shields.io/npm/dm/@hackathon-run/hackathon-run.svg)](https://www.npmjs.com/package/@hackathon-run/hackathon-run)
-[![GitHub release](https://img.shields.io/github/v/release/MAGA2010/hackathon-run.svg)](https://github.com/MAGA2010/hackathon-run/releases/latest)
+[![GitHub release](https://img.shields.io/github/v/release/hackathon-run/hackathon-run.svg)](https://github.com/hackathon-run/hackathon-run/releases/latest)
 
 <p align="center">
   <img src="docs/assets/images/hero.svg" alt="Hackathon Run hero" width="800">
@@ -505,7 +505,7 @@ hackathon init
 
 # Option C -- from source
 
-git clone https://github.com/MAGA2010/hackathon-run
+git clone https://github.com/hackathon-run/hackathon-run
 cd hackathon-run
 npm install
 npm run build
@@ -661,10 +661,10 @@ The [skill template](docs/contributing/skill-template.md) is the source of truth
 
 ## Star history
 
-<a href="https://star-history.com/#MAGA2010/hackathon-run&Date">
+<a href="https://star-history.com/#hackathon-run/hackathon-run&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=MAGA2010/hackathon-run&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=MAGA2010/hackathon-run&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=MAGA2010/hackathon-run&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=hackathon-run/hackathon-run&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=hackathon-run/hackathon-run&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=hackathon-run/hackathon-run&type=Date" />
   </picture>
 </a>

@@ -62,10 +62,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MAGA2010/hackathon-run.git"
+    "url": "git+https://github.com/hackathon-run/hackathon-run.git"
   },
   "bugs": {
-    "url": "https://github.com/MAGA2010/hackathon-run/issues"
+    "url": "https://github.com/hackathon-run/hackathon-run/issues"
   },
   "homepage": "https://maga2010.github.io/hackathon-run/",
   "dependencies": {

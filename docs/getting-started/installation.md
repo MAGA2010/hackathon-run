@@ -25,7 +25,7 @@ Windows, Git Bash, WSL, and CI.
 ## Option B — Run from source
 
 ```bash
-git clone https://github.com/MAGA2010/hackathon-run
+git clone https://github.com/hackathon-run/hackathon-run
 cd hackathon-run
 npm install
 npm run build
